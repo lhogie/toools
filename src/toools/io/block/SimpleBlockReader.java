@@ -35,28 +35,21 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.block;
 
-import java.io.IOException;
+package toools.io.block;
+
 import java.io.InputStream;
 
-public class SimpleBlockReader implements BlockReader
+public class SimpleBlockReader extends BlockReader
 {
-	private final InputStream is;
-	private final int blockSize;
-
-	public SimpleBlockReader(InputStream is, int blockSize)
+	public SimpleBlockReader(InputStream is, int bufSize)
 	{
-		this.is = is;
-		this.blockSize = blockSize;
+		super(is, bufSize);
 	}
 
 	@Override
-	public DataBlock readBlock() throws IOException
+	public DataBlock getNextBlock() 
 	{
-		DataBlock b = new DataBlock(blockSize);
-		b.actualSize = is.read(b.buf);
-		return b;
+		return readBlock();
 	}
 }

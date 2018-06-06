@@ -45,5 +45,9 @@ public class IORuntimeException extends RuntimeException
 	{
 		super(e);
 	}
+	public IORuntimeException(String msg)
+	{
+		super(msg);
+	}
 
 }

@@ -35,21 +35,24 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.block;
 
-import java.io.IOException;
+package toools.io.block;
+
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-public class ParallelBlockReader implements BlockReader
+import toools.io.IORuntimeException;
+
+public class ParallelBlockReader extends BlockReader
 {
 	private final BlockingQueue<DataBlock> queue;
 
-	public ParallelBlockReader(final InputStream is, final int blockSize,final  int nbBlocks)
+	public ParallelBlockReader(final InputStream is, final int blockSize,
+			final int queueSize)
 	{
-		queue = new ArrayBlockingQueue<>(nbBlocks);
+		super(is, blockSize);
+		this.queue = new ArrayBlockingQueue<>(queueSize);
 
 		new Thread(new Runnable()
 		{
@@ -61,20 +64,12 @@ public class ParallelBlockReader implements BlockReader
 				{
 					try
 					{
-						DataBlock b = new DataBlock(blockSize);
-						b.actualSize = is.read(b.buf);
+						DataBlock b = readBlock();
+						queue.put(b);
 
-						if (b.actualSize == -1)
-						{
-							b.actualSize = -1;
-							queue.put(b);
+						// if EOF
+						if (b.size == - 1)
 							return;
-						}
-						// do not put empty blocks, they would waste space
-						else if (b.actualSize > 0)
-						{
-							queue.put(b);
-						}
 					}
 					catch (Exception ex)
 					{
@@ -85,9 +80,8 @@ public class ParallelBlockReader implements BlockReader
 		}).start();
 	}
 
-	
 	@Override
-	public DataBlock readBlock() throws IOException
+	public DataBlock getNextBlock()
 	{
 		try
 		{
@@ -95,7 +89,7 @@ public class ParallelBlockReader implements BlockReader
 		}
 		catch (InterruptedException e)
 		{
-			throw new IOException(e);
+			throw new IORuntimeException(e);
 		}
 	}
 }

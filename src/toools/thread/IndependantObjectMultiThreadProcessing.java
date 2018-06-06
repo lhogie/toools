@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.thread;
+
+package toools.thread;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,40 +44,36 @@ import java.util.List;
 
 public abstract class IndependantObjectMultiThreadProcessing<T>
 {
-
 	public IndependantObjectMultiThreadProcessing(Collection<T> input)
 	{
 		this(input, new NCoresNThreadsPolicy(2));
 	}
-
-	public IndependantObjectMultiThreadProcessing(Collection<T> input, MultiThreadPolicy policy)
+	public IndependantObjectMultiThreadProcessing(Collection<T> input,
+			MultiThreadPolicy policy)
 	{
-		final List<T> list = new ArrayList<T>(input);
+		this(input, policy.getNbThreads());
+	}
 
-		new MultiThreadProcessing(policy)
+	public IndependantObjectMultiThreadProcessing(Collection<T> input, int nbThreads)
+	{
+		final ConcurrentIterator<T> i = new ConcurrentIterator<>(input);
+
+		new MultiThreadProcessing(nbThreads, null)
 		{
-
 			@Override
-			protected void runThread(int rank, List<Thread> threads) throws Throwable
+			protected void runInParallel(ThreadSpecifics s, List<Thread> threads) throws Throwable
 			{
 				while (true)
 				{
-					int next = next();
+					T next = i.next();
 
-					if (next >= list.size())
+					if (next == null)
 						break;
 
-					process(list.get(next));
+					process(next);
 				}
 			}
 		};
-	}
-
-	private int index = 0;
-
-	private synchronized int next()
-	{
-		return index++;
 	}
 
 	protected abstract void process(T element) throws Throwable;
@@ -89,18 +85,6 @@ public abstract class IndependantObjectMultiThreadProcessing<T>
 		l.add("couc");
 		l.add("luc");
 		l.add("anne");
-		l.add("stephane");
-		l.add("michel");
-		l.add("jean-claude");
-		l.add("couc");
-		l.add("luc");
-		l.add("anne");
-		l.add("stephane");
-		l.add("michel");
-		l.add("jean-claude");
-		l.add("couc");
-		l.add("luc");
-		l.add("jean-claude");
 
 		new IndependantObjectMultiThreadProcessing<String>(l, new NThreadsPolicy(2))
 		{

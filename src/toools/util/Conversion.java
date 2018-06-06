@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.util;
+
+package toools.util;
 
 public class Conversion
 {
@@ -45,9 +45,21 @@ public class Conversion
 		int intValue = (int) n;
 
 		if (n != intValue)
-			throw new Error("too big to be converted to int: " + n);
+			throw new Error("too big to be converted to int: " + n +  " => " + intValue);
 
 		return intValue;
+	}
+
+	public static int[] toIntArray(long[] a)
+	{
+		int[] r = new int[a.length];
+
+		for (int i = 0; i < a.length; ++i)
+		{
+			r[i] = long2int(a[i]);
+		}
+
+		return r;
 	}
 
 	public static void main(String[] args)
@@ -68,7 +80,7 @@ public class Conversion
 
 		throw new NumberFormatException("invalid boolean: " + s);
 	}
-	
+
 	private static final char[] hexAlphabet = "0123456789ABCDEF".toCharArray();
 
 	public static char[] bytesToHex(byte[] b)

@@ -35,15 +35,16 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.thread;
+
+package toools.thread;
 
 import java.util.Collection;
 
-public abstract class OneElementOneThreadProcessing<T> extends IndependantObjectMultiThreadProcessing<T>
+public abstract class OneElementOneThreadProcessing<T>
+		extends IndependantObjectMultiThreadProcessing<T>
 {
 	public OneElementOneThreadProcessing(Collection<T> input)
 	{
-		super(input, new NThreadsPolicy(input.size()));
+		super(input, input.size());
 	}
 }

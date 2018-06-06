@@ -35,10 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.thread;
 
-import java.util.Iterator;
+package toools.thread;
 
 /**
  * A generator represents a function than computes and deliver objects in
@@ -51,67 +49,10 @@ import java.util.Iterator;
  * @param <T>
  */
 
-public abstract class Generator<T> extends Producer<T>
+public abstract class Generator<T> extends Anticipator<T>
 {
-	private T currentValue;
-	boolean letProducerWork = false;
-	boolean isNextComputed = false;
-
-	@Override
-	public final void deliver(T newValue)
+	public Generator()
 	{
-		currentValue = newValue;
-		letProducerWork = false;
-
-		if ( ! isTerminaisonValue(newValue))
-		{
-			while ( ! letProducerWork)
-			{
-				Thread.yield();
-			}
-		}
-	}
-
-	@Override
-	public final Iterator<T> iterator()
-	{
-		return new Iterator<T>()
-		{
-			@Override
-			public boolean hasNext()
-			{
-				if ( ! internalThread.isAlive())
-				{
-					internalThread.start();
-				}
-
-				if ( ! isNextComputed)
-				{
-					letProducerWork = true;
-
-					// wait until the producer has computed next value
-					while (letProducerWork)
-					{
-						Thread.yield();
-					}
-
-					isNextComputed = true;
-				}
-
-				return ! isTerminaisonValue(currentValue);
-			}
-
-			@Override
-			public T next()
-			{
-				if ( ! isNextComputed)
-				{
-					hasNext();
-				}
-
-				isNextComputed = false;
-				return currentValue;
-			}
-		};
+		super(1);
 	}
 }

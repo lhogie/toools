@@ -41,7 +41,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 public class DataBlock
 {
 	public final byte[] buf;
-	public int actualSize;
+	public int size;
 
 	public DataBlock(int blockSize)
 	{

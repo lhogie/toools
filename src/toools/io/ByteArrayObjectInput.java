@@ -40,7 +40,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 import java.io.ObjectInput;
 
-import toools.NotYetImplementedException;
+import toools.exceptions.NotYetImplementedException;
 
 public class ByteArrayObjectInput implements ObjectInput
 {

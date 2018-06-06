@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.extern;
+
+package toools.extern;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -46,9 +46,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import toools.ExceptionUtilities;
-import toools.NotYetImplementedException;
 import toools.collections.Collections;
+import toools.exceptions.NotYetImplementedException;
 import toools.io.Utilities;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
@@ -109,15 +108,15 @@ public class Proces
 				byte[] out = output.getStdout();
 				byte[] err = output.getStderr();
 				String error = new String(err.length == 0 ? out : err);
-				throw new IllegalStateException("Command " + name + " "
-						+ Arrays.asList(args) + " has failed (exit code="
-						+ output.getReturnCode() + ")\n" + error + "stdin was: "
+				throw new ProcesException("Command " + name + " " + Arrays.asList(args)
+						+ " has failed (exit code=" + output.getReturnCode() + ")\n"
+						+ error + "stdin was: "
 						+ (stdin != null ? new String(stdin) : ""));
 			}
 		}
 		catch (IOException e)
 		{
-			throw ExceptionUtilities.toRuntimeException(e);
+			throw new ProcesException(e);
 		}
 	}
 
@@ -139,7 +138,7 @@ public class Proces
 	}
 
 	public static ProcessOutput rawExec(String name, Directory directory, byte[] stdin,
-			String... args) throws IOException 
+			String... args) throws IOException
 	{
 		try
 		{
@@ -284,23 +283,18 @@ public class Proces
 		{
 			synchronized (this)
 			{
-				try
-				{
-					// get all the content from the I/O stream and put
-					// it into a byte array
-					Utilities.copy(is, targetBuffer);
 
-					// that it's finished, flag it!
-					hasCompleted = true;
+				// get all the content from the I/O stream and put
+				// it into a byte array
+				Utilities.copy(is, targetBuffer);
 
-					// resume the thread that was waiting for retrieving the
-					// data
-					notify();
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
+				// that it's finished, flag it!
+				hasCompleted = true;
+
+				// resume the thread that was waiting for retrieving the
+				// data
+				notify();
+
 			}
 		}
 	}

@@ -10,20 +10,19 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntIterators;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import toools.Clazz;
 import toools.collections.primitive.LucIntHashSet;
 import toools.collections.primitive.LucIntSet;
 import toools.collections.primitive.SelfAdaptiveIntSet;
 import toools.math.MathsUtilities;
+import toools.reflect.Clazz;
 
 public class LucIntSets
 {
 	public static IntOpenHashSet create(int... elements)
 	{
-		return create(IntOpenHashSet	.class, elements);
+		return create(IntOpenHashSet.class, elements);
 	}
 
-	
 	public static <S extends IntSet> S create(Class<S> clazz, int... elements)
 	{
 		return create(clazz, IntIterators.wrap(elements));
@@ -56,7 +55,14 @@ public class LucIntSets
 
 	public static LucIntSet union(IntSet... sets)
 	{
-		LucIntSet t = new LucIntHashSet();
+		int n = 0;
+
+		for (IntSet s : sets)
+		{
+			n += s.size();
+		}
+
+		LucIntSet t = new LucIntHashSet(n);
 		return unionTo(t, sets);
 	}
 
@@ -176,7 +182,7 @@ public class LucIntSets
 
 			if (i < j)
 			{
-				temp = new SelfAdaptiveIntSet();
+				temp = new SelfAdaptiveIntSet(tab.get(i).size());
 				temp.addAll(tab.get(i));
 				tab.set(i, tab.get(j));
 				tab.set(j, temp);

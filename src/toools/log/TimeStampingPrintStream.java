@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.log;
+
+package toools.log;
 
 import java.io.PrintStream;
 
@@ -48,55 +48,55 @@ public class TimeStampingPrintStream extends PrintStream
 
 	public TimeStampingPrintStream(PrintStream out)
 	{
-		super(out);
+		super(out, true);
 	}
 
 	@Override
-	public void println(String x)
+	public void print(String x)
 	{
-		super.println(TextUtilities.prefixEachLineBy(x, Date.now() + "\t"));
+		super.print(TextUtilities.prefixEachLineBy(x, Date.now() + "\t"));
 	}
 
 	@Override
-	public void println(boolean x)
+	public void print(boolean x)
 	{
-		super.println(Date.now() + "\t" + x);
+		super.print(Date.now() + "\t" + x);
 	}
 
 	@Override
-	public void println(char x)
+	public void print(char x)
 	{
-		super.println(Date.now() + "\t" + x);
+		super.print(Date.now() + "\t" + x);
 	}
 
 	@Override
-	public void println(int x)
+	public void print(int x)
 	{
-		super.println(Date.now() + "\t" + x);
+		super.print(Date.now() + "\t" + x);
 	}
 
 	@Override
-	public void println(long x)
+	public void print(long x)
 	{
-		super.println(Date.now() + "\t" + x);
+		super.print(Date.now() + "\t" + x);
 	}
 
 	@Override
-	public void println(float x)
+	public void print(float x)
 	{
-		super.println(Date.now() + "\t" + x);
+		super.print(Date.now() + "\t" + x);
 	}
 
 	@Override
-	public void println(char[] x)
+	public void print(char[] x)
 	{
-		super.println(Date.now() + "\t" + x);
+		super.print(Date.now() + "\t" + x);
 	}
 
 	@Override
-	public void println(Object x)
+	public void print(Object x)
 	{
-		println(x.toString());
+		super.print(Date.now() + "\t" + x.toString());
 	}
 
 	public static void timeStampStandardIOStreams()

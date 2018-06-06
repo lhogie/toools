@@ -49,18 +49,14 @@ import toools.UnitTests;
 
 public class BitVectorSet extends AbstractIntSet implements LucIntSet
 {
-	private BitSet bitset = new BitSet();
-	private long len = 0;
+	private final BitSet bitset;
 	private final int offset;
+	private long len = 0;
 
-	public BitVectorSet()
-	{
-		this(0);
-	}
-
-	public BitVectorSet(int offset)
+	public BitVectorSet(int expected, int offset)
 	{
 		this.offset = offset;
+		this.bitset = new BitSet(expected);
 	}
 
 	@Override
@@ -302,10 +298,10 @@ public class BitVectorSet extends AbstractIntSet implements LucIntSet
 
 	private static void testHashcode()
 	{
-		LucIntSet s = new BitVectorSet(0);
+		LucIntSet s = new BitVectorSet(0, 0);
 		s.addAll(1, 2, 3);
 
-		LucIntSet s2 = new LucIntHashSet();
+		LucIntSet s2 = new LucIntHashSet(0);
 		s2.addAll(1, 3, 2);
 		UnitTests.ensure(s.hashCode() == s2.hashCode());
 

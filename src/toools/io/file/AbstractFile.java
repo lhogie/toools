@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.file;
+
+package toools.io.file;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +53,7 @@ import toools.os.OperatingSystem;
 @SuppressWarnings("serial")
 public abstract class AbstractFile implements Serializable
 {
-	File javaFile;
+	public File javaFile;
 	private boolean temporary = false;
 
 	public static String findUnusedNameIn(Directory location, String prefix,
@@ -88,16 +88,9 @@ public abstract class AbstractFile implements Serializable
 		javaFile = new File(path).getAbsoluteFile();
 	}
 
-	private static String processPath(String p)
-	{
-
-		return p;
-	}
-
 	public void createLink(AbstractFile f) throws IOException
 	{
 		Files.createSymbolicLink(f.javaFile.toPath(), javaFile.toPath());
-
 	}
 
 	public boolean isTemporary()
@@ -378,7 +371,7 @@ public abstract class AbstractFile implements Serializable
 		return getSize() == 0;
 	}
 
-	public abstract boolean create() throws IOException;
+	public abstract void create();
 
 	/**
 	 * Opens the file using the OS specific strategy.

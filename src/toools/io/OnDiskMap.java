@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io;
+
+package toools.io;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,8 +44,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import toools.ExceptionUtilities;
-import toools.NotYetImplementedException;
+import toools.exceptions.NotYetImplementedException;
 import toools.io.file.AbstractFile;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
@@ -56,7 +55,6 @@ public class OnDiskMap<K, V> implements Map<K, V>
 
 	private final Directory location;
 
-
 	public OnDiskMap(Directory location)
 	{
 		if (location == null)
@@ -64,7 +62,7 @@ public class OnDiskMap<K, V> implements Map<K, V>
 
 		this.location = location;
 
-		if (!location.exists())
+		if ( ! location.exists())
 		{
 			location.mkdirs();
 		}
@@ -102,27 +100,20 @@ public class OnDiskMap<K, V> implements Map<K, V>
 	{
 		RegularFile f = getFileForObject(key);
 
-		if (f == null || !f.exists())
+		if (f == null || ! f.exists())
 		{
 			return null;
 		}
 		else
 		{
-			try
-			{
-				return (V) Serializer.getDefaultSerializer().fromBytes(f.getContent());
-			}
-			catch (IOException e)
-			{
-				throw new IllegalStateException(ExceptionUtilities.toString(e));
-			}
+			return (V) Serializer.getDefaultSerializer().fromBytes(f.getContent());
 		}
 	}
-	
 
 	public static void main(String[] args) throws IOException
 	{
-		OnDiskMap<Object, Object> db = new OnDiskMap<Object, Object>(new Directory(System.getProperty("user.home") + "/coucou"));
+		OnDiskMap<Object, Object> db = new OnDiskMap<Object, Object>(
+				new Directory(System.getProperty("user.home") + "/coucou"));
 		db.put("coucou", new ArrayList());
 		System.out.println(db.get("coucou"));
 		db.delete();
@@ -158,21 +149,16 @@ public class OnDiskMap<K, V> implements Map<K, V>
 	@Override
 	public V put(K key, V value)
 	{
-		try
-		{
-			getFileForObject(key).setContent(Serializer.getDefaultSerializer().toBytes(value));
-			return value;
-		}
-		catch (IOException e)
-		{
-			throw new IllegalStateException(ExceptionUtilities.toString(e));
-		}
+		getFileForObject(key)
+				.setContent(Serializer.getDefaultSerializer().toBytes(value));
+		return value;
+
 	}
 
 	@Override
 	public void putAll(Map<? extends K, ? extends V> m)
 	{
-		
+
 	}
 
 	@Override
@@ -194,6 +180,5 @@ public class OnDiskMap<K, V> implements Map<K, V>
 	{
 		throw new NotYetImplementedException();
 	}
-
 
 }

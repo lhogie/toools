@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.text;
+
+package toools.text;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,11 +53,22 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import toools.Clazz;
+import toools.io.IORuntimeException;
 import toools.math.MathsUtilities;
+import toools.reflect.Clazz;
 
 public class TextUtilities
 {
+	public enum HORIZONTAL_ALIGNMENT
+	{
+		RIGHT, CENTER, LEFT
+	}
+
+	public enum VERTICAL_ALIGNMENT
+	{
+		TOP, MIDDLE, BOTTOM
+	}
+
 	public static String box(String s)
 	{
 		return box(s, '*', s.length() + 4);
@@ -152,7 +163,7 @@ public class TextUtilities
 		}
 	}
 
-	public static String toNiceString(double i)
+	public static String removeUselessDecimals(double i)
 	{
 		if (i == (int) i)
 		{
@@ -169,114 +180,99 @@ public class TextUtilities
 		System.out.println(parseNumbers("4 32 2 34 3".toCharArray(), ' ')[1]);
 	}
 
-	public static String toHumanString(final long n)
+	/*
+	 * public static String toHumanString(final long n) { if (n < 0) { return
+	 * "-" + toHumanString( - n); } else if (n < 1000) { return
+	 * String.valueOf(n); } else { String s = String.valueOf(n); String units =
+	 * "uKMGPH";
+	 * 
+	 * int unit = (s.length() - 1) / 3;
+	 * 
+	 * String a = s.substring(0, s.length() - 3 * unit);
+	 * 
+	 * if (a.isEmpty()) { a = "0"; }
+	 * 
+	 * String b = s.substring(s.length() - 3 * unit, s.length() - 3 * unit + 3 -
+	 * a.length());
+	 * 
+	 * String u = unit > 0 ? String.valueOf(units.charAt(unit)) : "";
+	 * 
+	 * return a + "." + b + u; } }
+	 */
+	public static String toHumanString(long n)
 	{
 		if (n < 0)
 		{
-			return "-" + toHumanString(-n);
+			return "-" + toHumanString( - n);
 		}
-		if (n < 1000)
-		{
-			return String.valueOf(n);
-		}
-		else
-		{
-			String s = String.valueOf(n);
-			String units = "uKMGPH";
-
-			int unit = (s.length() - 1) / 3;
-
-			String a = s.substring(0, s.length() - 3 * unit);
-
-			if (a.isEmpty())
-			{
-				a = "0";
-			}
-
-			String b = s.substring(s.length() - 3 * unit, s.length() - 3 * unit + 3 - a.length());
-
-			String u = unit > 0 ? String.valueOf(units.charAt(unit)) : "";
-
-			return a + "." + b + u;
-		}
-	}
-
-	public static String toHumanString(int n)
-	{
-		if (n < 0)
-		{
-			return "-" + toHumanString(-n);
-		}
-		if (n == 0)
+		else if (n == 0)
 		{
 			return "0";
 		}
 		else
 		{
-			boolean neg = n < 0;
-
 			int e = (int) (Math.log10(n) / 3) - 1;
 
 			if (e < 0)
 			{
-				return toNiceString(n);
+				return removeUselessDecimals(n);
 			}
 			else
 			{
 				String units = "KMGPH";
 				char unit = units.charAt(e);
-				return (neg ? "-" : "") + toNiceString(MathsUtilities.round(n / Math.pow(10, 3 * (e + 1)), 1)) + unit;
+				return removeUselessDecimals(
+						MathsUtilities.round(n / Math.pow(10, 3 * (e + 1)), 1)) + unit;
 			}
 		}
 
 	}
 
-	public static String toString(Exception ex)
+	public static int compareLexicographically(InputStream as, InputStream bs)
 	{
-		StringWriter w = new StringWriter();
-		PrintWriter pw = new PrintWriter(w);
-		ex.printStackTrace(pw);
-		pw.flush();
-		return w.getBuffer().toString();
-	}
-
-	public static int compareLexicographically(InputStream as, InputStream bs) throws IOException
-	{
-		while (true)
+		try
 		{
-			int ab = as.read();
-			int bb = bs.read();
+			while (true)
+			{
+				int ab = as.read();
+				int bb = bs.read();
 
-			if (ab == -1 && bb == -1)
-			{
-				as.close();
-				bs.close();
-				return 0;
-			}
-			else if (ab == -1)
-			{
-				as.close();
-				bs.close();
-				// a is shorter than b
-				return -1;
-			}
-			else if (bb == -1)
-			{
-				as.close();
-				bs.close();
-				// a is longer than b
-				return 1;
-			}
-			else
-			{
-				if (ab != bb)
+				if (ab == - 1 && bb == - 1)
 				{
 					as.close();
 					bs.close();
-					return new Integer(ab).compareTo(bb);
+					return 0;
+				}
+				else if (ab == - 1)
+				{
+					as.close();
+					bs.close();
+					// a is shorter than b
+					return - 1;
+				}
+				else if (bb == - 1)
+				{
+					as.close();
+					bs.close();
+					// a is longer than b
+					return 1;
+				}
+				else
+				{
+					if (ab != bb)
+					{
+						as.close();
+						bs.close();
+						return new Integer(ab).compareTo(bb);
+					}
 				}
 			}
 		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
+		}
+
 	}
 
 	public static String min(String a, String b)
@@ -318,17 +314,20 @@ public class TextUtilities
 		return l;
 	}
 
-	public static List<Integer> grep(List<String> lines, String pattern, boolean caseSensitive, boolean v)
+	public static List<Integer> grep(List<String> lines, String pattern,
+			boolean caseSensitive, boolean v)
 	{
 		List<Integer> newLines = new ArrayList<Integer>();
 
-		Pattern re = caseSensitive ? Pattern.compile(pattern) : Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+		Pattern re = caseSensitive ? Pattern.compile(pattern)
+				: Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 
 		for (int i = 0; i < lines.size(); ++i)
 		{
 			String line = lines.get(i);
 
-			if ((!v && re.matcher(line).matches()) || (v && !re.matcher(line).matches()))
+			if (( ! v && re.matcher(line).matches())
+					|| (v && ! re.matcher(line).matches()))
 			{
 				newLines.add(i);
 			}
@@ -347,11 +346,12 @@ public class TextUtilities
 		}
 		else
 		{
-			return -1;
+			return - 1;
 		}
 	}
 
-	public static List<String> getLinesAtIndexes(List<String> lines, List<Integer> lineNumbers, int indexShift)
+	public static List<String> getLinesAtIndexes(List<String> lines,
+			List<Integer> lineNumbers, int indexShift)
 	{
 		List<String> selectedLines = new ArrayList<String>();
 
@@ -365,7 +365,7 @@ public class TextUtilities
 
 	public static String prefixEachLineBy(String text, String prefix)
 	{
-		if (!text.startsWith("\n"))
+		if ( ! text.startsWith("\n"))
 		{
 			text = prefix + text;
 		}
@@ -375,7 +375,8 @@ public class TextUtilities
 
 	public static void prefixEachLineBy(Collection<String> lines, String prefix)
 	{
-		Collection<String> newlines = (Collection<String>) Clazz.makeInstance(lines.getClass());
+		Collection<String> newlines = (Collection<String>) Clazz
+				.makeInstance(lines.getClass());
 
 		for (String line : lines)
 		{
@@ -383,13 +384,15 @@ public class TextUtilities
 		}
 	}
 
-	public static void prefixEachLineByLineNumber(List<String> lines, String separator, int start)
+	public static void prefixEachLineByLineNumber(List<String> lines, String separator,
+			int start)
 	{
 		int width = (int) Math.log10(lines.size()) + 1;
 
 		for (int i = 0; i < lines.size(); ++i)
 		{
-			lines.set(i, flushRight(String.valueOf(i + start), width, '0') + separator + lines.get(i));
+			lines.set(i, flushRight(String.valueOf(i + start), width, '0') + separator
+					+ lines.get(i));
 		}
 	}
 
@@ -457,7 +460,8 @@ public class TextUtilities
 	public static byte[] fromHex(String s)
 	{
 		if (s.length() % 2 != 0)
-			throw new IllegalArgumentException("input text doesn't have an even number of characters");
+			throw new IllegalArgumentException(
+					"input text doesn't have an even number of characters");
 
 		byte[] r = new byte[s.length()];
 
@@ -530,7 +534,8 @@ public class TextUtilities
 		}
 	}
 
-	public static String replaceVariableValues(String s, Map<String, String> variableValues)
+	public static String replaceVariableValues(String s,
+			Map<String, String> variableValues)
 	{
 		int a = s.indexOf("${");
 
@@ -544,7 +549,8 @@ public class TextUtilities
 
 			if (b < 0)
 			{
-				throw new IllegalArgumentException("unterminated variable reference: '}' expected");
+				throw new IllegalArgumentException(
+						"unterminated variable reference: '}' expected");
 			}
 			else
 			{
@@ -556,16 +562,19 @@ public class TextUtilities
 
 					if (value == null)
 					{
-						throw new IllegalArgumentException("variable undeclared: " + name);
+						throw new IllegalArgumentException(
+								"variable undeclared: " + name);
 					}
 					else
 					{
-						return s.substring(0, a) + value + replaceVariableValues(s.substring(b + 1), variableValues);
+						return s.substring(0, a) + value + replaceVariableValues(
+								s.substring(b + 1), variableValues);
 					}
 				}
 				else
 				{
-					throw new IllegalArgumentException("invalid variable name: '" + name + "'");
+					throw new IllegalArgumentException(
+							"invalid variable name: '" + name + "'");
 				}
 			}
 		}
@@ -617,7 +626,7 @@ public class TextUtilities
 				{
 					buf.append(Character.toLowerCase(c));
 				}
-				else if (i > 0 && !isPropertyChar(s.charAt(i - 1)))
+				else if (i > 0 && ! isPropertyChar(s.charAt(i - 1)))
 				{
 					buf.append(Character.toUpperCase(c));
 				}
@@ -648,14 +657,15 @@ public class TextUtilities
 		}
 	}
 
-	public static final Collection<String> exceptions = Arrays.asList(new String[] { "a", "the", "an", "and", "to", "from", "on", "of", "by" });
+	public static final Collection<String> exceptions = Arrays.asList(
+			new String[] { "a", "the", "an", "and", "to", "from", "on", "of", "by" });
 
 	public static String capitalizeAllWords(String s)
 	{
 		s = s.toLowerCase();
 		List<String> words = Arrays.asList(s.split(" "));
 
-		if (!words.isEmpty())
+		if ( ! words.isEmpty())
 		{
 			words.set(0, capitalizeWord(words.get(0)));
 
@@ -722,20 +732,58 @@ public class TextUtilities
 		return buf.toString();
 	}
 
-	public static String flushRight(String s, int lineLenght, char fillChar)
+	public static String flush(Object o, HORIZONTAL_ALIGNMENT alignment, int lineLenght,
+			char fillChar)
 	{
-		if (s.length() > lineLenght)
-			throw new IllegalArgumentException("length is smaller that original line length");
+		String s = o.toString();
 
-		return TextUtilities.repeat(String.valueOf(fillChar), lineLenght - s.length()) + s;
+		if (s.length() > lineLenght)
+			throw new IllegalArgumentException("'" + o + "'.length() >  " + lineLenght);
+
+		if (alignment == HORIZONTAL_ALIGNMENT.LEFT)
+		{
+			return s + TextUtilities.repeat(String.valueOf(fillChar),
+					lineLenght - s.length());
+		}
+		else if (alignment == HORIZONTAL_ALIGNMENT.RIGHT)
+		{
+			return TextUtilities.repeat(String.valueOf(fillChar), lineLenght - s.length())
+					+ s;
+		}
+		else if (alignment == HORIZONTAL_ALIGNMENT.CENTER)
+		{
+			int leftMargin = (lineLenght - s.length()) / 2;
+			int rightMargin = lineLenght - leftMargin;
+			return TextUtilities.repeat(String.valueOf(fillChar), leftMargin) + s
+					+ TextUtilities.repeat(String.valueOf(fillChar), rightMargin);
+		}
+		else
+		{
+			throw new IllegalArgumentException("alignment == null");
+		}
+
 	}
 
-	public static String flushLeft(String s, int lineLenght, char fillChar)
+	public static String flushRight(Object o, int lineLenght, char fillChar)
 	{
-		if (s.length() > lineLenght)
-			throw new IllegalArgumentException("string is larger than line length (" + lineLenght + "): " + s);
+		String s = o.toString();
 
-		return s + TextUtilities.repeat(String.valueOf(fillChar), lineLenght - s.length());
+		if (s.length() > lineLenght)
+			s = s.substring(0, lineLenght);
+
+		return TextUtilities.repeat(String.valueOf(fillChar), lineLenght - s.length())
+				+ s;
+	}
+
+	public static String flushLeft(Object o, int lineLenght, char fillChar)
+	{
+		String s = o.toString();
+
+		if (s.length() > lineLenght)
+			s = s.substring(0, lineLenght);
+
+		return s + TextUtilities.repeat(String.valueOf(fillChar),
+				lineLenght - s.length());
 	}
 
 	public static String concatene(Collection strings, String separator)
@@ -758,7 +806,7 @@ public class TextUtilities
 		return b.toString();
 	}
 
-	public static String concat(String separator, String... strings)
+	public static String concat(String separator, Object... strings)
 	{
 		StringBuilder b = new StringBuilder();
 		int sz = strings.length;
@@ -789,7 +837,7 @@ public class TextUtilities
 
 		for (String unwrappable : unwrappables)
 		{
-			if (!lines.get(lines.size() - 1).isEmpty())
+			if ( ! lines.get(lines.size() - 1).isEmpty())
 			{
 				unwrappable = ' ' + unwrappable;
 			}
@@ -934,13 +982,143 @@ public class TextUtilities
 	public static int getNumberOf(char c, String s)
 	{
 		int n = 0;
-		int p = -1;
+		int p = - 1;
 
-		while ((p = s.indexOf(c, p + 1)) != -1)
+		while ((p = s.indexOf(c, p + 1)) != - 1)
 		{
 			++n;
 		}
 
 		return n;
 	}
+
+	public static String seconds2date(long s, boolean discardZeros)
+	{
+		long h = s / 3600;
+		s %= 3600;
+		long m = s / 60;
+		s %= 60;
+		return (h == 0 && discardZeros ? "" : h + "h ")
+				+ (m == 0 && discardZeros ? "" : m + "min ") + s + "s";
+	}
+
+	public static String milliseconds2date(long l, boolean discardZeros)
+	{
+		long h = l / 3600000;
+		l %= 3600000;
+
+		long m = l / 60000;
+		l %= 60000;
+
+		long s = l / 1000;
+		s %= 1000;
+
+		long ms = s;
+
+		return (h == 0 && discardZeros ? "" : h + "h")
+				+ (m == 0 && discardZeros ? "" : m + "m")
+				+ ((s == 0 && discardZeros ? "" : s + "s")) + ms + "ms";
+	}
+
+	public static boolean toBoolean(String s)
+	{
+		if (s.equals("true") || s.equals("yes"))
+		{
+			return true;
+		}
+		else if (s.equals("false") || s.equals("no"))
+		{
+			return false;
+		}
+		else
+		{
+			throw new IllegalStateException(
+					"don't know how interpret this as a boolean: " + s);
+		}
+	}
+
+	public static String toString(Object o)
+	{
+		if (o instanceof Throwable)
+		{
+			Throwable ex = (Throwable) o;
+			StringWriter w = new StringWriter();
+			PrintWriter pw = new PrintWriter(w);
+			ex.printStackTrace(pw);
+			pw.flush();
+			return w.getBuffer().toString();
+		}
+		if (o instanceof byte[])
+		{
+			return Arrays.toString((byte[]) o);
+		}
+		else if (o instanceof boolean[])
+		{
+			return Arrays.toString((boolean[]) o);
+		}
+		else if (o instanceof char[])
+		{
+			return Arrays.toString((char[]) o);
+		}
+		else if (o instanceof short[])
+		{
+			return Arrays.toString((short[]) o);
+		}
+		else if (o instanceof int[])
+		{
+			return Arrays.toString((int[]) o);
+		}
+		else if (o instanceof float[])
+		{
+			return Arrays.toString((float[]) o);
+		}
+		else if (o instanceof double[])
+		{
+			return Arrays.toString((double[]) o);
+		}
+		else if (o instanceof long[])
+		{
+			return Arrays.toString((long[]) o);
+		}
+		else if (o instanceof Object[])
+		{
+			StringBuilder b = new StringBuilder();
+			b.append("[");
+			Object[] a = (Object[]) o;
+
+			for (int i = 0; i < a.length; ++i)
+			{
+				b.append(toString(a[i]));
+
+				if (i < a.length - 1)
+					;
+				b.append(", ");
+			}
+
+			b.append("]");
+			return b.toString();
+		}
+		else
+		{
+			return o == null ? "null" : o.toString();
+		}
+	}
+
+	public static boolean parseBoolean(String s)
+	{
+		if (s.equals("yes") || s.equals("true"))
+		{
+			return true;
+		}
+		else if (s.equals("no") || s.equals("false"))
+		{
+			return false;
+		}
+		else
+		{
+			throw new IllegalArgumentException(
+					"cannot be interpreted as a boolean: " + s);
+		}
+	}
+
 }

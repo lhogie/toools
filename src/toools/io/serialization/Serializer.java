@@ -46,6 +46,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 
+import toools.io.IORuntimeException;
+
 public abstract class Serializer
 {
 	public abstract Object read(InputStream is) throws IOException;
@@ -60,7 +62,7 @@ public abstract class Serializer
 		}
 		catch (IOException e)
 		{
-			throw new IllegalStateException(e);
+			throw new IORuntimeException(e);
 		}
 	}
 
@@ -74,7 +76,7 @@ public abstract class Serializer
 		}
 		catch (IOException e)
 		{
-			throw new IllegalStateException(e);
+			throw new IORuntimeException(e);
 		}
 	}
 

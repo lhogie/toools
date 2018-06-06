@@ -48,11 +48,15 @@ import java.util.Vector;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
+import it.unimi.dsi.fastutil.doubles.DoubleArrays;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import toools.collections.Collections;
 import toools.io.FileUtilities;
+import toools.progression.LongProcess;
 import toools.text.TextUtilities;
 
 /**
@@ -60,6 +64,106 @@ import toools.text.TextUtilities;
  */
 public class MathsUtilities
 {
+	public static long[] partialSums(long[] weights)
+	{
+		LongProcess lp = new LongProcess("computing partial sums", " vertex",
+				weights.length);
+		long[] partialSums = new long[weights.length];
+		long currentSum = 0;
+
+		for (int i = 0; i < weights.length; ++i)
+		{
+			if (weights[i] < 0)
+				throw new IllegalArgumentException("weight should be positive");
+
+			long trySum = currentSum + weights[i];
+
+			if (trySum < currentSum)
+				throw new IllegalArgumentException(
+						"long overflow while adding " + weights[i] + " to " + currentSum);
+
+			partialSums[i] = currentSum = trySum;
+
+			lp.sensor.progressStatus++;
+		}
+
+		lp.end();
+		return partialSums;
+	}
+
+	public static double[] partialSums(double[] weights)
+	{
+		double[] partialSums = new double[weights.length];
+		double currentSum = 0;
+
+		for (int i = 0; i < weights.length; ++i)
+			partialSums[i] = currentSum += weights[i];
+
+		return partialSums;
+	}
+
+	public static int pick(double[] partialSums, Random prng)
+	{
+		double r = prng.nextDouble() * partialSums[partialSums.length - 1];
+		return DoubleArrays.binarySearch(partialSums, r);
+	}
+
+	public static int pick(long[] partialSums, Random prng)
+	{
+		double r = prng.nextDouble() * partialSums[partialSums.length - 1];
+		return binarySearch(partialSums, r);
+	}
+
+	private static int binarySearch(long[] partialSums, double d)
+	{
+		int min = 0, max = partialSums.length - 1;
+
+		while (max - min > 1)
+		{
+			int middle = (max + min) / 2;
+
+			if (d <= partialSums[middle])
+			{
+				max = middle;
+			}
+			else if (d > partialSums[middle])
+			{
+				min = middle;
+			}
+		}
+
+		if (max == min)
+			return min;
+
+		if (d < partialSums[min])
+			return min;
+
+		return max;
+	}
+
+	public static int binomial(int n, int k)
+	{
+		if (k == 2)
+		{
+			return n * (n - 1) / 2;
+		}
+		else
+		{
+			return fact(n) / (fact(k) * fact(n - k));
+		}
+	}
+
+	public static int fact(int n)
+	{
+		int r = 0;
+
+		for (int i = 2; i < n; ++i)
+		{
+			r *= i;
+		}
+
+		return r;
+	}
 
 	public static <T> Collection<Couple<T>> computeCouples(Collection<T> c1,
 			Collection<T> c2)
@@ -103,34 +207,6 @@ public class MathsUtilities
 			throw new IllegalArgumentException();
 
 		return (int) (Math.log(n) / Math.log(2));
-	}
-
-	/**
-	 * Computes the number of subsets of k elements in a set of n elements (the
-	 * binomial).
-	 * 
-	 * @param n
-	 *            set of n elements
-	 * @param k
-	 *            size of the subsets
-	 * @return number of subsets
-	 */
-	public static long binomial(int n, int k)
-	{
-		long[] b = new long[n + 1];
-		b[0] = 1;
-
-		for (int i = 1; i <= n; ++i)
-		{
-			b[i] = 1;
-
-			for (int j = i - 1; j > 0; --j)
-			{
-				b[j] += b[j - 1];
-			}
-		}
-
-		return b[k];
 	}
 
 	public static long computeLongAverage(long[] values)
@@ -394,11 +470,11 @@ public class MathsUtilities
 
 		int max = array[0];
 
-		for (int i = 1; i < array.length; ++i)
+		for (int e : array)
 		{
-			if (array[i] > max)
+			if (e > max)
 			{
-				max = array[i];
+				max = e;
 			}
 		}
 
@@ -562,9 +638,14 @@ public class MathsUtilities
 
 	public static long sum(int... array)
 	{
-		IntegerSequenceAnalyzer a = new IntegerSequenceAnalyzer();
-		a.add(array);
-		return a.getSum();
+		long s = 0;
+
+		for (int i : array)
+		{
+			s += i;
+		}
+
+		return s;
 	}
 
 	public static int long2int(long n)
@@ -816,17 +897,44 @@ public class MathsUtilities
 		return (previousAverage * previousNbElements + newElement)
 				/ (previousNbElements + 1);
 	}
-	
+
 	static double computeAverage2(double previousAverage, int previousNbElements,
 			double newElement)
 	{
-		return previousAverage * (previousNbElements / (previousNbElements + 1d)) +  newElement / (previousNbElements +1);
+		return previousAverage * (previousNbElements / (previousNbElements + 1d))
+				+ newElement / (previousNbElements + 1);
 	}
-	
+
 	public static void main(String[] args)
 	{
 		System.out.println(computeAverage(65700246546544d, 355546603, 6d));
 		System.out.println(computeAverage2(65700246546544d, 355546603, 6d));
+	}
+
+	public static int[] pickNValues(Random r, int n)
+	{
+		int[] a = new int[n];
+
+		for (int i = 0; i < n; ++i)
+		{
+			a[i] = r.nextInt(50);
+		}
+		return a;
+	}
+
+	public static Long2IntMap distribution(LongIterator i)
+	{
+		Long2IntMap r = new Long2IntOpenHashMap();
+
+		while (i.hasNext())
+		{
+			long v = i.nextLong();
+			int n = r.getOrDefault(v, 0);
+			r.put(v, n + 1);
+		}
+
+		return r;
+
 	}
 
 }

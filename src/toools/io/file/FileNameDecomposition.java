@@ -56,4 +56,10 @@ public class FileNameDecomposition
 			extensions.add(tokens[i]);
 		}
 	}
+	
+	public static String getExtension(String filename)
+	{
+		FileNameDecomposition d = new FileNameDecomposition(filename);
+		return d.extensions.isEmpty() ? null : d.extensions.get(d.extensions.size() -1);
+	}
 }

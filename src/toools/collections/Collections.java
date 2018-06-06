@@ -50,10 +50,10 @@ import java.util.Set;
 import java.util.Vector;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import toools.Clazz;
-import toools.beans.Bean;
-import toools.beans.BeanProperty;
 import toools.math.MathsUtilities;
+import toools.reflect.Clazz;
+import toools.reflect.beans.Bean;
+import toools.reflect.beans.BeanProperty;
 
 /*
  * Created on Oct 10, 2004

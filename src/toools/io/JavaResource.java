@@ -47,11 +47,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import toools.ClassContainer;
-import toools.ClassPath;
 import toools.io.file.AbstractFile;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
+import toools.reflect.ClassContainer;
+import toools.reflect.ClassPath;
 import toools.thread.Generator;
 import toools.thread.GeneratorChain;
 

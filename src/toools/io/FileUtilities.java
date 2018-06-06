@@ -607,4 +607,16 @@ public class FileUtilities
 		return files;
 	}
 
+	public static long sumSize(List<RegularFile> files)
+	{
+		long sum = 0;
+		
+		for (RegularFile f : files)
+		{
+			sum += f.getSize();
+		}
+		
+		return sum;
+	}
+
 }

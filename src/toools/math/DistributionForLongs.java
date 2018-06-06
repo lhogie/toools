@@ -45,16 +45,10 @@ import java.util.List;
 @SuppressWarnings("serial")
 public class DistributionForLongs extends Distribution<Long>
 {
-	public DistributionForLongs(String title)
-	{
-		super(title);
-	}
-
 	@Override
 	public String toGNUPlotData(boolean relative)
 	{
 		StringBuilder b = new StringBuilder();
-		b.append("# GNUPlot data for distribution " + getTitle() + "\n");
 		List<Long> l = new ArrayList<Long>(getOccuringObjects());
 		Collections.sort(l);
 

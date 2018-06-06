@@ -8,8 +8,8 @@ import java.util.Random;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
-import toools.Clazz;
 import toools.collections.ElementPrinter;
+import toools.reflect.Clazz;
 
 public interface LucIntSet extends IntSet, Serializable
 {
@@ -55,7 +55,7 @@ public interface LucIntSet extends IntSet, Serializable
 
 	public static LucIntSet singleton(int a)
 	{
-		LucIntSet r = new LucIntHashSet();
+		LucIntSet r = new LucIntHashSet(1);
 		r.add(a);
 		return r;
 	}
@@ -172,7 +172,7 @@ public interface LucIntSet extends IntSet, Serializable
 
 	public default boolean equals(int... i)
 	{
-		LucIntSet s = new LucIntHashSet();
+		LucIntSet s = new LucIntHashSet(i.length);
 		s.addAll(i);
 		return equals(s);
 	}

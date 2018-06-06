@@ -38,13 +38,17 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
  
  package toools.thread;
 
+import java.util.Iterator;
+
+import toools.io.Cout;
+
 public class GeneratorDemo
 {
 	public static void main(String[] args)
 	{
 		for (int i = 0; i < 1000; ++i)
 		{
-			System.out.println("*** " + i);
+			System.out.println("--- " + i);
 
 			f();
 		}
@@ -52,8 +56,7 @@ public class GeneratorDemo
 
 	public static void f()
 	{
-//		Producer<Integer> f = new Generator<Integer>()
-		Producer<Integer> f = new Generator<Integer>()
+		Generator<Integer> f = new Generator<Integer>()
 		{
 
 			@Override
@@ -66,9 +69,11 @@ public class GeneratorDemo
 			}
 		};
 
-		for (int i : f)
+		Iterator<Integer> it = f.iterator();
+		
+		for (int i = 0; i < 20; ++i)
 		{
-			System.out.println(i);
+			Cout.debug(i, it.next());
 		}
 	}
 }

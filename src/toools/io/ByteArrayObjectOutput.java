@@ -41,7 +41,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 import java.io.IOException;
 import java.io.ObjectOutput;
 
-import toools.NotYetImplementedException;
+import toools.exceptions.NotYetImplementedException;
 
 public class ByteArrayObjectOutput implements ObjectOutput
 {

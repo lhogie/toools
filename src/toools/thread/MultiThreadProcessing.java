@@ -35,21 +35,22 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.thread;
+
+package toools.thread;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import toools.collections.Lists;
+import toools.io.Cout;
+import toools.progression.LongProcess;
+import toools.progression.Sensor;
 
 /**
- * Launch several threads to execute the {@link #runThread(int, List)} function
- * in parallel. Correct usage of this class is to create a subclass of it, which
- * defines the runThread() function. The processing is synchronous with respect
- * to the caller of the constructor of this class. The constructor exits when
- * all the threads have exited.<br>
+ * Launch several threads to execute the {@link #runInParallel(int, List)}
+ * function in parallel. Correct usage of this class is to create a subclass of
+ * it, which defines the runThread() function. The processing is synchronous
+ * with respect to the caller of the constructor of this class. The constructor
+ * exits when all the threads have exited.<br>
  * 
  * If only one thread is required, the computation will happen in the current
  * thread: no new thread will be created.
@@ -60,19 +61,111 @@ import toools.collections.Lists;
 
 public abstract class MultiThreadProcessing
 {
+	public static int NB_THREADS_TO_USE = Runtime.getRuntime().availableProcessors() * 2;
+
 	private final List<Thread> threads = new ArrayList<Thread>();
-	private AtomicInteger finishedThreads = new AtomicInteger(0);
 
 	private final MultiThreadingException errors = new MultiThreadingException();
 
 	public MultiThreadProcessing()
 	{
-		this(new NCoresNThreadsPolicy(2));
+		this(NB_THREADS_TO_USE, null);
 	}
 
-	public MultiThreadProcessing(MultiThreadPolicy policy)
+	public MultiThreadProcessing(int nbThreads, LongProcess lp)
 	{
-		this(policy.getNbThreads());
+		this(nbThreads, lp == null ? null : lp.getDescription(), lp);
+	}
+
+	public MultiThreadProcessing(int nbThreads, String threadName, LongProcess lp)
+	{
+		if (lp != null)
+		{
+			lp.sensor = new Sensor()
+			{
+				boolean terminated = false;
+
+				@Override
+				public double getProgress()
+				{
+					return terminated ? progressStatus : progress();
+				}
+
+				@Override
+				public void set(double target)
+				{
+					terminated = true;
+					super.set(target);
+				}
+			};
+		}
+
+		Cout.debug("parallel processing using " + nbThreads + " threads");
+
+		// first instantiate the threads
+		for (int rank = 0; rank < nbThreads; ++rank)
+		{
+			ThreadSpecifics s = new ThreadSpecifics();
+			s.rank = rank;
+			s.threads = threads;
+			_Thread thread = new _Thread(s);
+			thread.setName(threadName + "-" + rank);
+			threads.add(thread);
+		}
+
+		// then start them later because they need the complete thread list
+		for (Thread thread : threads)
+		{
+			thread.start();
+		}
+
+		// All threads are finished, join with them to cleanup and collect
+		// exceptions
+		for (Thread thread : threads)
+		{
+			try
+			{
+				thread.join();
+			}
+			catch (InterruptedException e)
+			{
+				errors.getThreadLocalExceptions().add(e);
+				throw errors;
+			}
+		}
+
+		// if some errors happened in threads
+		if ( ! errors.getThreadLocalExceptions().isEmpty())
+		{
+			throw errors;
+		}
+
+	}
+
+	private class _Thread extends Thread
+	{
+		private final ThreadSpecifics s;
+
+		public _Thread(ThreadSpecifics s)
+		{
+			this.s = s;
+		}
+
+		@Override
+		public void run()
+		{
+			try
+			{
+				runInParallel(s, threads);
+			}
+			catch (Throwable t)
+			{
+				synchronized (MultiThreadProcessing.this)
+				{
+					errors.getThreadLocalExceptions().add(t);
+				}
+			}
+		}
 	}
 
 	/**
@@ -85,133 +178,47 @@ public abstract class MultiThreadProcessing
 	 *            member of this list.
 	 * @throws Throwable
 	 */
-	protected abstract void runThread(int rank,
+	protected abstract void runInParallel(ThreadSpecifics s,
 			@SuppressWarnings("hiding") List<Thread> threads) throws Throwable;
 
-	public MultiThreadProcessing(int nbThreads)
+	public static class ThreadSpecifics
 	{
-		this(nbThreads, MultiThreadProcessing.class.getName());
+		public int rank;
+		public double progressStatus = 0;
+		public List<Thread> threads;
 	}
 
-	public MultiThreadProcessing(int nbThreads, String threadName)
+	public double progress()
 	{
-		// if only 1 thread is required, we can use the current thread
-		if (nbThreads == 1)
+		double p = 0;
+
+		for (Thread t : threads)
 		{
-			try
-			{
-				runThread(0, Lists.singleton(Thread.currentThread()));
-			}
-			catch (Throwable t)
-			{
-				errors.getThreadLocalExceptions().add(t);
-				throw errors;
-			}
-		}
-		else
-		{
-			// first instantiate the threads
-			for (int rank = 0; rank < nbThreads; ++rank)
-			{
-				_Thread thread = new _Thread(rank);
-				thread.setName(threadName + "-" + rank);
-				threads.add(thread);
-			}
-
-			// then start them later because they need the complete thread list
-			for (Thread thread : threads)
-			{
-				thread.start();
-			}
-
-			synchronized (this)
-			{
-				while (finishedThreads.get() < nbThreads)
-				{
-					try
-					{
-						this.wait();
-					}
-					catch (InterruptedException e)
-					{
-						errors.getThreadLocalExceptions().add(e);
-						throw errors;
-					}
-				}
-			}
-			// All threads are finished, join with them to cleanup.
-			for (Thread thread : threads)
-			{
-				try
-				{
-					thread.join();
-				}
-				catch (InterruptedException e)
-				{
-					errors.getThreadLocalExceptions().add(e);
-					throw errors;
-				}
-			}
-			// if some errors happened in threads
-			if ( ! errors.getThreadLocalExceptions().isEmpty())
-			{
-				throw errors;
-			}
-		}
-	}
-
-	private class _Thread extends Thread
-	{
-		private final int rank;
-
-		public _Thread(int rank)
-		{
-			this.rank = rank;
+			p += ((_Thread) t).s.progressStatus;
 		}
 
-		@Override
-		public void run()
-		{
-			try
-			{
-				runThread(rank, threads);
-			}
-			catch (Throwable t)
-			{
-				synchronized (MultiThreadProcessing.this)
-				{
-					errors.getThreadLocalExceptions().add(t);
-				}
-			}
-			finally
-			{
-				synchronized (MultiThreadProcessing.this)
-				{
-					finishedThreads.incrementAndGet();
-					// There is only one waiter use notify() rather than
-					// notifyAll()
-					MultiThreadProcessing.this.notify();
-				}
-			}
-		}
+		return p;
 	}
 
 	public static void main(String[] args) throws Throwable
 	{
-		for (int i = 0; i < 1000; ++i)
+		for (int i = 0; i < 1; ++i)
 		{
-			new MultiThreadProcessing(2)
+			new MultiThreadProcessing(20, null)
 			{
 				@Override
-				protected void runThread(int rank, List<Thread> threads) throws Throwable
+				protected void runInParallel(ThreadSpecifics s, List<Thread> threads)
+						throws Throwable
 				{
-					// Threads.sleepMs(500);
+					s.progressStatus++;
+					Cout.debug(progress());
 				}
 			};
 
 			System.out.println(i + " completed");
 		}
 
-		System.out.println("it works!");
+		System.out.println("it works!: ");
 	}
+
 }

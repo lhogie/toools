@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io;
+
+package toools.io;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -58,11 +58,32 @@ import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import toools.CodeShouldNotHaveBeenReachedException;
 import toools.collections.Maps;
+import toools.exceptions.CodeShouldNotHaveBeenReachedException;
+import toools.math.MathsUtilities;
 
 public class Utilities
 {
+	public static byte getNbBytesRequireToEncode(long n)
+	{
+		if (n < 256)
+			return 1;
+		else if (n < 65536)
+			return 2;
+		else if (n < 16777216)
+			return 3;
+		else if (n < 4294967296L)
+			return 4;
+		else if (n < 1099511627776L)
+			return 5;
+		else if (n < 281474976710656L)
+			return 6;
+		else if (n < 72057594037927936L)
+			return 7;
+		else
+			return 8;
+	}
+
 	public static boolean operatingSystemIsUNIX()
 	{
 		return new File("/etc/passwd").exists();
@@ -113,7 +134,7 @@ public class Utilities
 		}
 	}
 
-	public static byte[] readUntilEOF(InputStream is) throws IOException
+	public static byte[] readUntilEOF(InputStream is)
 	{
 		if (is == null)
 			throw new NullPointerException("null stream");
@@ -123,7 +144,7 @@ public class Utilities
 		return bos.toByteArray();
 	}
 
-	public static void copy(InputStream is, OutputStream bos) throws IOException
+	public static void copy(InputStream is, OutputStream bos)
 	{
 		if (is == null)
 			throw new NullPointerException();
@@ -131,20 +152,27 @@ public class Utilities
 		if (bos == null)
 			throw new NullPointerException();
 
-		byte[] buffer = new byte[4 * 1024];
+		byte[] buffer = new byte[1024 * 1024];
 
-		while (true)
+		try
 		{
-			int nbBytesRead = is.read(buffer);
+			while (true)
+			{
+				int nbBytesRead = is.read(buffer);
 
-			if (nbBytesRead == - 1)
-			{
-				break;
+				if (nbBytesRead == - 1)
+				{
+					break;
+				}
+				else
+				{
+					bos.write(buffer, 0, nbBytesRead);
+				}
 			}
-			else
-			{
-				bos.write(buffer, 0, nbBytesRead);
-			}
+		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
 		}
 	}
 
@@ -234,8 +262,46 @@ public class Utilities
 				System.out.println((i + 1) + ") " + choices.get(i));
 			}
 
-			int n = Integer.valueOf(readUserInput("#? ", "[0-9]+"));
-			return choices.get(n - 1);
+			while (true)
+			{
+				String in = readUserInput("#? ", ".+");
+
+				if (MathsUtilities.isNumber(in))
+				{
+					int n = Integer.valueOf(in);
+					return choices.get(n - 1);
+				}
+				else
+				{
+					for (E c : choices)
+					{
+						if (c.toString().equals(in))
+						{
+							return c;
+						}
+					}
+
+					System.err.println("'" + in + "' is not an valid answser");
+				}
+			}
+		}
+	}
+
+	public static int skipUntilEndOfLine(InputStream is) throws IOException
+	{
+		int nbRead = 0;
+
+		while (true)
+		{
+			int c = is.read();
+
+			if (c == - 1)
+				return nbRead;
+
+			++nbRead;
+
+			if (c == '\n')
+				return nbRead;
 		}
 	}
 }

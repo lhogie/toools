@@ -41,7 +41,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 
-import toools.NotYetImplementedException;
+import toools.exceptions.NotYetImplementedException;
 import toools.extern.Proces;
 import toools.io.file.AbstractFile;
 import toools.io.file.Directory;

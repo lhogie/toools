@@ -35,19 +35,26 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- /*
- * Created on Jan 16, 2004
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
- */
+
+/*
+* Created on Jan 16, 2004
+*
+* To change the template for this generated file go to
+* Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+*/
 package toools.text;
 
 import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.DoubleToLongFunction;
+import java.util.function.LongToDoubleFunction;
+
+import it.unimi.dsi.fastutil.doubles.DoubleIterator;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMap.Entry;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 
 /**
  * @author luc.hogie
@@ -123,5 +130,44 @@ public class CSV
 	{
 		String s = TextUtilities.generateRandomString("ab,\n", 50, new Random());
 		System.out.println(assemble(disassemble(s, ","), ":"));
+	}
+
+	public static String from(Long2LongMap m)
+	{
+		StringBuilder b = new StringBuilder();
+
+		for (Entry e : m.long2LongEntrySet())
+		{
+			b.append(e.getLongKey());
+			b.append(' ');
+			b.append(e.getLongValue());
+			b.append('\n');
+		}
+
+		return b.toString();
+	}
+
+	public static void print(LongIterator i, LongToDoubleFunction f, PrintStream ps)
+	{
+		while (i.hasNext())
+		{
+			long l = i.nextLong();
+			ps.print(l);
+			ps.print(' ');
+			ps.print(f.applyAsDouble(l));
+			ps.print('\n');
+		}
+	}
+
+	public static void print(DoubleIterator i, DoubleToLongFunction f, PrintStream ps)
+	{
+		while (i.hasNext())
+		{
+			double l = i.nextDouble();
+			ps.print(l);
+			ps.print(' ');
+			ps.print(f.applyAsLong(l));
+			ps.print('\n');
+		}
 	}
 }

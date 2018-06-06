@@ -38,29 +38,14 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
  
  package toools;
 
-import java.lang.reflect.Field;
-
 import sun.misc.Unsafe;
 import toools.util.assertion.Assertions;
 
 public class Unsafe2
 {
 
-	public static final Unsafe unsafe;
+	public static final Unsafe unsafe = Unsafe.getUnsafe();
 
-	static
-	{
-		try
-		{
-			Field f = Unsafe.class.getDeclaredField("theUnsafe");
-			f.setAccessible(true);
-			unsafe = (Unsafe) f.get(null);
-		}
-		catch (IllegalAccessException | NoSuchFieldException e)
-		{
-			throw new IllegalStateException(e);
-		}
-	}
 
 	private final static Object[] array = new Object[1];
 	private final static long baseOffset = unsafe.arrayBaseOffset(Object[].class);
@@ -82,5 +67,11 @@ public class Unsafe2
 		Object o = "coucou";
 		long a = getAddress(o);
 		Assertions.ensure(getObjectAtAddress(a).equals(o));
+	}
+	
+	public static void main(String[] args)
+	{
+		long r = unsafe.allocateMemory(2500000000L);
+		unsafe.getByte(r);
 	}
 }

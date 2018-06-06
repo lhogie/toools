@@ -62,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import toools.CodeShouldNotHaveBeenReachedException;
 //import javax.mail.Message;
 //import javax.mail.MessagingException;
 //import javax.mail.Session;
@@ -72,6 +71,7 @@ import toools.CodeShouldNotHaveBeenReachedException;
 import toools.collections.Collections;
 import toools.collections.relation.HashRelation;
 import toools.collections.relation.Relation;
+import toools.exceptions.CodeShouldNotHaveBeenReachedException;
 import toools.io.Utilities;
 import toools.thread.IndependantObjectMultiThreadProcessing;
 import toools.thread.Threads;

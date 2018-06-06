@@ -35,10 +35,9 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.thread;
 
-import java.io.ByteArrayOutputStream;
+package toools.thread;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +47,8 @@ import java.util.List;
 public class MultiThreadingException extends RuntimeException
 {
 
-	final List<Throwable> threadLocalExceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+	final List<Throwable> threadLocalExceptions = Collections
+			.synchronizedList(new ArrayList<Throwable>());
 
 	public List<Throwable> getThreadLocalExceptions()
 	{
@@ -56,26 +56,29 @@ public class MultiThreadingException extends RuntimeException
 	}
 
 	@Override
-	public String getMessage()
+	public void printStackTrace(PrintStream out)
 	{
-		return threadLocalExceptions.size() + " exceptions have be thrown in parallel threads !";
-	}
-
-	@Override
-	public void printStackTrace(PrintStream s)
-	{
-		super.printStackTrace(s);
+		super.printStackTrace(out);
 
 		for (int i = 0; i < threadLocalExceptions.size(); ++i)
 		{
 			Throwable e = threadLocalExceptions.get(i);
-			s.println("Exception #" + (i + 1));
-			
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			PrintStream ps = new PrintStream(os);
-			
-//			String output = os.toString("UTF8");			
-			e.printStackTrace(s);
+			out.print("*** in thread *** ");
+			e.printStackTrace(out);
 		}
 	}
+
+	@Override
+	public StackTraceElement[] getStackTrace()
+	{
+		if (threadLocalExceptions.isEmpty())
+		{
+			return super.getStackTrace();
+		}
+		else
+		{
+			return threadLocalExceptions.get(0).getStackTrace();
+		}
+	}
+
 }

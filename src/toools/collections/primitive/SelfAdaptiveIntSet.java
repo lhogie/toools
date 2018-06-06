@@ -44,7 +44,7 @@ import it.unimi.dsi.fastutil.ints.AbstractIntSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
-import toools.Clazz;
+import toools.reflect.Clazz;
 import toools.thread.Threads;
 
 public class SelfAdaptiveIntSet extends AbstractIntSet implements LucIntSet
@@ -53,8 +53,12 @@ public class SelfAdaptiveIntSet extends AbstractIntSet implements LucIntSet
 	LucIntSet underlyingSet;
 	private double hashLoadFactor = 1.5;
 	private double histeresis = 2;
+	private final int expected;
 
-
+	public SelfAdaptiveIntSet(int expected)
+	{
+		this.expected = expected;
+	}
 
 	@Override
 	public boolean add(int e)
@@ -63,11 +67,11 @@ public class SelfAdaptiveIntSet extends AbstractIntSet implements LucIntSet
 		{
 			if (e < 64)
 			{
-				underlyingSet = new BitVectorSet();
+				underlyingSet = new BitVectorSet(expected, 0);
 			}
 			else
 			{
-				underlyingSet = new LucIntHashSet();
+				underlyingSet = new LucIntHashSet(expected);
 			}
 		}
 
@@ -177,7 +181,7 @@ public class SelfAdaptiveIntSet extends AbstractIntSet implements LucIntSet
 	{
 		if (underlyingSet.getClass() != BitVectorSet.class)
 		{
-			LucIntSet newset = new BitVectorSet();
+			LucIntSet newset = new BitVectorSet(size(), 0);
 			newset.addAll(underlyingSet);
 			underlyingSet = newset;
 		}
@@ -187,7 +191,7 @@ public class SelfAdaptiveIntSet extends AbstractIntSet implements LucIntSet
 	{
 		Clazz.makeInstance(SelfAdaptiveIntSet.class);
 
-		SelfAdaptiveIntSet set = new SelfAdaptiveIntSet();
+		SelfAdaptiveIntSet set = new SelfAdaptiveIntSet(4);
 		set.add(2);
 		Random r = new Random();
 

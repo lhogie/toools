@@ -90,4 +90,12 @@ public class Assertions
         e.setStackTrace(list.toArray(new StackTraceElement[0]));
         throw e;
     }
+
+	public static void ensureEquals(long n, long expected)
+	{
+		if (n != expected)
+		{
+			 throwException(new AssertionFailedException("expecting " + expected +  " but got " + n));
+		}
+	}
 }

@@ -47,7 +47,7 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
-import toools.CodeShouldNotHaveBeenReachedException;
+import toools.exceptions.CodeShouldNotHaveBeenReachedException;
 import toools.text.TextUtilities;
 import toools.util.assertion.Assertions;
 

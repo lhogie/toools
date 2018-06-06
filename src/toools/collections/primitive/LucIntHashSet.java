@@ -8,13 +8,7 @@ import toools.math.MathsUtilities;
 
 public class LucIntHashSet extends IntOpenHashSet implements LucIntSet
 {
-
 	private int greatest;
-
-	public LucIntHashSet()
-	{
-		this(10);
-	}
 
 	public LucIntHashSet(int capacity)
 	{
@@ -81,7 +75,7 @@ public class LucIntHashSet extends IntOpenHashSet implements LucIntSet
 
 	public static void main(String[] args)
 	{
-		LucIntHashSet s = new LucIntHashSet();
+		LucIntHashSet s = new LucIntHashSet(0);
 		s.add(5);
 		s.add(7);
 		System.out.println(s.getDensity());

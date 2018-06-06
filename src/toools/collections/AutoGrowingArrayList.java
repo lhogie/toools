@@ -97,11 +97,12 @@ public class AutoGrowingArrayList<V> extends ArrayList<V>
 		{
 			ensureCapacity(index);
 			int newsize = index + 1;
-
+System.out.println("kjk");
 			for (int n = oldsize; n < newsize; ++n)
 			{
 				super.add(null);
 			}
+			System.out.println("kjk");
 
 			return newsize - oldsize;
 		}

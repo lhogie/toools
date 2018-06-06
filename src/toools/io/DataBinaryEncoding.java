@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io;
+
+package toools.io;
 
 import java.util.Random;
 
@@ -44,21 +44,25 @@ public class DataBinaryEncoding
 {
 	public static int readInt(byte[] b, int i)
 	{
-		return (b[i] << 24) + ((b[++i] & 255) << 16) + ((b[++i] & 255) << 8)
+		int n = (b[i] << 24) + ((b[++i] & 255) << 16) + ((b[++i] & 255) << 8)
 				+ (b[++i] & 255);
+		return n;
+
 	}
 
 	public static long readLong(byte[] b, int i)
 	{
-		return (((long) b[i] << 56) + ((long) (b[++i] & 255) << 48)
+		long n = (((long) b[i] << 56) + ((long) (b[++i] & 255) << 48)
 				+ ((long) (b[++i] & 255) << 40) + ((long) (b[++i] & 255) << 32)
 				+ ((long) (b[++i] & 255) << 24) + ((b[++i] & 255) << 16)
 				+ ((b[++i] & 255) << 8) + ((b[++i] & 255) << 0));
+		return n;
+
 	}
 
 	public static boolean readBoolean(byte[] b, int i)
 	{
-		return b[i] == 0 ? false : true;
+		return b[i] != 0;
 	}
 
 	public static void writeLong(long v, byte[] b, int i)

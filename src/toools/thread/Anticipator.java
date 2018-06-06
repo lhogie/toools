@@ -35,31 +35,45 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.thread;
+
+package toools.thread;
 
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 
-
 /**
- * An antipator object represents a function can compute things asynchronously to the requesting threads. Computed values are made available through a blocking queue.
- * The capacity of the queue is user-defined.  
+ * An antipator object represents a function can compute things asynchronously
+ * to the requesting threads. Computed values are made available through a
+ * blocking queue. The capacity of the queue is user-defined.
+ * 
  * @author lhogie
  *
  * @param <T>
  */
 
-public abstract class Anticipator<T> extends Producer<T>
+public abstract class Anticipator<T> implements Iterable<T>
 {
 	private final ArrayBlockingQueue<T> queue;
+	private static final Object terminaisonValue = new Object();
+
+	private final Thread producerThread = new Thread()
+	{
+		@Override
+		public final void run()
+		{
+			produce();
+			deliver((T) terminaisonValue);
+		}
+	};
 
 	public Anticipator(int size)
 	{
 		queue = new ArrayBlockingQueue<>(size);
 	}
 
-	@Override
+	// this method will be called by the producer thread
+	public abstract void produce();
+
 	public final void deliver(T v)
 	{
 		try
@@ -68,7 +82,7 @@ public abstract class Anticipator<T> extends Producer<T>
 		}
 		catch (InterruptedException e)
 		{
-			throw new IllegalStateException();
+			throw new IllegalStateException(e);
 		}
 	}
 
@@ -77,30 +91,67 @@ public abstract class Anticipator<T> extends Producer<T>
 	{
 		return new Iterator<T>()
 		{
-			{
-				internalThread.start();
-			}
-
 			private T currentValue;
+			private boolean currentValueAlreadyTaken = false;
+
+			{
+				producerThread.start();
+				currentValue = take();
+			}
 
 			@Override
 			public boolean hasNext()
 			{
+				if (currentValueAlreadyTaken)
+				{
+					this.currentValue = take();
+					currentValueAlreadyTaken = false;
+				}
+
+				boolean terminated = currentValue == terminaisonValue;
+
+				if (terminated)
+				{
+					try
+					{
+						producerThread.join();
+					}
+					catch (InterruptedException e)
+					{
+						throw new IllegalStateException(e);
+					}
+				}
+
+				return ! terminated;
+			}
+
+			private T take()
+			{
 				try
 				{
-					this.currentValue = queue.take();
+					return queue.take();
 				}
 				catch (InterruptedException e)
 				{
-					throw new IllegalStateException();
+					throw new IllegalStateException(e);
 				}
-
-				return ! isTerminaisonValue(currentValue);
 			}
 
 			@Override
 			public T next()
 			{
+				if (currentValueAlreadyTaken)
+				{
+					if ( ! hasNext())
+					{
+						throw new IllegalStateException("no next value");
+					}
+				}
+				else
+				{
+					currentValueAlreadyTaken = true;
+				}
+
 				return currentValue;
 			}
 		};

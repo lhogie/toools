@@ -35,12 +35,13 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.file;
+
+package toools.io.file;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -51,14 +52,34 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import toools.extern.Proces;
+import toools.io.IORuntimeException;
 import toools.io.Utilities;
+import toools.reflect.Clazz;
 import toools.text.TextUtilities;
 
 public class RegularFile extends AbstractFile
 {
+	public static final Map<String, Class> extension_class = new HashMap<>();
+
+	public static RegularFile instanciate(String path)
+	{
+		String type = FileNameDecomposition.getExtension(path);
+		Class c = extension_class.get(type);
+
+		try
+		{
+			return (RegularFile) Clazz.makeInstance(c.getConstructor(String.class), path);
+		}
+		catch (NoSuchMethodException | SecurityException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
 
 	public RegularFile(String path)
 	{
@@ -98,12 +119,19 @@ public class RegularFile extends AbstractFile
 		return f;
 	}
 
-	public void setContent(byte[] bytes) throws IOException
+	public void setContent(byte[] bytes)
 	{
-		OutputStream bos = createWritingStream(false, true);
-		bos.write(bytes);
-		bos.flush();
-		bos.close();
+		try
+		{
+			OutputStream bos = createWritingStream();
+			bos.write(bytes);
+			bos.flush();
+			bos.close();
+		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
+		}
 	}
 
 	public void setContent(String text, Charset charset) throws IOException
@@ -131,11 +159,18 @@ public class RegularFile extends AbstractFile
 		setContent(text.getBytes("MacRoman"));
 	}
 
-	public byte[] getContent() throws IOException
+	public byte[] getContent()
 	{
-		BufferedInputStream bis = createReadingStream();
+		InputStream bis = createReadingStream();
 		byte[] bytes = Utilities.readUntilEOF(bis);
-		bis.close();
+		try
+		{
+			bis.close();
+		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
+		}
 		return bytes;
 	}
 
@@ -157,37 +192,23 @@ public class RegularFile extends AbstractFile
 		os.close();
 	}
 
-	public void moveTo(RegularFile destination, boolean overwrite)
-			throws FileNotFoundException, IOException
+	public void moveTo(Directory destDir, boolean overwrite)
+	{
+		moveTo(destDir.getPath() + "/" + getName(), overwrite);
+	}
+
+	public void moveTo(String path, boolean overwrite)
 	{
 		if ( ! exists())
 			throw new IllegalStateException(
 					"cannot move a non-existing file " + this.getPath());
 
-		copyTo(destination, overwrite);
-		delete();
-	}
+		if (new File(path).exists() && ! overwrite)
+			throw new IllegalStateException(
+					"dest file already exists: " + this.getPath());
 
-	public int getNumberOfLines() throws IOException
-	{
-		BufferedInputStream is = createReadingStream();
-		int n = 0;
-
-		while (true)
-		{
-			int i = is.read();
-
-			if (i == - 1)
-			{
-				is.close();
-				return n;
-			}
-			else
-			{
-				++n;
-			}
-		}
-
+		if ( ! javaFile.renameTo(new File(path)))
+			throw new IORuntimeException("can't rename file to " + path);
 	}
 
 	@Override
@@ -214,48 +235,77 @@ public class RegularFile extends AbstractFile
 		return javaFile.length();
 	}
 
-	public OutputStream createWritingStream() throws FileNotFoundException
+	public OutputStream createWritingStream()
 	{
-		return createWritingStream(false, true);
+		return createWritingStream(false, 65536 * 256);
 	}
 
-	public OutputStream createWritingStream(boolean append, boolean buffered)
-			throws FileNotFoundException
+	public OutputStream createWritingStream(boolean append)
 	{
-		if ( ! getParent().exists())
-			throw new FileNotFoundException(
-					"parent directory does not exist: " + getParent().getPath());
+		return createWritingStream(append, 1024 * 1024);
+	}
 
-		if (buffered)
+	public OutputStream createWritingStream(boolean append, int bufSize)
+	{
+		try
 		{
-			return new BufferedOutputStream(new FileOutputStream(javaFile, append),
-					1048576);
+			if (bufSize > 0)
+			{
+				return new BufferedOutputStream(new FileOutputStream(javaFile, append),
+						bufSize);
+			}
+			else
+			{
+				return new FileOutputStream(javaFile, append);
+			}
 		}
-		else
+		catch (FileNotFoundException e)
 		{
-			return new FileOutputStream(javaFile, append);
+			throw new IORuntimeException(e);
 		}
 	}
 
-	public BufferedInputStream createReadingStream() throws FileNotFoundException
+	public InputStream createReadingStream()
+	{
+		return createReadingStream(1024 * 1024);
+	}
+
+	public InputStream createReadingStream(int bufSize)
+	{
+		try
+		{
+			InputStream is = new FileInputStream(javaFile);
+
+			if (bufSize > 0)
+			{
+				is = new BufferedInputStream(is, bufSize);
+			}
+
+			return is;
+		}
+		catch (FileNotFoundException e)
+		{
+			throw new IORuntimeException(e);
+		}
+	}
+
+	public BufferedReader createLineReadingStream()
 	{
 		if ( ! exists())
-			throw new FileNotFoundException(
+			throw new IORuntimeException(
 					"cannot read a non-existing file " + this.getPath());
 
-		return new BufferedInputStream(new FileInputStream(javaFile), 1048576);
+		try
+		{
+			return new BufferedReader(new FileReader(javaFile), 1024 * 1024);
+		}
+		catch (FileNotFoundException e)
+		{
+			throw new IORuntimeException(e);
+		}
 	}
 
-	public BufferedReader createLineReadingStream() throws FileNotFoundException
-	{
-		if ( ! exists())
-			throw new FileNotFoundException(
-					"cannot read a non-existing file " + this.getPath());
-
-		return new BufferedReader(new FileReader(javaFile), 1048576);
-	}
-
-	public static boolean sameContents(RegularFile a, RegularFile b) throws IOException
+	public static boolean sameContents(RegularFile a, RegularFile b)
 	{
 		if (a.getSize() != b.getSize())
 		{
@@ -268,7 +318,6 @@ public class RegularFile extends AbstractFile
 	}
 
 	public static int compareFileContentsLexicographically(RegularFile a, RegularFile b)
-			throws IOException
 	{
 		if (a.getSize() == 0 && b.getSize() == 0)
 		{
@@ -304,27 +353,32 @@ public class RegularFile extends AbstractFile
 	}
 
 	@Override
-	public boolean create() throws IOException
+	public void create()
 	{
-		if ( ! exists())
+		try
 		{
-			return javaFile.createNewFile();
-		}
+			boolean ok = javaFile.createNewFile();
 
-		return true;
+			if ( ! ok)
+				throw new IORuntimeException("can't create file " + this);
+		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
+		}
 	}
 
-	public boolean create(boolean createParentIfNeeded) throws IOException
+	public void create(boolean createParentIfNeeded)
 	{
 		if ( ! getParent().exists() && createParentIfNeeded)
 		{
 			getParent().mkdirs();
 		}
 
-		return create();
+		create();
 	}
 
-	public List<String> getLines() throws IOException
+	public List<String> getLines()
 	{
 		return TextUtilities.splitInLines(new String(getContent()));
 	}
@@ -368,7 +422,7 @@ public class RegularFile extends AbstractFile
 
 	public void append(byte[] bytes) throws IOException
 	{
-		OutputStream os = createWritingStream(true, true);
+		OutputStream os = createWritingStream(true);
 		os.write(bytes);
 		os.close();
 	}
@@ -377,5 +431,27 @@ public class RegularFile extends AbstractFile
 	public void rsyncTo(String remotePath)
 	{
 		Proces.exec("rsync", getPath(), remotePath);
+	}
+
+	public static long sumSize(Iterable<RegularFile> files)
+	{
+		long size = 0;
+
+		for (RegularFile f : files)
+		{
+			size += f.getSize();
+		}
+
+		return size;
+	}
+
+	public RegularFile getRegularFileInSameDirectory(String name)
+	{
+		return getParent().getChildRegularFile(name);
+	}
+
+	public RegularFile getSibbling(String extension)
+	{
+		return getRegularFileInSameDirectory(getNameWithoutExtension() + extension);
 	}
 }

@@ -35,18 +35,23 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.file;
+
+package toools.io.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Stack;
 
 import toools.extern.Proces;
+import toools.io.IORuntimeException;
 import toools.io.ScannerListener;
 import toools.io.Utilities;
 import toools.text.TextUtilities;
@@ -236,18 +241,17 @@ public class Directory extends AbstractFile
 			}
 		});
 	}
-	
-	public List<Directory>  getChildDirectories()
+
+	public List<Directory> getChildDirectories()
 	{
 		return (List<Directory>) (List<?>) getChildFiles(FileFilter.directoryFilter);
 	}
 
-	public List<RegularFile>  getChildRegularFiles()
+	public List<RegularFile> getChildRegularFiles()
 	{
 		return (List<RegularFile>) (List<?>) getChildFiles(FileFilter.regularFileFilter);
 	}
 
-	
 	public boolean mkdirs()
 	{
 		if (exists())
@@ -392,9 +396,12 @@ public class Directory extends AbstractFile
 	}
 
 	@Override
-	public boolean create() throws IOException
+	public void create()
 	{
-		return mkdirs();
+		boolean b = mkdirs();
+
+		if ( ! b)
+			throw new IORuntimeException("can't create directory " + this);
 	}
 
 	@Override
@@ -408,5 +415,44 @@ public class Directory extends AbstractFile
 		Proces.exec("rsync", "-a", "--delete", getPath() + '/', remotePath);
 	}
 
+	public void ensureExists()
+	{
+		if ( ! exists())
+			mkdirs();
+	}
+
+	public String pickOneFileOrNull()
+	{
+		try
+		{
+			DirectoryStream<Path> s = Files.newDirectoryStream(javaFile.toPath());
+			Iterator<Path> i = s.iterator();
+			String f = i.hasNext() ? i.next().getFileName().toString() : null;
+			s.close();
+			return f;
+		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
+		}
+	}
+
+	public String pickOneFileOrNull(Random r)
+	{
+		String[] files = javaFile.list();
+
+		if (files.length == 0)
+			return null;
+
+		return files[r.nextInt(files.length)];
+	}
+
+	public long getNbFiles()
+	{
+		if (!exists())
+			throw new IllegalStateException("directory " + this + " does not exist");
+		
+		return javaFile.list().length;
+	}
 
 }

@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import toools.Clazz;
 import toools.math.MathsUtilities;
+import toools.reflect.Clazz;
 
 /*
  * Created on Oct 10, 2004

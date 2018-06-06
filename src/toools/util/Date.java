@@ -43,13 +43,13 @@ import java.util.Calendar;
 
 public class Date
 {
-	public static String DATE_FORMAT = "HH:mm:ss";
+	public static String TIME = "HH:mm:ss";
 
-	// public static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+	 public static String DATE_AND_TIME = "yyyy-MM-dd HH:mm:ss";
 
 	public static String now()
 	{
-		return now(DATE_FORMAT);
+		return now(TIME);
 	}
 
 	public static String now(String dateFormat)

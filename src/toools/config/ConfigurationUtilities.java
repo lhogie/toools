@@ -48,7 +48,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-import toools.ExceptionUtilities;
+import toools.exceptions.ExceptionUtilities;
 import toools.io.FileUtilities;
 import toools.text.xml.XMLNode;
 

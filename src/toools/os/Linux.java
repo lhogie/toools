@@ -35,10 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.os;
 
-import java.io.IOException;
+package toools.os;
 
 import toools.extern.Proces;
 import toools.io.file.RegularFile;
@@ -49,20 +47,14 @@ public class Linux extends Unix
 	@Override
 	public long getMemoryAvailableInBytes()
 	{
-		return 1000 * Long.valueOf(new String(Proces.exec("bash", "-c", "echo $(vmstat | tail -n 1 | awk '{print $4}')")).trim());
+		return 1000 * Long.valueOf(new String(Proces.exec("bash", "-c",
+				"echo $(vmstat | tail -n 1 | awk '{print $4}')")).trim());
 	}
-
-
 
 	public static String getCommandLine(long pid)
 	{
-		try
-		{
-			return new String(new RegularFile("/proc/" + pid + "/cmdline").getContent());
-		}
-		catch (IOException e)
-		{
-			throw new IllegalStateException(e);
-		}
+
+		return new String(new RegularFile("/proc/" + pid + "/cmdline").getContent());
+
 	}
 }

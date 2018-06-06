@@ -35,10 +35,9 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.math;
 
-import java.io.IOException;
+package toools.math;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,12 +61,6 @@ public class Distribution<T> implements Serializable
 	private long sum = 0;
 	private long greatestNumberOfOccurences = 0;
 	private T mostOccuringObject = null;
-	private final String title;
-
-	public Distribution(String title)
-	{
-		this.title = title;
-	}
 
 	public long getGreatestNumberOfOccurences()
 	{
@@ -110,8 +103,9 @@ public class Distribution<T> implements Serializable
 			}
 		}
 	}
-	
-	static private <T> void merge(Distribution<T> d1, Distribution<T> d2, Distribution<T> out)
+
+	static private <T> void merge(Distribution<T> d1, Distribution<T> d2,
+			Distribution<T> out)
 	{
 		if (d1 != out)
 		{
@@ -128,22 +122,26 @@ public class Distribution<T> implements Serializable
 			}
 		}
 	}
-	
+
 	/**
 	 * Merges two distributions (this and other) into a new one.
-	 * @param other the second distribution to merge
+	 * 
+	 * @param other
+	 *            the second distribution to merge
 	 * @return a new {@link Distribution} object
 	 */
 	public Distribution<T> merge(Distribution<T> other)
 	{
-		Distribution<T> output = new Distribution<T>(null);
+		Distribution<T> output = new Distribution<T>();
 		merge(this, other, output);
 		return output;
 	}
-	
+
 	/**
 	 * Merges the this distribution with another.
-	 * @param other the second distribution to merge
+	 * 
+	 * @param other
+	 *            the second distribution to merge
 	 * @return the this object.
 	 */
 	public Distribution<T> mergeInPlace(Distribution<T> other)
@@ -151,11 +149,11 @@ public class Distribution<T> implements Serializable
 		merge(this, other, this);
 		return this;
 	}
-	
+
 	public long getNumberOfOccurences(T t)
 	{
-		if (!map.containsKey(t))
-//			throw new IllegalArgumentException("element is not considered");
+		if ( ! map.containsKey(t))
+			// throw new IllegalArgumentException("element is not considered");
 			return 0;
 
 		return map.get(t);
@@ -180,7 +178,8 @@ public class Distribution<T> implements Serializable
 			@Override
 			public int compare(T o1, T o2)
 			{
-				return new Long(getNumberOfOccurences(o1)).compareTo(getNumberOfOccurences(o2));
+				return new Long(getNumberOfOccurences(o1))
+						.compareTo(getNumberOfOccurences(o2));
 			}
 		});
 
@@ -198,7 +197,8 @@ public class Distribution<T> implements Serializable
 
 		for (T o : list)
 		{
-			b.append(o.toString() + '\t' + (relative ? getRelativeNumberOfOccurences(o) : getNumberOfOccurences(o)) + '\n');
+			b.append(o.toString() + '\t' + (relative ? getRelativeNumberOfOccurences(o)
+					: getNumberOfOccurences(o)) + '\n');
 		}
 
 		return b.toString();
@@ -209,38 +209,35 @@ public class Distribution<T> implements Serializable
 		return toGNUPlotData(new ArrayList<T>(getOccuringObjects()), relative);
 	}
 
-	public String getGNUPlotCommands(String datafileName, boolean relative)
+	public String getGNUPlotCommands(String datafileName, String title, boolean relative)
 	{
 		StringBuilder b = new StringBuilder();
-		b.append("set term pdf\nset style data histogram\nset style fill solid border -1\nset style data histogram\n");
+		b.append(
+				"set term pdf\nset style data histogram\nset style fill solid border -1\nset style data histogram\n");
 		b.append("set boxwidth\nset auto x\n");
 		// b.append("set boxwidth 1\n");
-		b.append("set yrange [0:" + (relative ? 1 : (1.1 * getGreatestNumberOfOccurences())) + "]\n");
+		b.append("set yrange [0:"
+				+ (relative ? 1 : (1.1 * getGreatestNumberOfOccurences())) + "]\n");
 		b.append("plot \"" + datafileName + "\" with  lines title \"" + title + "\"\n");
 		return b.toString();
 	}
 
-	public byte[] toPDF()
+	public byte[] toPDF(String title)
 	{
-		try
-		{
-			RegularFile datafile = FileUtilities.createTempFile("toools-", ".dat");
-			datafile.setContent(toGNUPlotData(true).getBytes());
-			// System.out.println(getGNUPlotCommands("hehe", true));
-			byte[] pdf = Proces.exec("gnuplot", getGNUPlotCommands(datafile.getPath(), true).getBytes());
-			datafile.delete();
-			return pdf;
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-			throw new IllegalStateException();
-		}
+
+		RegularFile datafile = FileUtilities.createTempFile("toools-", ".dat");
+		datafile.setContent(toGNUPlotData(true).getBytes());
+		// System.out.println(getGNUPlotCommands("hehe", true));
+		byte[] pdf = Proces.exec("gnuplot",
+				getGNUPlotCommands(datafile.getPath(), title, true).getBytes());
+		datafile.delete();
+		return pdf;
+
 	}
 
-	public static Distribution<Integer> getDistribution(String title, int[] values)
+	public static Distribution<Integer> getDistribution(int[] values)
 	{
-		Distribution<Integer> distribution = new Distribution<Integer>(title);
+		Distribution<Integer> distribution = new Distribution<Integer>();
 
 		for (int v : values)
 		{
@@ -250,9 +247,9 @@ public class Distribution<T> implements Serializable
 		return distribution;
 	}
 
-	public static Distribution<Long> getDistribution(String title, long[] values)
+	public static Distribution<Long> getDistribution(long[] values)
 	{
-		Distribution<Long> distribution = new Distribution<Long>(title);
+		Distribution<Long> distribution = new Distribution<Long>();
 
 		for (long v : values)
 		{
@@ -264,27 +261,21 @@ public class Distribution<T> implements Serializable
 
 	public static void main(String[] args) throws Exception
 	{
-		Distribution<Integer> d = new Distribution<Integer>("RANDOM example");
+		Distribution<Integer> d = new Distribution<Integer>();
 		Random r = new Random();
 		for (int i = 0; i < 20; ++i)
 		{
 			d.addOccurence(r.nextInt(10));
 		}
 
-		d.display();
-
+		d.display("");
 	}
 
-	public String getTitle()
-	{
-		return title;
-	}
-
-	public void display()
+	public void display(String title)
 	{
 		PDFRenderingAWTComponent c = new PDFRenderingAWTComponent();
 		toools.gui.Utilities.displayInJFrame(c, "Distribution");
-		c.setPDFData(toPDF(), 0);
+		c.setPDFData(toPDF(title), 0);
 	}
 
 	@Override

@@ -35,12 +35,45 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.block;
+
+package toools.io.block;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-public interface BlockReader
+import toools.io.IORuntimeException;
+
+public abstract class BlockReader
 {
-	DataBlock readBlock() throws IOException;
+	final private InputStream is;
+	final private int blockSize;
+	private long nbBytesRead = 0;
+
+	public BlockReader(InputStream is, int blockSize)
+	{
+		this.is = is;
+		this.blockSize = blockSize;
+	}
+
+	public long getNbBytesRead()
+	{
+		return nbBytesRead;
+	}
+
+	public abstract DataBlock getNextBlock();
+
+	protected final DataBlock readBlock()
+	{
+		try
+		{
+			DataBlock b = new DataBlock(blockSize);
+			b.size = is.read(b.buf);
+			nbBytesRead += b.size;
+			return b;
+		}
+		catch (IOException e)
+		{
+			throw new IORuntimeException(e);
+		}
+	}
 }
