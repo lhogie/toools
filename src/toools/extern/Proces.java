@@ -52,18 +52,14 @@ import toools.io.Utilities;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
-public class Proces
-{
+public class Proces {
 
-	public static boolean isTerminated(Process p)
-	{
-		try
-		{
+	public static boolean isTerminated(Process p) {
+		try {
 			p.exitValue();
 			return true;
 		}
-		catch (IllegalThreadStateException e)
-		{
+		catch (IllegalThreadStateException e) {
 			return false;
 		}
 	}
@@ -71,40 +67,32 @@ public class Proces
 	public static boolean TRACE_CALLS = false;
 
 	public static void execAsFilter(String name, Directory cwd, byte[] stdin,
-			String... args)
-	{
+			String... args) {
 		throw new NotYetImplementedException();
 	}
 
-	public static byte[] exec(String name, Directory d, String... args)
-	{
+	public static byte[] exec(String name, Directory d, String... args) {
 		return exec(name, d, null, args);
 	}
 
-	public static byte[] exec(String name, byte[] sdtin, String... args)
-	{
+	public static byte[] exec(String name, byte[] sdtin, String... args) {
 		return exec(name, Directory.getCurrentDirectory(), sdtin, args);
 	}
 
-	public static byte[] exec(String name, String... args)
-	{
+	public static byte[] exec(String name, String... args) {
 		return exec(name, Directory.getCurrentDirectory(), null, args);
 	}
 
 	public static byte[] exec(String name, Directory directory, byte[] stdin,
-			String... args)
-	{
-		try
-		{
+			String... args) {
+		try {
 			ProcessOutput output = rawExec(name, directory, stdin, args);
 
 			// the execution went ok
-			if (output.getReturnCode() == 0)
-			{
+			if (output.getReturnCode() == 0) {
 				return output.getStdout();
 			}
-			else
-			{
+			else {
 				byte[] out = output.getStdout();
 				byte[] err = output.getStderr();
 				String error = new String(err.length == 0 ? out : err);
@@ -114,39 +102,32 @@ public class Proces
 						+ (stdin != null ? new String(stdin) : ""));
 			}
 		}
-		catch (IOException e)
-		{
+		catch (IOException e) {
 			throw new ProcesException(e);
 		}
 	}
 
 	public static ProcessOutput rawExec(String name, Directory d, String... args)
-			throws IOException
-	{
+			throws IOException {
 		return rawExec(name, d, null, args);
 	}
 
 	public static ProcessOutput rawExec(String name, byte[] in, String... args)
-			throws IOException
-	{
+			throws IOException {
 		return rawExec(name, Directory.getCurrentDirectory(), in, args);
 	}
 
-	public static ProcessOutput rawExec(String name, String... args) throws IOException
-	{
+	public static ProcessOutput rawExec(String name, String... args) throws IOException {
 		return rawExec(name, Directory.getCurrentDirectory(), null, args);
 	}
 
 	public static ProcessOutput rawExec(String name, Directory directory, byte[] stdin,
-			String... args) throws IOException
-	{
-		try
-		{
+			String... args) throws IOException {
+		try {
 			List<String> tokens = new ArrayList<String>();
 			tokens.add(name);
 
-			if (args != null)
-			{
+			if (args != null) {
 				tokens.addAll(Arrays.asList(args));
 			}
 
@@ -159,8 +140,7 @@ public class Proces
 			ReadThread stdoutThread = new ReadThread(process.getInputStream());
 			ReadThread stderrthread = new ReadThread(process.getErrorStream());
 
-			if (stdin != null)
-			{
+			if (stdin != null) {
 				process.getOutputStream().write(stdin);
 				process.getOutputStream().flush();
 				process.getOutputStream().close();
@@ -172,12 +152,9 @@ public class Proces
 
 			process.waitFor();
 
-			for (ReadThread t : new ReadThread[] { stdoutThread, stderrthread })
-			{
-				synchronized (t)
-				{
-					if ( ! t.hasCompleted)
-					{
+			for (ReadThread t : new ReadThread[] { stdoutThread, stderrthread }) {
+				synchronized (t) {
+					if ( ! t.hasCompleted) {
 						t.wait();
 					}
 				}
@@ -187,32 +164,26 @@ public class Proces
 					stdoutThread.targetBuffer.toByteArray(),
 					stderrthread.targetBuffer.toByteArray());
 		}
-		catch (InterruptedException e)
-		{
+		catch (InterruptedException e) {
 			e.printStackTrace();
 			throw new IllegalStateException("command " + name + " has been interrupted");
 		}
-		finally
-		{
+		finally {
 
 		}
 	}
 
 	public final static List<Directory> path = retrieveSystemPath();
 
-	public static RegularFile locate(String cmd)
-	{
+	public static RegularFile locate(String cmd) {
 		return locate(path, cmd);
 	}
 
-	public static RegularFile locate(List<Directory> directories, String cmd)
-	{
-		for (Directory dir : directories)
-		{
+	public static RegularFile locate(List<Directory> directories, String cmd) {
+		for (Directory dir : directories) {
 			RegularFile f = locate(dir, cmd);
 
-			if (f != null)
-			{
+			if (f != null) {
 				return f;
 			}
 		}
@@ -220,21 +191,17 @@ public class Proces
 		return null;
 	}
 
-	public static RegularFile locate(Directory d, String cmd)
-	{
+	public static RegularFile locate(Directory d, String cmd) {
 		RegularFile f = d.getChildRegularFile(cmd);
 		return f.exists() ? f : null;
 	}
 
-	public static List<Directory> retrieveSystemPath()
-	{
+	public static List<Directory> retrieveSystemPath() {
 		List<Directory> files = new ArrayList<Directory>();
 
 		for (String filename : System.getenv("PATH")
-				.split(System.getProperty("path.separator")))
-		{
-			if (filename.trim().length() > 0)
-			{
+				.split(System.getProperty("path.separator"))) {
+			if (filename.trim().length() > 0) {
 				files.add(new Directory(filename));
 			}
 		}
@@ -242,17 +209,13 @@ public class Proces
 		return files;
 	}
 
-	public static boolean commandIsAvailable(String name)
-	{
+	public static boolean commandIsAvailable(String name) {
 		return locate(name) != null;
 	}
 
-	public static void ensureCommandsAreAvailable(String... commands)
-	{
-		for (String cmd : commands)
-		{
-			if ( ! commandIsAvailable(cmd))
-			{
+	public static void ensureCommandsAreAvailable(String... commands) {
+		for (String cmd : commands) {
+			if ( ! commandIsAvailable(cmd)) {
 				throw new IllegalStateException("Command \"" + cmd
 						+ "\" is not available on this computer. If there are not in the system PATH, you can add the directory to "
 						+ Proces.class + ".path static attribute");
@@ -260,29 +223,24 @@ public class Proces
 		}
 	}
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		path.add(new Directory("/opt/local/bin/"));
 		System.out.println(locate("dot"));
 	}
 
-	private static class ReadThread extends Thread
-	{
+	private static class ReadThread extends Thread {
 		boolean hasCompleted = false;
 		private BufferedInputStream is;
 		ByteArrayOutputStream targetBuffer = new ByteArrayOutputStream();
 
-		public ReadThread(InputStream is)
-		{
+		public ReadThread(InputStream is) {
 			this.is = new BufferedInputStream(is);
 			start();
 		}
 
 		@Override
-		public void run()
-		{
-			synchronized (this)
-			{
+		public void run() {
+			synchronized (this) {
 
 				// get all the content from the I/O stream and put
 				// it into a byte array

@@ -41,6 +41,7 @@ package toools.progression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.Consumer;
 
 import toools.io.Cout;
 import toools.io.file.Directory;
@@ -49,15 +50,12 @@ import toools.math.MathsUtilities;
 import toools.text.TextUtilities;
 import toools.thread.Threads;
 
-public class LongProcess
-{
-	static class State
-	{
+public class LongProcess {
+	static class State {
 		final double avancement;
 		final long date = System.currentTimeMillis();
 
-		State(double p)
-		{
+		State(double p) {
 			this.avancement = p;
 		}
 	}
@@ -75,135 +73,124 @@ public class LongProcess
 	int progressPrintCount = 0;
 	private int rateWindow = 10;
 	private RegularFile file;
+	private final Consumer<String> msgOut;
+	private Thread thread;
 
-	public int getRateWindow()
-	{
+	public int getRateWindow() {
 		return rateWindow;
 	}
 
-	public void setRateWindow(int rateWindow)
-	{
+	public void setRateWindow(int rateWindow) {
 		this.rateWindow = rateWindow;
 	}
 
-	public static class MultiThreadSensor extends Sensor
-	{
+	public static class MultiThreadSensor extends Sensor {
 		@Override
-		public double getProgress()
-		{
+		public double getProgress() {
 			return progressStatus;
 		}
 
 		@Override
-		public void set(double v)
-		{
+		public void set(double v) {
 			progressStatus = v;
 		}
 	}
 
-	public LongProcess(String object, String unit, double target)
-	{
+	public LongProcess(String object, String unit, double target) {
+		this(object, unit, target, msg -> Cout.progress(msg));
+	}
+
+	public LongProcess(String object, String unit, double target,
+			Consumer<String> stdout) {
+		this.msgOut = stdout;
+		if (object != null) {
+			stdout("> STARTING " + object);
+		}
+
 		stack.push(this);
-		Cout.leftShit++;
-		
-		//if (unit == null)
-		//	throw new NullPointerException("it makes no sense to set unit to null. Please give it a name.");
-		
+
+		// if (unit == null)
+		// throw new NullPointerException("it makes no sense to set unit to
+		// null. Please give it a name.");
+
 		this.unit = unit;
 		this.object = object;
 		this.target = target;
 
-		if (object != null)
-			Cout.progress("> STARTING " + object);
+		this.thread = new Thread(() -> {
+			// initial sleep
+			Threads.sleepMs(refreshInterval);
 
-		Thread t = new Thread(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				// initial sleep
+			while (true) {
 				Threads.sleepMs(refreshInterval);
+				double progressStatus = sensor.getProgress();
+				progressHistory.add(new State(progressStatus));
 
-				while (true)
-				{
-					Threads.sleepMs(refreshInterval);
-					double progressStatus = sensor.getProgress();
-					progressHistory.add(new State(progressStatus));
+				if (progressStatus < 0 || (target != - 1 && progressStatus >= target))
+					break;
 
-					if (progressStatus < 0 || (target != - 1 && progressStatus >= target))
-						break;
+				if (stack.peek() == LongProcess.this && progressStatus > 0) {
+					String msg = getMessage();
+					stdout.accept(msg);
 
-					if (stack.peek() == LongProcess.this && progressStatus > 0)
-					{
-						String msg = getMessage();
-						Cout.progress(msg);
-
-						if (file != null)
-						{
-							file.setContent(msg.getBytes());
-						}
-
-						++progressPrintCount;
+					if (file != null) {
+						file.setContent(msg.getBytes());
 					}
-				}
 
-				stack.remove(LongProcess.this);
+					++progressPrintCount;
+				}
 			}
+
+			stack.remove(LongProcess.this);
 		});
 
-		t.setDaemon(true);
-		t.setPriority(Thread.MAX_PRIORITY);
-		t.start();
+		thread.setDaemon(true);
+		thread.setPriority(Thread.MAX_PRIORITY);
+		thread.start();
 	}
 
-	static public int getStackSize()
-	{
+	public void stdout(String msg) {
+		msgOut.accept(TextUtilities.repeat("\t", stack.size()) + msg);
+	}
+
+	static public int getStackSize() {
 		return stack.size();
 	}
 
-	protected String getMessage()
-	{
+	protected String getMessage() {
 		double status = progressHistory.get(progressHistory.size() - 1).avancement;
 
 		String s = "\t";
 
-		if (object != null)
-		{
+		if (object != null) {
 			s += object + "\t";
 		}
 
-		if (rateWindow < 0 || progressHistory.size() > rateWindow)
-		{
+		if (rateWindow < 0 || progressHistory.size() > rateWindow) {
 			String rate = getRateAsString(rateWindow) + unit + "/s";
 			s += TextUtilities.flushLeft(rate, 16, ' ');
 			s += " ";
 		}
 
-		if (target == - 1)
-		{
+		if (target == - 1) {
 			s += status + " " + unit + "(s)";
 		}
-		else
-		{
+		else {
 			s += getPercentage() + "%";
 
-			if (progressHistory.size() > 1)
-			{
+			if (progressHistory.size() > 1) {
 				s += " \tremaining "
 						+ TextUtilities.seconds2date(getRemainingSeconds(), true);
 			}
 		}
 
-		if (temporaryResult != null)
-		{
+		if (temporaryResult != null) {
 			String r = temporaryResult.toString();
 
-			if (r.indexOf('\n') < 0)
-			{
+			if (r.indexOf('\n') < 0) {
 				s += " \t" + temporaryResult;
 			}
-			else
-			{
+			else {
 				s += '\n' + TextUtilities.prefixEachLineBy(r, "\t");
 			}
 		}
@@ -211,15 +198,13 @@ public class LongProcess
 		return s;
 	}
 
-	protected double getPercentage()
-	{
+	protected double getPercentage() {
 		double avancement = progressHistory.get(progressHistory.size() - 1).avancement;
 		double ratio = avancement / target;
 		return MathsUtilities.round(100 * ratio, 1);
 	}
 
-	protected double getRate(int windowWidth)
-	{
+	protected double getRate(int windowWidth) {
 		if (windowWidth < 0)
 			windowWidth = progressHistory.size();
 
@@ -237,35 +222,29 @@ public class LongProcess
 		return rate;
 	}
 
-	public String getRateAsString(int windowWidth)
-	{
+	public String getRateAsString(int windowWidth) {
 		double rate = getRate(windowWidth);
 
-		if (rate < 100)
-		{
+		if (rate < 100) {
 			rate = MathsUtilities.round(rate, 1);
 		}
-		else
-		{
+		else {
 			rate = MathsUtilities.round(rate, 0);
 		}
 
 		String s = "";
 
-		if (rate > 1000)
-		{
+		if (rate > 1000) {
 			s = TextUtilities.toHumanString((long) rate);
 		}
-		else
-		{
+		else {
 			s = "" + rate;
 		}
 
 		return s;
 	}
 
-	protected int getRemainingSeconds()
-	{
+	protected int getRemainingSeconds() {
 		double duration = (System.currentTimeMillis() - startDate) / 1000;
 		double nbElementProcessed = progressHistory
 				.get(progressHistory.size() - 1).avancement;
@@ -274,44 +253,43 @@ public class LongProcess
 		return (int) (duration * ratio);
 	}
 
-	public void end()
-	{
+	public void end() {
 		end(null);
 	}
 
-	public void end(String s)
-	{
+	public void end(String s) {
 		sensor.set(target);
 
-		// if some history has already been printed
-		if (progressPrintCount > 0)
-		{
-			String msg = getMessage();
-			Cout.progress(msg);
+		try {
+			thread.join();
+		}
+		catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		if (object != null)
-		{
+		// if some history has already been printed
+		if (progressPrintCount > 0) {
+			String msg = getMessage();
+			stdout(msg);
+		}
+
+		if (object != null) {
 			long duration = (System.currentTimeMillis() - startDate) / 1000;
-			Cout.progress(
-					"> END " + object + " (" + TextUtilities.seconds2date(duration, true)
-							+ ")" + (s == null ? "" : ": " + s));
-			Cout.leftShit--;
+			stdout("> END " + object + " (" + TextUtilities.seconds2date(duration, true)
+					+ ")" + (s == null ? "" : ": " + s));
 		}
 	}
 
-	public static LongProcess getActiveProgressMonitor()
-	{
+	public static LongProcess getActiveProgressMonitor() {
 		return stack.peek();
 	}
 
-	public String getDescription()
-	{
+	public String getDescription() {
 		return object;
 	}
 
-	public void setDirectory(Directory d)
-	{
+	public void setDirectory(Directory d) {
 		file = new RegularFile(d, object);
 	}
 }

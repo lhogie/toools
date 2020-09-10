@@ -44,37 +44,36 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-import toools.extern.Proces;
+import toools.collections.Collections;
 import toools.io.FileUtilities;
+import toools.io.Utilities;
 import toools.io.file.AbstractFile;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
+import toools.net.SSHParms;
+import toools.net.SSHUtils;
 import toools.thread.Generator;
 import toools.thread.GeneratorChain;
 
 @SuppressWarnings("serial")
-public class ClassPath extends ArrayList<ClassContainer>
-{
+public class ClassPath extends ArrayList<ClassContainer> {
 	private static ClassPath systemClassPath;
 	private RegularFile zipFile;
 	List<RegularFile> zipFiles;
 
-	public static ClassPath retrieveSystemClassPath()
-	{
-		if (systemClassPath == null)
-		{
+	public static synchronized ClassPath retrieveSystemClassPath() {
+		if (systemClassPath == null) {
 			systemClassPath = new ClassPath();
 
 			for (String entry : System.getProperty("java.class.path")
-					.split(File.pathSeparator))
-			{
+					.split(File.pathSeparator)) {
 				entry = entry.trim();
 
-				if ( ! entry.isEmpty())
-				{
-					systemClassPath.add(
-							new ClassContainer(AbstractFile.map(entry, Directory.class)));
+				if ( ! entry.isEmpty()) {
+					AbstractFile f = AbstractFile.map(entry, Directory.class);
+					systemClassPath.add(new ClassContainer(f));
 				}
 			}
 		}
@@ -82,26 +81,21 @@ public class ClassPath extends ArrayList<ClassContainer>
 		return systemClassPath;
 	}
 
-	public Generator<Class<?>> listAllClasses()
-	{
+	public Generator<Class<?>> listAllClasses() {
 		GeneratorChain<Class<?>> chain = new GeneratorChain<>();
 
-		for (ClassContainer ce : this)
-		{
+		for (ClassContainer ce : this) {
 			chain.getChain().add(ce.listAllClasses());
 		}
 
 		return chain;
 	}
 
-	public List<ClassContainer> getContainersMatching(String re)
-	{
+	public List<ClassContainer> getContainersMatching(String re) {
 		List<ClassContainer> matchingContainers = new ArrayList();
 
-		for (ClassContainer ce : this)
-		{
-			if (ce.getFile().getPath().matches(re))
-			{
+		for (ClassContainer ce : this) {
+			if (ce.getFile().getPath().matches(re)) {
 				matchingContainers.add(ce);
 			}
 		}
@@ -109,28 +103,22 @@ public class ClassPath extends ArrayList<ClassContainer>
 		return matchingContainers;
 	}
 
-	public List<RegularFile> getJars() throws IOException
-	{
-		if (zipFiles == null)
-		{
+	public List<RegularFile> getJars() throws IOException {
+		if (zipFiles == null) {
 			zipFiles = new ArrayList();
 
-			for (ClassContainer cc : this)
-			{
+			for (ClassContainer cc : this) {
 				AbstractFile f = cc.getFile();
 
-				if (f instanceof RegularFile)
-				{
+				if (f instanceof RegularFile) {
 					zipFiles.add((RegularFile) cc.getFile());
 				}
-				else
-				{
+				else {
 					Directory d = (Directory) f;
 					RegularFile zz = new RegularFile(
 							"/tmp/" + d.getPath().replace('/', '_') + ".jar");
 
-					if ( ! d.getChildren().isEmpty())
-					{
+					if ( ! d.getChildren().isEmpty()) {
 						FileUtilities.zip(zz, d, null);
 						zipFiles.add(zz);
 					}
@@ -141,23 +129,18 @@ public class ClassPath extends ArrayList<ClassContainer>
 		return zipFiles;
 	}
 
-	public RegularFile getSeftContainedZipFile() throws IOException
-	{
-		if (zipFile == null)
-		{
+	public RegularFile getSeftContainedZipFile() throws IOException {
+		if (zipFile == null) {
 			Map<String, byte[]> map = new HashMap<String, byte[]>();
 
-			for (ClassContainer cc : this)
-			{
+			for (ClassContainer cc : this) {
 				AbstractFile f = cc.getFile();
 
-				if (f instanceof RegularFile)
-				{
+				if (f instanceof RegularFile) {
 					map.put(cc.getFile().getName(),
 							((RegularFile) cc.getFile()).getContent());
 				}
-				else
-				{
+				else {
 					RegularFile zz = new RegularFile("/tmp/sdfsdfjskjfshkjhqg");
 					FileUtilities.zip(zz, (Directory) f, null);
 					map.put(f.getPath().replace('/', '-') + ".jar", zz.getContent());
@@ -167,8 +150,7 @@ public class ClassPath extends ArrayList<ClassContainer>
 
 			zipFile = new RegularFile("/tmp/" + Math.random() + ".zip");
 
-			if (zipFile.exists())
-			{
+			if (zipFile.exists()) {
 				zipFile.delete();
 			}
 
@@ -179,12 +161,10 @@ public class ClassPath extends ArrayList<ClassContainer>
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		StringBuilder b = new StringBuilder();
 
-		for (ClassContainer cc : this)
-		{
+		for (ClassContainer cc : this) {
 			b.append(cc.getFile().getPath() + (cc.getFile().exists() ? "" : "(not found)")
 					+ "\n");
 		}
@@ -192,14 +172,11 @@ public class ClassPath extends ArrayList<ClassContainer>
 		return b.toString();
 	}
 
-	public long sizeInBytes()
-	{
+	public long sizeInBytes() {
 		long s = 0;
 
-		for (ClassContainer cc : this)
-		{
-			if (cc.getFile().exists())
-			{
+		for (ClassContainer cc : this) {
+			if (cc.getFile().exists()) {
 				s += cc.getFile().getSize();
 			}
 		}
@@ -207,25 +184,51 @@ public class ClassPath extends ArrayList<ClassContainer>
 		return s;
 	}
 
-	public String rsyncTo(String dest)
-	{
-		List<String> args = new ArrayList<>();
-		args.add("-a");
-		args.add("--delete");
-		args.add("-v");
-
-		for (ClassContainer e : this)
-		{
-			if (e.getFile() instanceof Directory)
-				args.add(e.getFile().getPath() + "/");
-			else
-				args.add(e.getFile().getPath());
-		}
-
-		args.add(dest);
-
-		byte[] r = Proces.exec("rsync", args.toArray(new String[0]));
-		return new String(r);
+	public void rsyncTo(String destIP, String destPath) throws IOException {
+		rsyncTo(null, destIP, destPath, stdout -> {
+		}, stderr -> {
+		});
 	}
 
+	public int rsyncTo(SSHParms sshParameters, String destIP, String destPath,
+			Consumer<String> stdout, Consumer<String> stderr) throws IOException {
+		List<String> args = new ArrayList<>();
+		args.add("rsync");
+
+		if (sshParameters != null) {
+			args.add("-e");
+			List<String> ssh = new ArrayList<>();
+			ssh.add(SSHUtils.sshCmd());
+			SSHUtils.addSSHOptions(ssh, sshParameters);
+			args.add(Collections.toString(ssh, " "));
+		}
+
+		args.add("-a");
+		args.add("--delete");
+		args.add("--copy-links");
+		args.add("-v");
+
+		for (ClassContainer e : this) {
+			if (e.getFile() instanceof Directory) {
+				args.add(e.getFile().getPath() + "/");
+			}
+			else {
+				args.add(e.getFile().getPath());
+			}
+		}
+
+		args.add(destIP + ":" + destPath);
+
+		try {
+			// System.out.println(args);
+			Process rsync = Runtime.getRuntime().exec(args.toArray(new String[0]));
+			Utilities.grabLines(rsync.getInputStream(), stdout, err -> {}) ;
+			Utilities.grabLines(rsync.getErrorStream(), stderr, err -> {});
+			rsync.waitFor();
+			return rsync.exitValue();
+		}
+		catch (InterruptedException e1) {
+			throw new IllegalStateException(e1);
+		}
+	}
 }

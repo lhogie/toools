@@ -1,3 +1,4 @@
+
 /* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
 Licensed to the CNRS under one
@@ -71,6 +72,7 @@ public class Unsafe2
 	
 	public static void main(String[] args)
 	{
+		System.out.println(getAddress("salut"));
 		long r = unsafe.allocateMemory(2500000000L);
 		unsafe.getByte(r);
 	}

@@ -35,101 +35,84 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools;
+
+package toools;
 
 import java.util.Arrays;
 
-public class Version implements Comparable<Version>
-{
+public class Version implements Comparable<Version> {
 	private int[] numbers = new int[3];
 
-	public void set(String s)
-	{
+	public void set(String s) {
 		String[] a = s.split("\\.");
 
-		if (a.length == numbers.length)
-		{
-			for (int i = 0; i < 3; ++i)
-			{
+		if (a.length == numbers.length) {
+			for (int i = 0; i < 3; ++i) {
 				numbers[i] = Integer.parseInt(a[i]);
 			}
 		}
-		else
-		{
+		else {
 			throw new IllegalArgumentException("invalid version: " + s);
 		}
 	}
 
-	public void set(int major, int minor, int revision)
-	{
+	public void set(int major, int minor, int revision) {
 		numbers[0] = major;
 		numbers[1] = minor;
 		numbers[2] = revision;
 	}
 
-	public static enum Level
-	{
+	public static enum Level {
 		major, minor, revision, same
 	};
 
-	public int get(int i)
-	{
+	public int get(int i) {
 		return numbers[i];
 	}
 
-	public int get(Level l)
-	{
+	public int get(Level l) {
 		return get(l.ordinal());
 	}
 
-	public void set(int i, int n)
-	{
+	public void set(int i, int n) {
 		if (n < 0)
 			throw new IllegalArgumentException("should be positive");
 
 		numbers[i] = n;
 	}
 
-	public void set(Level l, int n)
-	{
+	public void set(Level l, int n) {
 		set(l.ordinal(), n);
 	}
 
-	public void upgrade(Level l)
-	{
+	public void upgrade(Level l) {
 		if (l == Level.same)
 			return;
 
 		int n = l.ordinal();
 		++numbers[n];
 
-		while (++n < numbers.length)
-		{
+		while (++n < numbers.length) {
 			numbers[n] = 0;
 		}
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return numbers[0] + "." + numbers[1] + "." + numbers[2];
 	}
 
 	@Override
-	public boolean equals(Object obj)
-	{
+	public boolean equals(Object obj) {
 		return Arrays.equals(numbers, ((Version) obj).numbers);
 	}
 
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return Arrays.hashCode(numbers);
 	}
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		Version v = new Version();
 		System.out.println(v);
 		v.set(5, 6, 7);
@@ -138,23 +121,19 @@ public class Version implements Comparable<Version>
 		System.out.println(v);
 	}
 
-	public boolean isNewerThan(Version v)
-	{
+	public boolean isNewerThan(Version v) {
 		return compareTo(v) > 0;
 	}
 
-	public int compareTo(Version v)
-	{
+	public int compareTo(Version v) {
 		if ( ! compliesWith(v))
 			throw new IllegalArgumentException(
 					"version do not comply: " + this + " and " + v);
 
-		for (int i = 0; i < numbers.length; ++i)
-		{
+		for (int i = 0; i < numbers.length; ++i) {
 			int c = Integer.compare(numbers[i], v.numbers[i]);
-			
-			if (c != 0 )
-			{
+
+			if (c != 0) {
 				return c;
 			}
 		}
@@ -162,9 +141,7 @@ public class Version implements Comparable<Version>
 		return 0;
 	}
 
-	
-	public boolean compliesWith(Version v)
-	{
+	public boolean compliesWith(Version v) {
 		return numbers.length == v.numbers.length;
 	}
 

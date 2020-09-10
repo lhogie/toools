@@ -23,107 +23,97 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import toools.extern.Proces;
 import toools.io.Cout;
 import toools.text.TextUtilities;
 
-public class SSHUtils
-{
-	public static void createSSHTunnelTo(String remoteHost, int remotePort,
-			String username, int localPort, int timeoutInSecond)
-	{
-		if (NetUtilities.isLocalServerRunningOnPort(localPort, 1000, null))
+public class SSHUtils {
+	public static void createSSHTunnelTo(SSHParms sshp, InetAddress remoteHost,
+			int remotePort, int localPort) {
+		if (NetUtilities.isLocalServerRunningOnPort(localPort, sshp.timeoutS * 1000,
+				null))
 			throw new IllegalArgumentException(
 					"local port " + localPort + " is already in use");
-		
-		List<String> args = getSSHOptions(timeoutInSecond);
-		args.add(username + "@" + remoteHost);
+
+		List<String> args = new ArrayList<>();
+		addSSHOptions(args, sshp);
+		args.add(remoteHost.getHostName());
 		args.add("-L" + localPort + ":localhost:" + remotePort);
 		new Thread(() -> Proces.exec(sshCmd(), args.toArray(new String[0]))).start();
 
-		try
-		{
+		try {
 			Cout.debug("waiting for server");
 			NetUtilities.waitUntilServerStarts(InetAddress.getLocalHost(), localPort,
 					1000, 1000, null);
 			Cout.debug("OK");
 		}
-		catch (UnknownHostException e)
-		{
+		catch (UnknownHostException e) {
 			throw new RuntimeException(e);
 		}
 	}
-/*
-	public static TunnelConnection createSSHTunnelTo_JSCH(String remoteHost,
-			int remotePort, String remoteUsername, int localPort, int timeoutInSecond)
-			throws JSchException
-	{
-		if (NetUtilities.isLocalServerRunningOnPort(localPort, 1000, null))
-			throw new IllegalArgumentException(
-					"local port " + localPort + " is already in use");
 
-		DefaultSessionFactory sessionFactory = new DefaultSessionFactory();
-		sessionFactory.setUsername(remoteUsername);
-		TunnelConnection tunnelConnection = new TunnelConnection(sessionFactory,
-				new Tunnel(localPort, remoteHost, remotePort));
-		tunnelConnection.open();
-		return tunnelConnection;
-	}
-
-*/
-	public static String sshCmd()
-	{
+	/*
+	 * public static TunnelConnection createSSHTunnelTo_JSCH(String remoteHost,
+	 * int remotePort, String remoteUsername, int localPort, int
+	 * timeoutInSecond) throws JSchException { if
+	 * (NetUtilities.isLocalServerRunningOnPort(localPort, 1000, null)) throw
+	 * new IllegalArgumentException( "local port " + localPort +
+	 * " is already in use");
+	 * 
+	 * DefaultSessionFactory sessionFactory = new DefaultSessionFactory();
+	 * sessionFactory.setUsername(remoteUsername); TunnelConnection
+	 * tunnelConnection = new TunnelConnection(sessionFactory, new
+	 * Tunnel(localPort, remoteHost, remotePort)); tunnelConnection.open();
+	 * return tunnelConnection; }
+	 * 
+	 */
+	public static String sshCmd() {
 		return "ssh";
 	}
 
-	public static List<String> getSSHOptions(int timeoutInSecond)
-	{
-		List<String> options = new ArrayList<>();
-		options.add("-o");
-		options.add("ForwardX11=no");
-		options.add("-o");
-		options.add("StrictHostKeyChecking=no");
-		options.add("-o");
-		options.add("BatchMode=yes");
-		options.add("-o");
-		options.add("ConnectTimeout=" + timeoutInSecond);
-		return options;
+	public static void addSSHOptions(List<String> cmdline, SSHParms p) {
+
+		cmdline.add("-p");
+		cmdline.add(String.valueOf(p.port));
+
+		if (p.username != null) {
+			cmdline.add("-l");
+			cmdline.add(p.username);
+		}
+
+		cmdline.add("-x");
+		cmdline.add("-o");
+		cmdline.add("ForwardX11=no");
+		cmdline.add("-o");
+		cmdline.add("StrictHostKeyChecking=no");
+		cmdline.add("-o");
+		cmdline.add("BatchMode=yes");
+		cmdline.add("-o");
+		cmdline.add("ConnectTimeout=" + p.timeoutS);
 	}
 
-	public static List<String> execSh(int timeoutInSecond, String node, String shText)
-	{
-		List<String> args = getSSHOptions(timeoutInSecond);
-		args.add(node);
-		args.add("bash");
-		args.add("--posix");
-		byte[] r = Proces.exec(sshCmd(), shText.getBytes(), args.toArray(new String[0]));
+	public static List<String> execShAndWait(SSHParms sshparms, String shText) {
+		List<String> sshOptions = new ArrayList<>();
+		addSSHOptions(sshOptions, sshparms);
+		sshOptions.add(sshparms.hostname);
+		sshOptions.add("bash");
+		sshOptions.add("--posix");
+		byte[] r = Proces.exec(sshCmd(), shText.getBytes(),
+				sshOptions.toArray(new String[0]));
 		return r.length == 0 ? new ArrayList<String>()
 				: TextUtilities.splitInLines(new String(r));
 	}
 
-	public static void createSSHTunnelTo(InetAddress remoteHost, int remotePort,
-			String username, int localPort, int timeoutInSecond)
-	{
-		List<String> args = getSSHOptions(timeoutInSecond);
-		args.add(username + "@" + remoteHost.getHostName());
-		args.add("-L" + localPort + ":localhost:" + remotePort);
-		new Thread(() -> Proces.exec(sshCmd(), args.toArray(new String[0]))).start();
-	}
-
-	public static Process exec(int timeoutInSecond, String node, String... cmd)
-			throws IOException
-	{
-		List<String> args = getSSHOptions(timeoutInSecond);
-		args.add(0, sshCmd());
-		args.add(node);
-
-		for (String a : cmd)
-		{
-			args.add(a);
-		}
-
+	public static Process exec(SSHParms sshparms, String... cmd) throws IOException {
+		List<String> args = new ArrayList<>();
+		args.add(sshCmd());
+		addSSHOptions(args, sshparms);
+		args.add(sshparms.hostname);
+		Arrays.stream(cmd).forEach(a -> args.add(a));
+		// System.out.println("****" + args);
 		return Runtime.getRuntime().exec(args.toArray(new String[0]));
 	}
 }

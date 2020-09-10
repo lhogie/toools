@@ -35,65 +35,56 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools;
 
-public class IntCellularAutomata
-{
-    public int cells = 0;
-    private static final int[] rule30 = new int[] { 0, 1, 1, 1, 1, 0, 0, 0 };
+package toools;
 
-    public void evolve()
-    {
-	int next = 0;
+public class CellularAutomata32 {
+	public int cells = 0;
+	private static final int[] rule30 = new int[] { 0, 1, 1, 1, 1, 0, 0, 0 };
 
-	next |= rule30[((cells << 1) | (cells >> 31)) & 7];
+	public void evolve() {
+		int next = 0;
 
-	for (int i = 1; i < 31; ++i)
-	{
-	    int k = (cells >> i - 1) & 7;
-	    next |= rule30[k] << i;
+		next |= rule30[((cells << 1) | (cells >> 31)) & 7];
+
+		for (int i = 1; i < 31; ++i) {
+			int k = (cells >> i - 1) & 7;
+			next |= rule30[k] << i;
+		}
+
+		next |= (rule30[((cells >> 30) | ((cells & 1) << 2)) & 7]) << 31;
+		cells = next;
 	}
 
-	next |= (rule30[((cells >> 30) | ((cells & 1) << 2)) & 7]) << 31;
-	cells = next;
-    }
-
-    public int getCells()
-    {
-	return cells;
-    }
-
-    public void setCells(int cells)
-    {
-	this.cells = cells;
-    }
-
-    @Override
-    public String toString()
-    {
-	StringBuilder b = new StringBuilder();
-	b.append('[');
-
-	for (int i = 0; i < 32; ++i)
-	{
-	    b.append(((cells >> i) & 1) == 0 ? ' ' : '*');
+	public int getCells() {
+		return cells;
 	}
 
-	b.append(']');
-	return b.toString();
-    }
-
-    public static void main(String[] args)
-    {
-	IntCellularAutomata ca = new IntCellularAutomata();
-	ca.setCells(567);
-	System.out.println(ca);
-
-	for (int i = 0; i < 2000; ++i)
-	{
-	    ca.evolve();
-	    System.out.println(ca);
+	public void setCells(int cells) {
+		this.cells = cells;
 	}
-    }
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append('[');
+
+		for (int i = 0; i < 32; ++i) {
+			b.append(((cells >> i) & 1) == 0 ? ' ' : '*');
+		}
+
+		b.append(']');
+		return b.toString();
+	}
+
+	public static void main(String[] args) {
+		CellularAutomata32 ca = new CellularAutomata32();
+		ca.setCells(567);
+		System.out.println(ca);
+
+		for (int i = 0; i < 2000; ++i) {
+			ca.evolve();
+			System.out.println(ca);
+		}
+	}
 }

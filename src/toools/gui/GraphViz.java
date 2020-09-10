@@ -35,26 +35,22 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.gui;
+
+package toools.gui;
 
 import toools.extern.Proces;
 
-public class GraphViz
-{
+public class GraphViz {
 
-	public enum COMMAND
-	{
+	public enum COMMAND {
 		dot, neato, fdp, twopi, circo
 	}
 
-	public enum OUTPUT_FORMAT
-	{
+	public enum OUTPUT_FORMAT {
 		bmp, canon, dot, gv, xdot, xdot1_2, xdot1_4, cgimage, cmap, eps, exr, fig, gd, gd2, gif, gtk, ico, imap, cmapx, imap_np, cmapx_np, ismap, jp2, jpg, jpeg, jpe, pct, pict, pdf, pic, plain_ext, png, pov, ps, ps2, psd, sgi, svg, svgz, tga, tif, tiff, tk, vml, vmlz, vrml, wbmp, webp, xlib, x11
 	}
 
-	public static byte[] toBytes(COMMAND cmd, String dotText, OUTPUT_FORMAT of)
-	{
+	public static byte[] toBytes(COMMAND cmd, String dotText, OUTPUT_FORMAT of) {
 		return Proces.exec(cmd.name(), dotText.getBytes(), "-T" + of.name());
 	}
 

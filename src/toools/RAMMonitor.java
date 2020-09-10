@@ -52,6 +52,7 @@ public class RAMMonitor
 				s += (char) c;
 			}
 
+			fis.close();
 			return s;
 		}
 
@@ -139,7 +140,7 @@ public class RAMMonitor
 	public static void start(int periodMs, Supplier<String> extraMsg,
 			Consumer<MemoryInfo> out)
 	{
-		Threads.loop(periodMs, () -> true, () -> {
+		Threads.newThread_loop_periodic(periodMs, () -> true, () -> {
 			while (true)
 			{
 				MemoryInfo u = new MemoryInfo(extraMsg);

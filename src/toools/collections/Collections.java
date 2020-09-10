@@ -556,7 +556,7 @@ public class Collections
 
 		while (i.hasNext())
 		{
-			b.append(i.next().toString());
+			b.append(i.next());
 
 			if (i.hasNext())
 			{

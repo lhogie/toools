@@ -38,6 +38,10 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
  
  package toools.io.ser;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -46,13 +50,20 @@ import java.io.OutputStream;
 
 public class JavaSerializer<E> extends Serializer<E>
 {
-
 	@Override
 	public E read(InputStream is) throws IOException
 	{
 		try
 		{
-			return (E) new ObjectInputStream(is).readObject();
+			DataInputStream d = new DataInputStream(is);
+			int size = d.readInt();
+			byte[] b = new byte[size];
+			d.readFully(b);
+
+			ObjectInputStream oos = new ObjectInputStream(new ByteArrayInputStream(b));
+			Object o = oos.readObject();
+			oos.close();
+			return (E) o;
 		}
 		catch (ClassNotFoundException e)
 		{
@@ -63,9 +74,14 @@ public class JavaSerializer<E> extends Serializer<E>
 	@Override
 	public void write(E o, OutputStream os) throws IOException
 	{
-		ObjectOutputStream oos = new ObjectOutputStream(os);
+		ByteArrayOutputStream bo = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(bo);
 		oos.writeObject(o);
 		oos.close();
+		byte[] buf = bo.toByteArray();
+		DataOutputStream dos = new DataOutputStream(os);
+		dos.writeInt(buf.length);
+		dos.write(buf);
 	}
 
 	@Override

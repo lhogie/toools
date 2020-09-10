@@ -39,7 +39,9 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 package toools.reflect;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Introspector
@@ -93,27 +95,27 @@ public class Introspector
 		}
 	}
 
-	private final Map<String, FF> fields = new HashMap<>();
+	private final List<FF> fields = new ArrayList<>();
 
 	private Introspector(Class<?> c)
 	{
 		for (Field f : c.getDeclaredFields())
 		{
 			f.setAccessible(true);
-			fields.put(f.getName(), new FF(f));
+			fields.add(new FF(f));
 		}
 
 		// adds also the fields declared in the superclass, if any
 		if (c.getSuperclass() != null)
 		{
-			for (FF f : getIntrospector(c.getSuperclass()).getFields().values())
+			for (FF f : getIntrospector(c.getSuperclass()).getFields())
 			{
-				fields.put(f.getName(), f);
+				fields.add(f);
 			}
 		}
 	}
 
-	public Map<String, FF> getFields()
+	public List<FF> getFields()
 	{
 		return fields;
 	}

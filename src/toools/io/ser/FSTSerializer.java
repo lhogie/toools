@@ -35,46 +35,40 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.ser;
+
+package toools.io.ser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import de.ruedigermoeller.serialization.FSTObjectInput;
-import de.ruedigermoeller.serialization.FSTObjectOutput;
+import org.nustaq.serialization.FSTObjectInput;
+import org.nustaq.serialization.FSTObjectOutput;
 
-public class FSTSerializer extends Serializer
-{
+public class FSTSerializer<E> extends Serializer<E> {
 
 	@Override
-	public Object read(InputStream is) throws IOException
-	{
-		try
-		{
+	public E read(InputStream is) throws IOException {
+		try {
 			FSTObjectInput in = new FSTObjectInput(is);
-			Object result = in.readObject();
-			in.close();
+			E result = (E) in.readObject();
+			// in.close();
 			return result;
 		}
-		catch (ClassNotFoundException e)
-		{
+		catch (ClassNotFoundException e) {
 			throw new IOException(e);
 		}
 	}
 
 	@Override
-	public void write(Object o, OutputStream os) throws IOException
-	{
+	public void write(E o, OutputStream os) throws IOException {
 		FSTObjectOutput out = new FSTObjectOutput(os);
 		out.writeObject(o);
-		out.close();
+		out.flush();
 	}
 
 	@Override
-	public String getMIMEType()
-	{
+	public String getMIMEType() {
 		return "fst";
 	}
 

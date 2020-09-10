@@ -35,25 +35,33 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.util;
+
+package toools.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class Date
-{
+public class Date {
+	static final long timeDiffMs = System.nanoTime()
+			- (1000000 * System.currentTimeMillis());
+
+	public static long timeNs() {
+		return System.nanoTime() - timeDiffMs;
+	}
+
+	public static double time() {
+		return timeNs() / 1000000000d;
+	}
+
 	public static String TIME = "HH:mm:ss";
 
-	 public static String DATE_AND_TIME = "yyyy-MM-dd HH:mm:ss";
+	public static String DATE_AND_TIME = "yyyy-MM-dd HH:mm:ss";
 
-	public static String now()
-	{
+	public static String now() {
 		return now(TIME);
 	}
 
-	public static String now(String dateFormat)
-	{
+	public static String now(String dateFormat) {
 		Calendar cal = Calendar.getInstance();
 		SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
 		return sdf.format(cal.getTime());

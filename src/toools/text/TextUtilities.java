@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Vector;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,25 +58,20 @@ import toools.io.IORuntimeException;
 import toools.math.MathsUtilities;
 import toools.reflect.Clazz;
 
-public class TextUtilities
-{
-	public enum HORIZONTAL_ALIGNMENT
-	{
+public class TextUtilities {
+	public enum HORIZONTAL_ALIGNMENT {
 		RIGHT, CENTER, LEFT
 	}
 
-	public enum VERTICAL_ALIGNMENT
-	{
+	public enum VERTICAL_ALIGNMENT {
 		TOP, MIDDLE, BOTTOM
 	}
 
-	public static String box(String s)
-	{
+	public static String box(String s) {
 		return box(s, '*', s.length() + 4);
 	}
 
-	public static String box(String s, char c, int len)
-	{
+	public static String box(String s, char c, int len) {
 		String r = repeat(c, len) + '\n';
 		int slen = Math.min(s.length(), len - 4);
 		r += c + " " + s.substring(0, slen) + repeat(' ', len - 3 - slen) + c + '\n';
@@ -83,19 +79,15 @@ public class TextUtilities
 		return r;
 	}
 
-	public static long[] parseNumbers(char[] s, char separator)
-	{
+	public static long[] parseNumbers(char[] s, char separator) {
 		long[] a = new long[getNumberOf(separator, s) + 1];
 		int in = 0;
 
-		for (int i = 0; i < s.length; ++i)
-		{
-			if (Character.isDigit(s[i]))
-			{
+		for (int i = 0; i < s.length; ++i) {
+			if (Character.isDigit(s[i])) {
 				int n = s[i] - '0';
 
-				while (++i < s.length && Character.isDigit(s[i]))
-				{
+				while (++i < s.length && Character.isDigit(s[i])) {
 					n = n * 10 + s[i] - '0';
 				}
 
@@ -106,77 +98,62 @@ public class TextUtilities
 		return a;
 	}
 
-	public static int parseFileSize(String s)
-	{
+	public static int parseFileSize(String s) {
 		return parseFileSize(s, 1024);
 	}
 
-	public static String pickRandomString(Random r, int minLength, int maxLength)
-	{
+	public static String pickRandomString(Random r, int minLength, int maxLength) {
 		int l = MathsUtilities.pickRandomBetween(minLength, maxLength + 1, r);
 
 		String s = "";
 
-		for (int i = 0; i < l; ++i)
-		{
+		for (int i = 0; i < l; ++i) {
 			s += pickUpOneRandomChar("azertyuiopqsdfghjklmwxcvbn", r);
 		}
 
 		return s;
 	}
 
-	public static int parseFileSize(String s, int multiplier)
-	{
+	public static int parseFileSize(String s, int multiplier) {
 		char lastLetter = s.charAt(s.length() - 1);
 
-		if (lastLetter == 'b')
-		{
+		if (lastLetter == 'b') {
 			s = s.substring(0, s.length() - 1);
 			lastLetter = s.charAt(s.length() - 1);
 		}
 
-		if (Character.isLetter(lastLetter))
-		{
+		if (Character.isLetter(lastLetter)) {
 			char unit = Character.toLowerCase(lastLetter);
 			int base = Integer.valueOf(s.substring(0, s.length() - 1));
 
-			if (unit == 'k')
-			{
+			if (unit == 'k') {
 				return base * multiplier;
 			}
-			else if (unit == 'm')
-			{
+			else if (unit == 'm') {
 				return base * multiplier * multiplier;
 			}
-			else if (unit == 'g')
-			{
+			else if (unit == 'g') {
 				return base * multiplier * multiplier * multiplier;
 			}
-			else
-			{
+			else {
 				throw new IllegalArgumentException("unknown unit '" + lastLetter + "'");
 			}
 		}
-		else
-		{
+		else {
 			return Integer.valueOf(s);
 		}
 	}
 
-	public static String removeUselessDecimals(double i)
-	{
-		if (i == (int) i)
-		{
+	public static String removeUselessDecimals(double i) {
+		if (i == (int) i) {
 			return String.valueOf((int) i);
 		}
-		else
-		{
+		else {
 			return String.valueOf(i);
 		}
 	}
 
-	public static void main(String... args)
-	{
+	public static void main(String... args) {
 		System.out.println(parseNumbers("4 32 2 34 3".toCharArray(), ' ')[1]);
 	}
 
@@ -199,26 +176,20 @@ public class TextUtilities
 	 * 
 	 * return a + "." + b + u; } }
 	 */
-	public static String toHumanString(long n)
-	{
-		if (n < 0)
-		{
+	public static String toHumanString(long n) {
+		if (n < 0) {
 			return "-" + toHumanString( - n);
 		}
-		else if (n == 0)
-		{
+		else if (n == 0) {
 			return "0";
 		}
-		else
-		{
+		else {
 			int e = (int) (Math.log10(n) / 3) - 1;
 
-			if (e < 0)
-			{
+			if (e < 0) {
 				return removeUselessDecimals(n);
 			}
-			else
-			{
+			else {
 				String units = "KMGPH";
 				char unit = units.charAt(e);
 				return removeUselessDecimals(
@@ -228,39 +199,31 @@ public class TextUtilities
 
 	}
 
-	public static int compareLexicographically(InputStream as, InputStream bs)
-	{
-		try
-		{
-			while (true)
-			{
+	public static int compareLexicographically(InputStream as, InputStream bs) {
+		try {
+			while (true) {
 				int ab = as.read();
 				int bb = bs.read();
 
-				if (ab == - 1 && bb == - 1)
-				{
+				if (ab == - 1 && bb == - 1) {
 					as.close();
 					bs.close();
 					return 0;
 				}
-				else if (ab == - 1)
-				{
+				else if (ab == - 1) {
 					as.close();
 					bs.close();
 					// a is shorter than b
 					return - 1;
 				}
-				else if (bb == - 1)
-				{
+				else if (bb == - 1) {
 					as.close();
 					bs.close();
 					// a is longer than b
 					return 1;
 				}
-				else
-				{
-					if (ab != bb)
-					{
+				else {
+					if (ab != bb) {
 						as.close();
 						bs.close();
 						return new Integer(ab).compareTo(bb);
@@ -268,44 +231,36 @@ public class TextUtilities
 				}
 			}
 		}
-		catch (IOException e)
-		{
+		catch (IOException e) {
 			throw new IORuntimeException(e);
 		}
 
 	}
 
-	public static String min(String a, String b)
-	{
+	public static String min(String a, String b) {
 		return a.compareTo(b) > 0 ? b : a;
 	}
 
-	public static String max(String a, String b)
-	{
+	public static String max(String a, String b) {
 		return a.compareTo(b) > 0 ? a : b;
 	}
 
-	public static List<String> splitInLines(String text)
-	{
+	public static List<String> splitInLines(String text) {
 		return Arrays.asList(text.split("\\n"));
 	}
 
-	public static List<String> splitInLines2(String text)
-	{
+	public static List<String> splitInLines2(String text) {
 		List<String> l = new ArrayList();
 		int p = 0;
 
-		while (true)
-		{
+		while (true) {
 			int q = text.indexOf('\n', p);
 
-			if (q < 0)
-			{
+			if (q < 0) {
 				l.add(text.substring(p));
 				break;
 			}
-			else
-			{
+			else {
 				l.add(text.substring(p, q));
 				p = q + 1;
 			}
@@ -315,20 +270,17 @@ public class TextUtilities
 	}
 
 	public static List<Integer> grep(List<String> lines, String pattern,
-			boolean caseSensitive, boolean v)
-	{
+			boolean caseSensitive, boolean v) {
 		List<Integer> newLines = new ArrayList<Integer>();
 
 		Pattern re = caseSensitive ? Pattern.compile(pattern)
 				: Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 
-		for (int i = 0; i < lines.size(); ++i)
-		{
+		for (int i = 0; i < lines.size(); ++i) {
 			String line = lines.get(i);
 
 			if (( ! v && re.matcher(line).matches())
-					|| (v && ! re.matcher(line).matches()))
-			{
+					|| (v && ! re.matcher(line).matches())) {
 				newLines.add(i);
 			}
 		}
@@ -336,87 +288,70 @@ public class TextUtilities
 		return newLines;
 	}
 
-	public static int indexOfRegexp(String lookIn, Pattern lookFor)
-	{
+	public static int indexOfRegexp(String lookIn, Pattern lookFor) {
 		Matcher m = lookFor.matcher(lookIn);
 
-		if (m.find())
-		{
+		if (m.find()) {
 			return m.start();
 		}
-		else
-		{
+		else {
 			return - 1;
 		}
 	}
 
 	public static List<String> getLinesAtIndexes(List<String> lines,
-			List<Integer> lineNumbers, int indexShift)
-	{
+			List<Integer> lineNumbers, int indexShift) {
 		List<String> selectedLines = new ArrayList<String>();
 
-		for (int thisLineNumber : lineNumbers)
-		{
+		for (int thisLineNumber : lineNumbers) {
 			selectedLines.add(lines.get(thisLineNumber + indexShift));
 		}
 
 		return selectedLines;
 	}
 
-	public static String prefixEachLineBy(String text, String prefix)
-	{
-		if ( ! text.startsWith("\n"))
-		{
+	public static String prefixEachLineBy(String text, String prefix) {
+		if ( ! text.startsWith("\n")) {
 			text = prefix + text;
 		}
 
 		return text.replaceAll("\n", "\n" + prefix);
 	}
 
-	public static void prefixEachLineBy(Collection<String> lines, String prefix)
-	{
+	public static void prefixEachLineBy(Collection<String> lines, String prefix) {
 		Collection<String> newlines = (Collection<String>) Clazz
 				.makeInstance(lines.getClass());
 
-		for (String line : lines)
-		{
+		for (String line : lines) {
 			newlines.add(prefix + line);
 		}
 	}
 
 	public static void prefixEachLineByLineNumber(List<String> lines, String separator,
-			int start)
-	{
+			int start) {
 		int width = (int) Math.log10(lines.size()) + 1;
 
-		for (int i = 0; i < lines.size(); ++i)
-		{
+		for (int i = 0; i < lines.size(); ++i) {
 			lines.set(i, flushRight(String.valueOf(i + start), width, '0') + separator
 					+ lines.get(i));
 		}
 	}
 
-	public static String toBinary(int n, int numberOfDigits, boolean useSpacing)
-	{
+	public static String toBinary(int n, int numberOfDigits, boolean useSpacing) {
 		StringBuffer buf = new StringBuffer();
 
-		while (numberOfDigits-- > 0)
-		{
-			if (n % 2 == 0)
-			{
+		while (numberOfDigits-- > 0) {
+			if (n % 2 == 0) {
 				buf.append('0');
 			}
-			else
-			{
+			else {
 				buf.append('1');
 			}
 
 			n /= 2;
 
-			if (useSpacing)
-			{
-				if (numberOfDigits % 4 == 0)
-				{
+			if (useSpacing) {
+				if (numberOfDigits % 4 == 0) {
 					buf.append(' ');
 				}
 			}
@@ -426,28 +361,23 @@ public class TextUtilities
 		return buf.toString();
 	}
 
-	public static String toHex(byte[] bytes)
-	{
-		return toHex(bytes, "");
+	public static String toHex(byte[] bytes) {
+		return toHex(bytes, ' ');
 	}
 
-	public static String toHex(byte[] bytes, String sep)
-	{
+	public static String toHex(byte[] bytes, char sep) {
 		StringBuilder buf = new StringBuilder();
 
-		for (int i = 0; i < bytes.length; ++i)
-		{
+		for (int i = 0; i < bytes.length; ++i) {
 			byte b = bytes[i];
 
-			if (i > 0)
-			{
+			if (i > 0) {
 				buf.append(sep);
 			}
 
 			String s = toHexString(b);
 
-			if (s.length() == 1)
-			{
+			if (s.length() == 1) {
 				s = "0" + s;
 			}
 
@@ -457,16 +387,14 @@ public class TextUtilities
 		return buf.toString();
 	}
 
-	public static byte[] fromHex(String s)
-	{
+	public static byte[] fromHex(String s) {
 		if (s.length() % 2 != 0)
 			throw new IllegalArgumentException(
 					"input text doesn't have an even number of characters");
 
 		byte[] r = new byte[s.length()];
 
-		for (int i = 0; i < r.length; i += 2)
-		{
+		for (int i = 0; i < r.length; i += 2) {
 			String a = s.substring(i, i + 2);
 			r[i] = Byte.decode("#" + a);
 		}
@@ -474,33 +402,26 @@ public class TextUtilities
 		return r;
 	}
 
-	public static String toHexString(byte b)
-	{
+	public static String toHexString(byte b) {
 		return Integer.toHexString(b & 0xFF);
 	}
 
-	public static boolean isDouble(String s)
-	{
-		try
-		{
+	public static boolean isDouble(String s) {
+		try {
 			Double.valueOf(s);
 			return true;
 		}
-		catch (NumberFormatException ex)
-		{
+		catch (NumberFormatException ex) {
 			return false;
 		}
 	}
 
-	public static boolean isInt(String s)
-	{
-		try
-		{
+	public static boolean isInt(String s) {
+		try {
 			Integer.valueOf(s);
 			return true;
 		}
-		catch (NumberFormatException ex)
-		{
+		catch (NumberFormatException ex) {
 			return false;
 		}
 	}
@@ -509,70 +430,55 @@ public class TextUtilities
 	 * @return a nice representation of the name of the given array class.
 	 *         org.lucci.Boh -> org.lucci.Boh [String9 - String[]
 	 */
-	public static String getNiceClassName(Class clazz)
-	{
-		if (clazz.isArray())
-		{
+	public static String getNiceClassName(Class clazz) {
+		if (clazz.isArray()) {
 			return getNiceClassName(clazz.getComponentType()) + "[]";
 		}
-		else
-		{
+		else {
 			return clazz.getName();
 		}
 	}
 
-	public static String getClassNameWithoutPackage(Class clazz)
-	{
-		if (clazz.isArray())
-		{
+	public static String getClassNameWithoutPackage(Class clazz) {
+		if (clazz.isArray()) {
 			return getNiceClassName(clazz.getComponentType()) + "[]";
 		}
-		else
-		{
+		else {
 			String s = clazz.getName();
 			return s.substring(s.lastIndexOf('.') + 1);
 		}
 	}
 
 	public static String replaceVariableValues(String s,
-			Map<String, String> variableValues)
-	{
+			Map<String, String> variableValues) {
 		int a = s.indexOf("${");
 
-		if (a < 0)
-		{
+		if (a < 0) {
 			return s;
 		}
-		else
-		{
+		else {
 			int b = s.indexOf('}', a + 2);
 
-			if (b < 0)
-			{
+			if (b < 0) {
 				throw new IllegalArgumentException(
 						"unterminated variable reference: '}' expected");
 			}
-			else
-			{
+			else {
 				String name = s.substring(a + 2, b);
 
-				if (name.matches("[a-zA-Z_]+"))
-				{
+				if (name.matches("[a-zA-Z_]+")) {
 					String value = variableValues.get(name);
 
-					if (value == null)
-					{
+					if (value == null) {
 						throw new IllegalArgumentException(
 								"variable undeclared: " + name);
 					}
-					else
-					{
+					else {
 						return s.substring(0, a) + value + replaceVariableValues(
 								s.substring(b + 1), variableValues);
 					}
 				}
-				else
-				{
+				else {
 					throw new IllegalArgumentException(
 							"invalid variable name: '" + name + "'");
 				}
@@ -583,23 +489,19 @@ public class TextUtilities
 	/**
 	 * @return the full name of the method described by the given elements.
 	 */
-	public static String getNiceMethodName(Class target, String name, Class[] argTypes)
-	{
+	public static String getNiceMethodName(Class target, String name, Class[] argTypes) {
 		StringBuilder buf = new StringBuilder();
 		buf.append(target.getName());
 		buf.append('#');
 		buf.append(name);
 		buf.append('(');
 
-		if (argTypes != null && argTypes.length > 0)
-		{
-			for (int i = 0; i < argTypes.length; ++i)
-			{
+		if (argTypes != null && argTypes.length > 0) {
+			for (int i = 0; i < argTypes.length; ++i) {
 				buf.append(' ');
 				buf.append(getNiceClassName(argTypes[i]));
 
-				if (i < argTypes.length - 1)
-				{
+				if (i < argTypes.length - 1) {
 					buf.append(',');
 				}
 			}
@@ -611,27 +513,21 @@ public class TextUtilities
 		return buf.toString();
 	}
 
-	public static String normalizePropertyName(String s)
-	{
+	public static String normalizePropertyName(String s) {
 		StringBuffer buf = new StringBuffer();
 		int len = s.length();
 
-		for (int i = 0; i < len; ++i)
-		{
+		for (int i = 0; i < len; ++i) {
 			char c = s.charAt(i);
 
-			if (isPropertyChar(c))
-			{
-				if (i == 0)
-				{
+			if (isPropertyChar(c)) {
+				if (i == 0) {
 					buf.append(Character.toLowerCase(c));
 				}
-				else if (i > 0 && ! isPropertyChar(s.charAt(i - 1)))
-				{
+				else if (i > 0 && ! isPropertyChar(s.charAt(i - 1))) {
 					buf.append(Character.toUpperCase(c));
 				}
-				else
-				{
+				else {
 					buf.append(c);
 				}
 			}
@@ -640,19 +536,15 @@ public class TextUtilities
 		return buf.toString();
 	}
 
-	public static boolean isPropertyChar(char c)
-	{
+	public static boolean isPropertyChar(char c) {
 		return Character.isLetterOrDigit(c) || c == '_';
 	}
 
-	public static String capitalizeWord(String s)
-	{
-		if (s.isEmpty())
-		{
+	public static String capitalizeWord(String s) {
+		if (s.isEmpty()) {
 			return "";
 		}
-		else
-		{
+		else {
 			return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
 		}
 	}
@@ -660,17 +552,14 @@ public class TextUtilities
 	public static final Collection<String> exceptions = Arrays.asList(
 			new String[] { "a", "the", "an", "and", "to", "from", "on", "of", "by" });
 
-	public static String capitalizeAllWords(String s)
-	{
+	public static String capitalizeAllWords(String s) {
 		s = s.toLowerCase();
 		List<String> words = Arrays.asList(s.split(" "));
 
-		if ( ! words.isEmpty())
-		{
+		if ( ! words.isEmpty()) {
 			words.set(0, capitalizeWord(words.get(0)));
 
-			for (int i = 1; i < words.size(); ++i)
-			{
+			for (int i = 1; i < words.size(); ++i) {
 				String w = words.get(i).toLowerCase();
 				words.set(i, exceptions.contains(w) ? w : capitalizeWord(w));
 			}
@@ -679,28 +568,22 @@ public class TextUtilities
 		return concatene(words, " ");
 	}
 
-	public static String invertCase(String s)
-	{
+	public static String invertCase(String s) {
 		StringBuffer buf = new StringBuffer();
 		int len = s.length();
 
-		for (int i = 0; i < len; ++i)
-		{
+		for (int i = 0; i < len; ++i) {
 			char c = s.charAt(i);
 
-			if (Character.isLetter(c))
-			{
-				if (Character.isUpperCase(c))
-				{
+			if (Character.isLetter(c)) {
+				if (Character.isUpperCase(c)) {
 					buf.append(Character.toLowerCase(c));
 				}
-				else
-				{
+				else {
 					buf.append(Character.toUpperCase(c));
 				}
 			}
-			else
-			{
+			else {
 				buf.append(c);
 			}
 		}
@@ -708,24 +591,20 @@ public class TextUtilities
 		return buf.toString();
 	}
 
-	public static String repeat(String s, int count)
-	{
+	public static String repeat(String s, int count) {
 		StringBuilder buf = new StringBuilder();
 
-		for (int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			buf.append(s);
 		}
 
 		return buf.toString();
 	}
 
-	public static String repeat(char c, int count)
-	{
+	public static String repeat(char c, int count) {
 		StringBuilder buf = new StringBuilder();
 
-		for (int i = 0; i < count; ++i)
-		{
+		for (int i = 0; i < count; ++i) {
 			buf.append(c);
 		}
 
@@ -733,39 +612,33 @@ public class TextUtilities
 	}
 
 	public static String flush(Object o, HORIZONTAL_ALIGNMENT alignment, int lineLenght,
-			char fillChar)
-	{
+			char fillChar) {
 		String s = o.toString();
 
 		if (s.length() > lineLenght)
 			throw new IllegalArgumentException("'" + o + "'.length() >  " + lineLenght);
 
-		if (alignment == HORIZONTAL_ALIGNMENT.LEFT)
-		{
+		if (alignment == HORIZONTAL_ALIGNMENT.LEFT) {
 			return s + TextUtilities.repeat(String.valueOf(fillChar),
 					lineLenght - s.length());
 		}
-		else if (alignment == HORIZONTAL_ALIGNMENT.RIGHT)
-		{
+		else if (alignment == HORIZONTAL_ALIGNMENT.RIGHT) {
 			return TextUtilities.repeat(String.valueOf(fillChar), lineLenght - s.length())
 					+ s;
 		}
-		else if (alignment == HORIZONTAL_ALIGNMENT.CENTER)
-		{
+		else if (alignment == HORIZONTAL_ALIGNMENT.CENTER) {
 			int leftMargin = (lineLenght - s.length()) / 2;
 			int rightMargin = lineLenght - leftMargin;
 			return TextUtilities.repeat(String.valueOf(fillChar), leftMargin) + s
 					+ TextUtilities.repeat(String.valueOf(fillChar), rightMargin);
 		}
-		else
-		{
+		else {
 			throw new IllegalArgumentException("alignment == null");
 		}
 
 	}
 
-	public static String flushRight(Object o, int lineLenght, char fillChar)
-	{
+	public static String flushRight(Object o, int lineLenght, char fillChar) {
 		String s = o.toString();
 
 		if (s.length() > lineLenght)
@@ -775,8 +648,7 @@ public class TextUtilities
 				+ s;
 	}
 
-	public static String flushLeft(Object o, int lineLenght, char fillChar)
-	{
+	public static String flushLeft(Object o, int lineLenght, char fillChar) {
 		String s = o.toString();
 
 		if (s.length() > lineLenght)
@@ -786,19 +658,16 @@ public class TextUtilities
 				lineLenght - s.length());
 	}
 
-	public static String concatene(Collection strings, String separator)
-	{
+	public static String concatene(Collection strings, String separator) {
 		StringBuilder b = new StringBuilder();
 
 		Iterator<String> i = strings.iterator();
 
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			Object s = i.next();
 			b.append(s.toString());
 
-			if (i.hasNext())
-			{
+			if (i.hasNext()) {
 				b.append(separator);
 			}
 		}
@@ -806,17 +675,30 @@ public class TextUtilities
 		return b.toString();
 	}
 
-	public static String concat(String separator, Object... strings)
-	{
+	public static <E> String concat(String separator, List<E> elements,
+			Function<E, String> toString) {
+		StringBuilder b = new StringBuilder();
+		int sz = elements.size();
+
+		for (int i = 0; i < sz; ++i) {
+			b.append(toString.apply(elements.get(0)));
+
+			if (i < sz - 1) {
+				b.append(separator);
+			}
+		}
+
+		return b.toString();
+	}
+
+	public static String concat(String separator, Object... strings) {
 		StringBuilder b = new StringBuilder();
 		int sz = strings.length;
 
-		for (int i = 0; i < sz; ++i)
-		{
+		for (int i = 0; i < sz; ++i) {
 			b.append(strings[i]);
 
-			if (i < sz - 1)
-			{
+			if (i < sz - 1) {
 				b.append(separator);
 			}
 		}
@@ -824,30 +706,24 @@ public class TextUtilities
 		return b.toString();
 	}
 
-	public static List<String> wrap(String text, int size)
-	{
+	public static List<String> wrap(String text, int size) {
 		List<String> unwrappables = Arrays.asList(text.split("\\s+"));
 
-		for (int i = 0; i < unwrappables.size(); ++i)
-		{
+		for (int i = 0; i < unwrappables.size(); ++i) {
 		}
 
 		List<String> lines = new Vector<String>();
 		lines.add("");
 
-		for (String unwrappable : unwrappables)
-		{
-			if ( ! lines.get(lines.size() - 1).isEmpty())
-			{
+		for (String unwrappable : unwrappables) {
+			if ( ! lines.get(lines.size() - 1).isEmpty()) {
 				unwrappable = ' ' + unwrappable;
 			}
 
-			if (lines.get(lines.size() - 1).length() + unwrappable.length() <= size)
-			{
+			if (lines.get(lines.size() - 1).length() + unwrappable.length() <= size) {
 				lines.set(lines.size() - 1, lines.get(lines.size() - 1) + unwrappable);
 			}
-			else
-			{
+			else {
 				lines.add(unwrappable.trim());
 			}
 		}
@@ -857,32 +733,27 @@ public class TextUtilities
 
 	public static String defaultAlphabet = "azertyuiopqsdfghjklmwxcvbnazertyuiopAZERTYUIOPQSDFGHJKLMWXCVBN123456789?0@&\"'(!)-$€%£?,;.:/=+* ";
 
-	public static char pickUpOneRandomChar(Random random)
-	{
+	public static char pickUpOneRandomChar(Random random) {
 		return pickUpOneRandomChar(defaultAlphabet, random);
 	}
 
-	public static char pickUpOneRandomChar(String alphabet, Random random)
-	{
+	public static char pickUpOneRandomChar(String alphabet, Random random) {
 		return alphabet.charAt((int) (random.nextDouble() * alphabet.length()));
 	}
 
-	public static String generateRandomString(String alphabet, int length, Random random)
-	{
+	public static String generateRandomString(String alphabet, int length,
+			Random random) {
 		StringBuilder b = new StringBuilder();
 
-		while (length-- >= 0)
-		{
+		while (length-- >= 0) {
 			b.append(pickUpOneRandomChar(alphabet, random));
 		}
 
 		return b.toString();
 	}
 
-	public static int computeLevenshteinDistance(String s, String t)
-	{
-		if (s == null || t == null)
-		{
+	public static int computeLevenshteinDistance(String s, String t) {
+		if (s == null || t == null) {
 			throw new NullPointerException();
 		}
 
@@ -909,12 +780,10 @@ public class TextUtilities
 		int n = s.length(); // length of s
 		int m = t.length(); // length of t
 
-		if (n == 0)
-		{
+		if (n == 0) {
 			return m;
 		}
-		else if (m == 0)
-		{
+		else if (m == 0) {
 			return n;
 		}
 
@@ -930,18 +799,15 @@ public class TextUtilities
 
 		int cost; // cost
 
-		for (i = 0; i <= n; i++)
-		{
+		for (i = 0; i <= n; i++) {
 			p[i] = i;
 		}
 
-		for (j = 1; j <= m; j++)
-		{
+		for (j = 1; j <= m; j++) {
 			t_j = t.charAt(j - 1);
 			d[0] = j;
 
-			for (i = 1; i <= n; i++)
-			{
+			for (i = 1; i <= n; i++) {
 				cost = s.charAt(i - 1) == t_j ? 0 : 1;
 				// minimum of cell to the left+1, to the top+1, diagonally left
 				// and up +cost
@@ -959,19 +825,15 @@ public class TextUtilities
 		return p[n];
 	}
 
-	public static String removeComments(String s)
-	{
+	public static String removeComments(String s) {
 		return s.replaceAll("#.*(\\n|$)", "");
 	}
 
-	public static int getNumberOf(char c, char[] s)
-	{
+	public static int getNumberOf(char c, char[] s) {
 		int n = 0;
 
-		for (int i = 0; i < s.length; ++i)
-		{
-			if (s[i] == c)
-			{
+		for (int i = 0; i < s.length; ++i) {
+			if (s[i] == c) {
 				++n;
 			}
 		}
@@ -979,21 +841,18 @@ public class TextUtilities
 		return n;
 	}
 
-	public static int getNumberOf(char c, String s)
-	{
+	public static int getNumberOf(char c, String s) {
 		int n = 0;
 		int p = - 1;
 
-		while ((p = s.indexOf(c, p + 1)) != - 1)
-		{
+		while ((p = s.indexOf(c, p + 1)) != - 1) {
 			++n;
 		}
 
 		return n;
 	}
 
-	public static String seconds2date(long s, boolean discardZeros)
-	{
+	public static String seconds2date(long s, boolean discardZeros) {
 		long h = s / 3600;
 		s %= 3600;
 		long m = s / 60;
@@ -1002,8 +861,7 @@ public class TextUtilities
 				+ (m == 0 && discardZeros ? "" : m + "min ") + s + "s";
 	}
 
-	public static String milliseconds2date(long l, boolean discardZeros)
-	{
+	public static String milliseconds2date(long l, boolean discardZeros) {
 		long h = l / 3600000;
 		l %= 3600000;
 
@@ -1020,31 +878,24 @@ public class TextUtilities
 				+ ((s == 0 && discardZeros ? "" : s + "s")) + ms + "ms";
 	}
 
-	public static boolean toBoolean(String s)
-	{
-		if (s.equals("true") || s.equals("yes"))
-		{
+	public static boolean toBoolean(String s) {
+		if (s.equals("true") || s.equals("yes")) {
 			return true;
 		}
-		else if (s.equals("false") || s.equals("no"))
-		{
+		else if (s.equals("false") || s.equals("no")) {
 			return false;
 		}
-		else
-		{
+		else {
 			throw new IllegalStateException(
 					"don't know how interpret this as a boolean: " + s);
 		}
 	}
 
-	public static String toString(Object o)
-	{
-		if (o == null)
-		{
+	public static String toString(Object o) {
+		if (o == null) {
 			return "null";
 		}
-		else if (o instanceof Throwable)
-		{
+		else if (o instanceof Throwable) {
 			Throwable ex = (Throwable) o;
 			StringWriter w = new StringWriter();
 			PrintWriter pw = new PrintWriter(w);
@@ -1052,46 +903,36 @@ public class TextUtilities
 			pw.flush();
 			return w.getBuffer().toString();
 		}
-		if (o instanceof byte[])
-		{
+		else if (o instanceof byte[]) {
 			return Arrays.toString((byte[]) o);
 		}
-		else if (o instanceof boolean[])
-		{
+		else if (o instanceof boolean[]) {
 			return Arrays.toString((boolean[]) o);
 		}
-		else if (o instanceof char[])
-		{
+		else if (o instanceof char[]) {
 			return Arrays.toString((char[]) o);
 		}
-		else if (o instanceof short[])
-		{
+		else if (o instanceof short[]) {
 			return Arrays.toString((short[]) o);
 		}
-		else if (o instanceof int[])
-		{
+		else if (o instanceof int[]) {
 			return Arrays.toString((int[]) o);
 		}
-		else if (o instanceof float[])
-		{
+		else if (o instanceof float[]) {
 			return Arrays.toString((float[]) o);
 		}
-		else if (o instanceof double[])
-		{
+		else if (o instanceof double[]) {
 			return Arrays.toString((double[]) o);
 		}
-		else if (o instanceof long[])
-		{
+		else if (o instanceof long[]) {
 			return Arrays.toString((long[]) o);
 		}
-		else if (o instanceof Object[])
-		{
+		else if (o instanceof Object[]) {
 			StringBuilder b = new StringBuilder();
 			b.append("[");
 			Object[] a = (Object[]) o;
 
-			for (int i = 0; i < a.length; ++i)
-			{
+			for (int i = 0; i < a.length; ++i) {
 				b.append(toString(a[i]));
 
 				if (i < a.length - 1)
@@ -1102,44 +943,74 @@ public class TextUtilities
 			b.append("]");
 			return b.toString();
 		}
-		else
-		{
-			return o == null ? "null" : o.toString();
+		else {
+			return o.toString();
 		}
 	}
 
-	public static boolean parseBoolean(String s)
-	{
-		if (s.equals("yes") || s.equals("true"))
-		{
+	public static boolean parseBoolean(String s) {
+		if (s.equals("yes") || s.equals("true")) {
 			return true;
 		}
-		else if (s.equals("no") || s.equals("false"))
-		{
+		else if (s.equals("no") || s.equals("false")) {
 			return false;
 		}
-		else
-		{
+		else {
 			throw new IllegalArgumentException(
 					"cannot be interpreted as a boolean: " + s);
 		}
 	}
 
-	public static String[] getParagraphs(String text)
-	{
+	public static String[] getParagraphs(String text) {
 		return text.split("\n\n");
 	}
 
-	public static String unquote(String s, char quoteChar)
-	{
-		if (s.charAt(0) == quoteChar && s.charAt(s.length() - 1) == quoteChar)
-		{
+	public static String unquote(String s, char quoteChar) {
+		if (s.charAt(0) == quoteChar && s.charAt(s.length() - 1) == quoteChar) {
 			return s.substring(1, s.length() - 1);
 		}
-		else
-		{
+		else {
 			return s;
 		}
+	}
+
+	public static String repeat(String line, int n, String sep) {
+		StringBuilder b = new StringBuilder(line.length() * n + sep.length() * (n - 1));
+
+		for (int i = 0; i < n; ++i) {
+			if (i > 0)
+				b.append(sep);
+
+			b.append(line);
+		}
+
+		return b.toString();
+	}
+
+	public static int[] toInts(String[] a) {
+		int[] r = new int[a.length];
+
+		for (int i = 0; i < r.length; ++i) {
+			r[i] = Integer.valueOf(a[i]);
+		}
+
+		return r;
+	}
+
+	public static boolean isASCIIPrintable(String line) {
+		int len = line.length();
+
+		for (int i = 0; i < len; ++i) {
+			if ( ! isAsciiPrintable(line.charAt(i))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public static boolean isAsciiPrintable(char ch) {
+		return ch >= 32 && ch < 127 || Character.isWhitespace(ch);
 	}
 
 }

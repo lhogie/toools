@@ -240,7 +240,7 @@ public class RegularFile extends AbstractFile
 			CountingInputStream cin = new CountingInputStream(createReadingStream());
 			ObjectInputStream in = new ObjectInputStream(cin);
 			AtomicBoolean run = new AtomicBoolean(true);
-			Threads.loop(1000, () -> run.get(), () -> c.accept(cin.getByteCount()));
+			Threads.newThread_loop_periodic(1000, () -> run.get(), () -> c.accept(cin.getByteCount()));
 			Object o = in.readObject();
 			in.close();
 			run.set(false);

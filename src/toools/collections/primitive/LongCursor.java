@@ -36,74 +36,33 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 */
 
-package toools.collection.bigstuff.longset;
+package toools.collections.primitive;
 
 import java.util.Iterator;
 
 import it.unimi.dsi.fastutil.longs.LongIterable;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 
-public class LongCursor
-{
+public class LongCursor {
 	public long value;
 
-	public static Iterable<LongCursor> fromHPPC(
-			Iterable<com.carrotsearch.hppc.cursors.LongCursor> iterable)
-	{
-
-		return new Iterable<LongCursor>()
-		{
-			Iterator<com.carrotsearch.hppc.cursors.LongCursor> i = iterable.iterator();
+	public static Iterable<LongCursor> fromFastUtil(LongIterable iterable) {
+		return new Iterable<LongCursor>() {
 
 			@Override
-			public Iterator<LongCursor> iterator()
-			{
-
-				return new Iterator<LongCursor>()
-				{
-					final LongCursor cursor = new LongCursor();
-
-					@Override
-					public boolean hasNext()
-					{
-						return i.hasNext();
-					}
-
-					@Override
-					public LongCursor next()
-					{
-						cursor.value = i.next().value;
-						return cursor;
-					}
-
-				};
-			}
-		};
-	}
-
-	public static Iterable<LongCursor> fromFastUtil(LongIterable iterable)
-	{
-		return new Iterable<LongCursor>()
-		{
-
-			@Override
-			public Iterator<LongCursor> iterator()
-			{
+			public Iterator<LongCursor> iterator() {
 				it.unimi.dsi.fastutil.longs.LongIterator fui = iterable.iterator();
 
-				return new Iterator<LongCursor>()
-				{
+				return new Iterator<LongCursor>() {
 					final LongCursor cursor = new LongCursor();
 
 					@Override
-					public boolean hasNext()
-					{
+					public boolean hasNext() {
 						return fui.hasNext();
 					}
 
 					@Override
-					public LongCursor next()
-					{
+					public LongCursor next() {
 						cursor.value = fui.nextLong();
 						return cursor;
 					}
@@ -113,28 +72,22 @@ public class LongCursor
 		};
 	}
 
-	public static Iterable<LongCursor> fromLongIterator(LongIterator i)
-	{
-		return new Iterable<LongCursor>()
-		{
+	public static Iterable<LongCursor> fromLongIterator(LongIterator i) {
+		return new Iterable<LongCursor>() {
 
 			@Override
-			public Iterator<LongCursor> iterator()
-			{
+			public Iterator<LongCursor> iterator() {
 
-				return new Iterator<LongCursor>()
-				{
+				return new Iterator<LongCursor>() {
 					final LongCursor cursor = new LongCursor();
 
 					@Override
-					public boolean hasNext()
-					{
+					public boolean hasNext() {
 						return i.hasNext();
 					}
 
 					@Override
-					public LongCursor next()
-					{
+					public LongCursor next() {
 						cursor.value = i.next();
 						return cursor;
 					}

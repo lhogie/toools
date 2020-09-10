@@ -38,7 +38,6 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.thread;
 
-import java.lang.Thread.State;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -47,25 +46,20 @@ import java.util.function.Consumer;
 import toools.extern.Proces;
 import toools.math.MathsUtilities;
 
-public class Threads
-{
-	public static Thread loop(long periodMs, BooleanSupplier run, Consumer<Long> warningTooSlow,
-			Runnable r)
-	{
+public class Threads {
+	public static Thread newThread_loop_periodic(long periodMs, BooleanSupplier run,
+			Consumer<Long> warningTooSlow, Runnable r) {
 		Thread t = new Thread(() -> {
-			while (run.getAsBoolean())
-			{
+			while (run.getAsBoolean()) {
 				long startMs = System.currentTimeMillis();
 				r.run();
 				long endMs = System.currentTimeMillis();
 				long durationMs = endMs - startMs;
 
-				if (durationMs > periodMs)
-				{
+				if (durationMs > periodMs) {
 					warningTooSlow.accept(durationMs);
 				}
-				else
-				{
+				else {
 					sleepMs(periodMs - durationMs);
 				}
 			}
@@ -76,32 +70,44 @@ public class Threads
 		return t;
 	}
 
-	public static Thread loop(long periodMs, BooleanSupplier run, Runnable r)
-	{
-		return loop(periodMs, run, durationMs -> System.err
-				.println("the run() method of the cylic task took " + durationMs
-						+ " ms to execute, this is too long."),
+	public static Thread newThread_loop(long pauseMs, BooleanSupplier run, Runnable r) {
+		Thread t = new Thread(() -> {
+			while (run.getAsBoolean()) {
+				r.run();
+				sleepMs(pauseMs);
+			}
+		});
+
+		t.setDaemon(true);
+		t.start();
+		return t;
+	}
+
+	public static Thread newThread_loop(BooleanSupplier run, Runnable r) {
+		return newThread_loop(0, run, r);
+	}
+
+	public static Thread newThread_loop_periodic(long periodMs, BooleanSupplier run, Runnable r) {
+		return newThread_loop_periodic(periodMs, run,
+				durationMs -> System.err
+						.println("the run() method of the cylic task (" + r + ") took "
+								+ durationMs + " ms to execute, this is too long."),
 				r);
 	}
 
-	public static Thread loop(Runnable r)
-	{
-		return loop(0, () -> true, r);
+	public static Thread newThread_loop(Runnable r) {
+		return newThread_loop(() -> true, r);
 	}
 
-	public static long sleepMs(long ms)
-	{
-		if (ms > 0)
-		{
+	public static long sleepMs(long ms) {
+		if (ms > 0) {
 			// new IllegalStateException().printStackTrace();
 			long a = System.currentTimeMillis();
 
-			try
-			{
+			try {
 				Thread.sleep(ms);
 			}
-			catch (InterruptedException e)
-			{
+			catch (InterruptedException e) {
 				return System.currentTimeMillis() - a;
 			}
 
@@ -110,34 +116,23 @@ public class Threads
 		return ms;
 	}
 
-	public static void uninterruptibleSleepMs(long ms)
-	{
-		while (ms > 0)
-		{
+	public static void uninterruptibleSleepMs(long ms) {
+		while (ms > 0) {
 			ms -= sleepMs(ms);
 		}
 	}
 
-	public static void sleepForever()
-	{
+	public static void sleepForever() {
 		uninterruptibleSleepMs(Long.MAX_VALUE);
-	}
-
-	public static void sleep(int i, String msg)
-	{
-		sleepMs(i);
-		System.out.println(msg);
 	}
 
 	private static double currentLoadAvg = 1;
 	private static long loadAvgLastSenseDate = 0;
 
-	public static double getLastMinuteLoadAverage()
-	{
+	public static double getLastMinuteLoadAverage() {
 		long now = System.currentTimeMillis();
 
-		if (now - loadAvgLastSenseDate > 10000d)
-		{
+		if (now - loadAvgLastSenseDate > 10000d) {
 			String uptimeOutput = new String(Proces.exec("uptime"));
 			String[] values = uptimeOutput.split(" +");
 			loadAvgLastSenseDate = now;
@@ -147,24 +142,18 @@ public class Threads
 		return currentLoadAvg;
 	}
 
-	private static final Thread computerLoadMonitorThread = new Thread()
-	{
+	private static final Thread computerLoadMonitorThread = new Thread() {
 
 		@Override
-		public void run()
-		{
+		public void run() {
 			double oldValue = getNumberOfUnusedProcessors();
 
-			while (true)
-			{
-				try
-				{
+			while (true) {
+				try {
 					double newValue = getNumberOfUnusedProcessors();
 
-					if (oldValue != newValue)
-					{
-						for (ComputerLoadListener cl : computerLoadListeners)
-						{
+					if (oldValue != newValue) {
+						for (ComputerLoadListener cl : computerLoadListeners) {
 							cl.numberOfUnusedProcessorsChanged(oldValue, newValue);
 						}
 
@@ -173,8 +162,7 @@ public class Threads
 
 					uninterruptibleSleepMs(1000);
 				}
-				catch (Throwable e)
-				{
+				catch (Throwable e) {
 					e.printStackTrace();
 				}
 			}
@@ -183,29 +171,24 @@ public class Threads
 
 	private static List<ComputerLoadListener> computerLoadListeners = new ArrayList<ComputerLoadListener>();
 
-	public static void addComputerLoadListener(ComputerLoadListener l)
-	{
+	public static void addComputerLoadListener(ComputerLoadListener l) {
 		computerLoadListeners.add(l);
 
 		// if this is the first listener to come
-		if (computerLoadListeners.size() == 1)
-		{
+		if (computerLoadListeners.size() == 1) {
 			computerLoadMonitorThread.start();
 		}
 	}
 
-	public static int getNumberOfProcessors()
-	{
+	public static int getNumberOfProcessors() {
 		return Runtime.getRuntime().availableProcessors();
 	}
 
-	public static double getNumberOfUnusedProcessors()
-	{
+	public static double getNumberOfUnusedProcessors() {
 		return getNumberOfProcessors() - getLastMinuteLoadAverage();
 	}
 
-	public static boolean isCPUOverloaded()
-	{
+	public static boolean isCPUOverloaded() {
 		return getNumberOfUnusedProcessors() <= 0;
 	}
 
@@ -215,19 +198,16 @@ public class Threads
 	 * 
 	 * @return
 	 */
-	public static int getNumberOfThreadsANewTaskCanUseToTakeAllComputationalResources()
-	{
+	public static int getNumberOfThreadsANewTaskCanUseToTakeAllComputationalResources() {
 		return Math.max(1, (int) MathsUtilities.round(getNumberOfUnusedProcessors(), 0));
 	}
 
-	public static void main(String[] args)
-	{
-		addComputerLoadListener(new ComputerLoadListener()
-		{
+	public static void main(String[] args) {
+		addComputerLoadListener(new ComputerLoadListener() {
 
 			@Override
-			public void numberOfUnusedProcessorsChanged(double oldValue, double newValue)
-			{
+			public void numberOfUnusedProcessorsChanged(double oldValue,
+					double newValue) {
 				System.out.println("nouveau load: " + newValue + " ancien=" + oldValue);
 			}
 		});
@@ -235,34 +215,20 @@ public class Threads
 		sleepForever();
 	}
 
-	public static void wait(Object lock)
-	{
-		try
-		{
-			synchronized (lock)
-			{
+	public static void wait(Object lock) {
+		try {
+			synchronized (lock) {
 				lock.wait();
 			}
 		}
-		catch (InterruptedException e)
-		{
+		catch (InterruptedException e) {
 			throw new IllegalStateException();
 		}
 	}
 
-	public static void notify(Object lock)
-	{
-		synchronized (lock)
-		{
+	public static void notify(Object lock) {
+		synchronized (lock) {
 			lock.notify();
-		}
-	}
-
-	public static void waitThreadState(Thread t, State s)
-	{
-		while (t.getState() != s)
-		{
-			Thread.yield();
 		}
 	}
 }

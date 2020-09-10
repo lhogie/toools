@@ -42,6 +42,11 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * Represents an union of multiple collection. No data is copied. 
+ * @author lhogie
+ */
+
 public class Union<E> extends AbstractCollection<E>
 {
 	private final  Collection<E>[] sets;

@@ -1,112 +1,133 @@
 package toools.io;
 
+import java.io.IOException;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintStream;
 
-import toools.io.file.RegularFile;
 import toools.text.TextUtilities;
 import toools.util.Date;
 
-public class Cout
-{
-	public static String processName = null;
+public abstract class Cout {
+	public static final PrintStream raw_stdout = System.out, raw_stderr = System.err;
+	public static Cout out = new Stdout();
+	public static Cout err = new Stderr();
 
+	static {
+		if (false) {
+			try {
+				{
+					PipedInputStream pis = new PipedInputStream();
+					PipedOutputStream pos = new PipedOutputStream(pis);
+					Utilities.grabLines(pis, line -> out.add(line), err -> {
+					});
+					System.setOut(new PrintStream(pos));
+				}
 
-	public static String allowedPrefices = "REPWIMD";
-	public static boolean showLetter = true;
-	public static boolean showDate = true;
-	public static int leftShit = 0;
-
-	public static void result(Object... s)
-	{
-		stdout(prefix('R', s), System.out);
+				{
+					PipedInputStream pis = new PipedInputStream();
+					PipedOutputStream pos = new PipedOutputStream(pis);
+					Utilities.grabLines(pis, line -> err.add(line), err -> {
+					});
+					System.setErr(new PrintStream(pos));
+				}
+			}
+			catch (IOException e) {
+				throw new IllegalStateException(e);
+			}
+		}
 	}
 
-	public static void error(Object... s)
-	{
-		stdout(prefix('E', s), System.out);
+	public static void activate() {
+		out = new TimestampedOut(new Beautifyer(out));
+		err = new TimestampedOut(new Beautifyer(err));
 	}
 
-	public static void warning(Object... s)
-	{
-		stdout(prefix('W', s), System.out);
-	}
+	public static class Stdout extends Cout {
 
-	public static void progress(Object... s)
-	{
-		stdout(prefix('P', s), System.out);
-	}
+		@Override
+		public void add(Object o) {
+			raw_stdout.println(o);
+		}
+	};
 
-	public static void info(Object... s)
-	{
-		stdout(prefix('I', s), System.out);
-	}
+	public static class Stderr extends Cout {
 
-	public static void sys(Object... s)
-	{
-		stdout(prefix('M', s), System.out);
-	}
+		@Override
+		public void add(Object o) {
+			raw_stderr.println(o);
+		}
+	};
 
-	public static void debug(Object... s)
-	{
-		stdout(prefix('D', s), System.out);
-	}
+	public static abstract class DelegLineOutput extends Cout {
+		protected final Cout out;
 
-	private static synchronized void stdout(String s, PrintStream os)
-	{
-		if (os == null)
-		{
-			String filename = (processName == null ? "" : processName + " - ")
-					+ Date.now(Date.DATE_AND_TIME) + ".log";
+		public DelegLineOutput(Cout out) {
+			this.out = out;
+		}
+	};
 
-			filename = filename.replace(":", "_");
-			filename = filename.replace(" ", "_");
+	public static class TimestampedOut extends DelegLineOutput {
 
-			RegularFile f = new RegularFile("$HOME/luclogs/" + filename);
-			f.getParent().ensureExists();
-
-			os = new PrintStream(f.createWritingStream(false, 1024));
+		public TimestampedOut(Cout out) {
+			super(out);
 		}
 
-		os.println(s);
-		os.flush();
-	}
+		@Override
+		public void add(Object o) {
+			out.add(Date.now() + " \t" + o);
+		}
+	};
 
-	private static String prefix(char mark, Object... s)
-	{
-		if (allowedPrefices.indexOf(mark) < 0)
-			throw new IllegalArgumentException(
-					"mark '" + mark + "' is not allowed. Valid marks: " + allowedPrefices);
+	public static class Beautifyer extends DelegLineOutput {
 
-		String prefix = (showLetter ? mark + " \t" : "");
-		prefix += (showDate ? Date.now() + " \t" : "");
-		// prefix += TextUtilities.repeat('\t', leftShit);
-		String r = prefix
-				+ TextUtilities.concat(", ", ennice(s)).replace("\n", "\n" + prefix);
-		return r;
-	}
-
-	private static String[] ennice(Object[] s)
-	{
-		if (s == null)
-			throw new NullPointerException();
-		
-		String[] r = new String[s.length];
-
-		for (int i = 0; i < r.length; ++i)
-		{
-			r[i] = TextUtilities.toString(s[i]);
+		public Beautifyer(Cout out) {
+			super(out);
 		}
 
-		return r;
-	}
-
-	public static void debugSuperVisible(Object... os)
-	{
-		for (Object o : os)
-		{
-			debug(TextUtilities.box(TextUtilities.toString(o)));
+		@Override
+		public void add(Object o) {
+			out.add(TextUtilities.toString(o));
 		}
+	};
 
+	public static void progress(Object o) {
+		out.add("PGRS \t" + o);
 	}
+
+	public static void warning(Object o) {
+		err.add("WARN \t" + o);
+	}
+
+	public static void error(Object o) {
+		err.add("ERROR \t" + o);
+	}
+
+	public static void sys(Object o) {
+		out.add("SYS \t" + o);
+	}
+
+	public static void info(Object o) {
+		out.add("I \t" + o);
+	}
+
+	public static void result(Object o) {
+		out.add("R \t" + o);
+	}
+
+	public static void debug(Object... o) {
+		for (Object a : o) {
+			out.add("D\t" + a);
+		}
+	}
+
+	public static void debugSuperVisible(Object o) {
+		for (String s : TextUtilities.box(TextUtilities.toString(o)).split("\n")) {
+			out.add("D\t" + s);
+		}
+	}
+
+	public abstract void add(Object o);
+
 
 }

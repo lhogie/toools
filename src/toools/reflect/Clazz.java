@@ -40,6 +40,7 @@ package toools.reflect;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -55,44 +56,35 @@ import java.util.Map;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import toools.io.Cout;
 import toools.io.JavaResource;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
-public class Clazz
-{
-	public static <T> List<Class<T>> findImplementationsInTheSamePackage(Class<T> model)
-	{
+public class Clazz {
+	public static <T> List<Class<T>> findImplementationsInTheSamePackage(Class<T> model) {
 		return findImplementations(model, Clazz.listAllClasses(model.getPackage()));
 	}
 
 	public static <T> List<Class<T>> findImplementationsInPackage(Class<T> model,
-			Package... pkg)
-	{
+			Package... pkg) {
 		return findImplementations(model, Clazz.listAllClasses(pkg));
 	}
 
-	public static <T> List<Class<T>> findImplementations(Class<T> model)
-	{
+	public static <T> List<Class<T>> findImplementations(Class<T> model) {
 		return findImplementations(model, ClassPath.retrieveSystemClassPath());
 	}
 
 	public static <T> List<Class<T>> findImplementations(Class<T> model,
-			ClassPath classpath)
-	{
+			ClassPath classpath) {
 		return findImplementations(model, classpath.listAllClasses());
 	}
 
 	public static <T> List<Class<T>> findImplementations(Class<T> model,
-			Iterable<Class<?>> classes)
-	{
+			Iterable<Class<?>> classes) {
 		List<Class<T>> implementations = new ArrayList<Class<T>>();
 
-		for (Class<?> potentialImplementation : classes)
-		{
-			if (isAnImplementation(potentialImplementation, model))
-			{
+		for (Class<?> potentialImplementation : classes) {
+			if (isAnImplementation(potentialImplementation, model)) {
 				implementations.add((Class<T>) potentialImplementation);
 			}
 		}
@@ -101,190 +93,144 @@ public class Clazz
 	}
 
 	public static boolean isAnImplementation(Class<?> potentialImplementation,
-			Class<?> model)
-	{
+			Class<?> model) {
 		return model.isAssignableFrom(potentialImplementation)
 				&& Clazz.isInstantiable(potentialImplementation);
 	}
 
-	public static boolean classExists(String className)
-	{
-		try
-		{
+	public static boolean classExists(String className) {
+		try {
 			Class.forName(className);
 			return true;
 		}
-		catch (ClassNotFoundException e)
-		{
+		catch (ClassNotFoundException e) {
 			return false;
 		}
-		catch (NoClassDefFoundError e)
-		{
+		catch (NoClassDefFoundError e) {
 			return false;
 		}
 	}
 
-	public static boolean isAbstract(Class<?> thisClass)
-	{
+	public static boolean isAbstract(Class<?> thisClass) {
 		return Modifier.isAbstract(thisClass.getModifiers());
 	}
 
-	public static boolean isInterface(Class<?> thisClass)
-	{
+	public static boolean isInterface(Class<?> thisClass) {
 		return Modifier.isInterface(thisClass.getModifiers());
 	}
 
-	public static boolean isConcrete(Class<?> thisClass)
-	{
+	public static boolean isConcrete(Class<?> thisClass) {
 		return ! isInterface(thisClass) && ! isAbstract(thisClass);
 	}
 
-	public static <V> Constructor<V> findDefaultConstructor(Class<V> thisClass)
-	{
-		try
-		{
+	public static <V> Constructor<V> findDefaultConstructor(Class<V> thisClass) {
+		try {
 			return thisClass.getConstructor(new Class[0]);
 		}
-		catch (SecurityException e)
-		{
+		catch (SecurityException e) {
 			return null;
 		}
-		catch (NoSuchMethodException e)
-		{
+		catch (NoSuchMethodException e) {
 			return null;
 		}
 	}
 
-	public static boolean isInner(Class<?> thisClass)
-	{
+	public static boolean isInner(Class<?> thisClass) {
 		return thisClass.getName().contains("$");
 	}
 
-	public static boolean isInstantiable(Class<?> thisClass)
-	{
+	public static boolean isInstantiable(Class<?> thisClass) {
 		return Modifier.isPublic(thisClass.getModifiers()) && isConcrete(thisClass)
 				&& ! isInner(thisClass);
 	}
 
-	public static boolean isInstantiableWithoutArguments(Class<?> thisClass)
-	{
+	public static boolean isInstantiableWithoutArguments(Class<?> thisClass) {
 		return isInstantiable(thisClass) && findDefaultConstructor(thisClass) != null;
 	}
 
-	public static Class findClass(String className)
-	{
-		try
-		{
+	public static Class findClass(String className) {
+		try {
 			return findClassOrFail(className);
 		}
-		catch (NoClassDefFoundError e)
-		{
+		catch (NoClassDefFoundError e) {
 			return null;
 		}
 	}
 
-	public static Class findClassOrFail(String className)
-	{
+	public static Class findClassOrFail(String className) {
+		if (className.endsWith("[]")) {
+			String componentTypeName = className.substring(0, className.length() - 2);
+			Class c = findClassOrFail(componentTypeName);
+			return Array.newInstance(c, 0).getClass();
+		}
+
 		Class c = name_primitive.get(className);
 
 		if (c != null)
 			return c;
 
-		try
-		{
+		try {
 			return Class.forName(className);
 		}
-		catch (ClassNotFoundException e)
-		{
+		catch (ClassNotFoundException e) {
 			throw new NoClassDefFoundError(className);
 		}
 	}
 
-	public static Class<?> findClassOrFail2(String className)
-	{
-		if (className == null)
-			throw new NullPointerException();
-
-		try
-		{
-			return Class.forName(className);
-		}
-		catch (ClassNotFoundException e)
-		{
-			throw new NoClassDefFoundError(e.getMessage());
-		}
-	}
-
 	public static <T> T makeInstanceOrFail(Class<T> clazz)
-			throws ClassInstantiationException
-	{
+			throws ClassInstantiationException {
 		if (clazz == null)
 			throw new NullPointerException("cannot instantiate the null class");
 
-		try
-		{
+		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable e)
-		{
-			if (e.getCause() == null)
-			{
+		catch (Throwable e) {
+			if (e.getCause() == null) {
 				throw new ClassInstantiationException(e);
 			}
-			else
-			{
+			else {
 				throw new ClassInstantiationException(e.getCause());
 			}
 		}
 	}
 
-	public static <T> T makeInstance(Class<T> clazz)
-	{
-		try
-		{
+	public static <T> T makeInstance(Class<T> clazz) {
+		try {
 			return makeInstanceOrFail(clazz);
 		}
-		catch (ClassInstantiationException e)
-		{
+		catch (ClassInstantiationException e) {
 			return null;
 		}
 	}
 
-	public static <T> T makeInstance(Constructor<T> constructor, Object... args)
-	{
-		try
-		{
+	public static <T> T makeInstance(Constructor<T> constructor, Object... args) {
+		try {
 			constructor.setAccessible(true);
 			return constructor.newInstance(args);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			throw new IllegalStateException(e.getCause() == null ? e : e.getCause());
 		}
 	}
 
 	public static <T> List<T> makeSeveralInstances(Class<T> clazz, int numberOfInstances)
-			throws ClassInstantiationException
-	{
+			throws ClassInstantiationException {
 		List<T> c = new ArrayList<T>();
 
-		while (numberOfInstances-- > 0)
-		{
+		while (numberOfInstances-- > 0) {
 			c.add(makeInstance(clazz));
 		}
 
 		return c;
 	}
 
-	public static List<Class<?>> listAllClasses(Package... pkg)
-	{
+	public static List<Class<?>> listAllClasses(Package... pkg) {
 		List<Package> packages = Arrays.asList(pkg);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 
-		for (Class<?> clazz : ClassPath.retrieveSystemClassPath().listAllClasses())
-		{
-			if (packages.contains(clazz.getPackage()))
-			{
+		for (Class<?> clazz : ClassPath.retrieveSystemClassPath().listAllClasses()) {
+			if (packages.contains(clazz.getPackage())) {
 				classes.add(clazz);
 			}
 		}
@@ -292,62 +238,49 @@ public class Clazz
 		return classes;
 	}
 
-	public static boolean isExecutable(Class<?> thisClass)
-	{
-		try
-		{
+	public static boolean isExecutable(Class<?> thisClass) {
+		try {
 			Method m = thisClass.getMethod("main",
 					new Class[] { (new String[0]).getClass() });
 			return (m.getModifiers() & Modifier.STATIC) != 0;
 		}
-		catch (Throwable e)
-		{
+		catch (Throwable e) {
 			return false;
 		}
 	}
 
-	public static ClassPath findClassContainer(String classname, ClassPath urls)
-	{
+	public static ClassPath findClassContainer(String classname, ClassPath urls) {
 		String resname = classname.replace('.', '/') + ".class";
 		return JavaResource.findResourceContainer(resname, urls);
 	}
 
-	public static boolean hasDefaultConstructor(Class<? extends Object> c)
-	{
-		try
-		{
+	public static boolean hasDefaultConstructor(Class<? extends Object> c) {
+		try {
 			return c.getConstructor(new Class[0]) != null;
 		}
-		catch (SecurityException e)
-		{
+		catch (SecurityException e) {
 			throw new IllegalStateException(e);
 		}
-		catch (NoSuchMethodException e)
-		{
+		catch (NoSuchMethodException e) {
 			return false;
 		}
 	}
 
-	public static ClassName getClassName(String name)
-	{
+	public static ClassName getClassName(String name) {
 		int p = name.lastIndexOf('.');
 
-		if (p >= 0)
-		{
+		if (p >= 0) {
 			return new ClassName(name.substring(0, p), name.substring(p + 1));
 		}
-		else
-		{
+		else {
 			return new ClassName(null, name);
 		}
 	}
 
-	public static <T> T makeInstance(Class<T> c, Object[] parms)
-	{
+	public static <T> T makeInstance(Class<T> c, Object[] parms) {
 		Class[] types = new Class[parms.length];
 
-		for (int i = 0; i < parms.length; ++i)
-		{
+		for (int i = 0; i < parms.length; ++i) {
 			types[i] = parms[i].getClass();
 		}
 
@@ -355,21 +288,17 @@ public class Clazz
 		return makeInstance(co, parms);
 	}
 
-	public static <T> Constructor<T> getConstructor(Class<T> c, Class[] types)
-	{
-		try
-		{
+	public static <T> Constructor<T> getConstructor(Class<T> c, Class... types) {
+		try {
 			return c.getConstructor(types);
 		}
-		catch (NoSuchMethodException | SecurityException e)
-		{
+		catch (NoSuchMethodException | SecurityException e) {
 			return null;
 		}
 	}
 
 	public static <T> List<Constructor<T>> getConstructorsAccepting(Class<T> c,
-			Object... parms)
-	{
+			Object... parms) {
 		// System.out.println("searching constructor " +
 		// Clazz.toString(Clazz.getClasses(parms)) + " in class " + c);
 
@@ -377,10 +306,8 @@ public class Clazz
 
 		List<Constructor<T>> r = new ArrayList<>();
 
-		for (Constructor co : c.getDeclaredConstructors())
-		{
-			if (isAssignableFrom(co.getParameterTypes(), parmTypes))
-			{
+		for (Constructor co : c.getDeclaredConstructors()) {
+			if (isAssignableFrom(co.getParameterTypes(), parmTypes)) {
 				r.add(co);
 			}
 		}
@@ -388,12 +315,10 @@ public class Clazz
 		return r;
 	}
 
-	public static Class[] getClasses(Object... objects)
-	{
+	public static Class[] getClasses(Object... objects) {
 		Class[] classes = new Class[objects.length];
 
-		for (int i = 0; i < objects.length; ++i)
-		{
+		for (int i = 0; i < objects.length; ++i) {
 			classes[i] = objects[i] == null ? null : objects[i].getClass();
 		}
 
@@ -402,8 +327,7 @@ public class Clazz
 
 	public static Map<Class, Class> class_primitives = new HashMap<>();
 
-	static
-	{
+	static {
 		class_primitives.put(Integer.class, int.class);
 		class_primitives.put(Long.class, long.class);
 		class_primitives.put(Short.class, short.class);
@@ -416,8 +340,7 @@ public class Clazz
 
 	public static Map<Class, Class> primivite_class = new HashMap<>();
 
-	static
-	{
+	static {
 		primivite_class.put(int.class, Integer.class);
 		primivite_class.put(double.class, Double.class);
 		primivite_class.put(short.class, Short.class);
@@ -429,8 +352,7 @@ public class Clazz
 	}
 	public static Map<String, Class> name_primitive = new HashMap<>();
 
-	static
-	{
+	static {
 		name_primitive.put("int", int.class);
 		name_primitive.put("long", long.class);
 		name_primitive.put("short", short.class);
@@ -441,57 +363,43 @@ public class Clazz
 		name_primitive.put("boolean", boolean.class);
 	}
 
-	public static boolean isAssignableFrom(Class[] dest, Class[] src)
-	{
-		if (dest.length == src.length)
-		{
-			for (int i = 0; i < dest.length; ++i)
-			{
+	public static boolean isAssignableFrom(Class[] dest, Class[] src) {
+		if (dest.length == src.length) {
+			for (int i = 0; i < dest.length; ++i) {
 				// the type is undefined
-				if (src[i] == null)
-				{
+				if (src[i] == null) {
 					// only a primitive type can't match
 					// all object types can
-					if (dest[i].isPrimitive())
-					{
+					if (dest[i].isPrimitive()) {
 						return false;
 					}
 				}
-				else
-				{
+				else {
 					// both are primitive
-					if (dest[i].isPrimitive() && src[i].isPrimitive())
-					{
-						if (dest[i] != src[i])
-						{
+					if (dest[i].isPrimitive() && src[i].isPrimitive()) {
+						if (dest[i] != src[i]) {
 							return false;
 						}
 					}
 					// none are primitive
-					else if ( ! dest[i].isPrimitive() && ! src[i].isPrimitive())
-					{
-						if ( ! dest[i].isAssignableFrom(src[i]))
-						{
+					else if ( ! dest[i].isPrimitive() && ! src[i].isPrimitive()) {
+						if ( ! dest[i].isAssignableFrom(src[i])) {
 							return false;
 						}
 					}
-					else if (dest[i].isPrimitive())
-					{
+					else if (dest[i].isPrimitive()) {
 						Class correspondingPrimitiveType = class_primitives.get(src[i]);
 
 						if (correspondingPrimitiveType == null
-								|| correspondingPrimitiveType != dest[i])
-						{
+								|| correspondingPrimitiveType != dest[i]) {
 							return false;
 						}
 					}
-					else if (src[i].isPrimitive())
-					{
+					else if (src[i].isPrimitive()) {
 						Class correspondingPrimitiveType = class_primitives.get(dest[i]);
 
 						if (correspondingPrimitiveType == null
-								|| correspondingPrimitiveType != src[i])
-						{
+								|| correspondingPrimitiveType != src[i]) {
 							return false;
 						}
 					}
@@ -500,59 +408,47 @@ public class Clazz
 
 			return true;
 		}
-		else
-		{
+		else {
 			return false;
 		}
 	}
 
-	public static int computeDistance(Class[] src, Class[] dest)
-	{
-		if (src.length == dest.length)
-		{
+	public static int computeDistance(Class[] src, Class[] dest) {
+		if (src.length == dest.length) {
 			int sum = 0;
 
-			for (int i = 0; i < dest.length; ++i)
-			{
+			for (int i = 0; i < dest.length; ++i) {
 				sum += computeDistance(src[i], dest[i]);
 			}
 
 			return sum;
 		}
-		else
-		{
+		else {
 			return Integer.MAX_VALUE;
 		}
 	}
 
-	public static int computeDistance(Class src, Class dest)
-	{
-		if (src == dest)
-		{
+	public static int computeDistance(Class src, Class dest) {
+		if (src == dest) {
 			return 0;
 		}
-		else
-		{
+		else {
 			List<Class> l = new ArrayList<>();
 
-			for (Class i : src.getInterfaces())
-			{
+			for (Class i : src.getInterfaces()) {
 				l.add(i);
 			}
 
-			if (src.getSuperclass() != null)
-			{
+			if (src.getSuperclass() != null) {
 				l.add(src.getSuperclass());
 			}
 
 			int min = 100000;
 
-			for (Class i : l)
-			{
+			for (Class i : l) {
 				int d = computeDistance(i, dest);
 
-				if (d < min)
-				{
+				if (d < min) {
 					min = d;
 				}
 			}
@@ -561,13 +457,11 @@ public class Clazz
 		}
 	}
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		System.out.println(computeDistance(List.class, Serializable.class));
 	}
 
-	public static String toString(Class[] classes)
-	{
+	public static String toString(Class[] classes) {
 		return Arrays.asList(classes).toString();
 
 	}
@@ -576,43 +470,32 @@ public class Clazz
 	 * Returns the size of the given class. This assumes that the class is
 	 * either a primitive type or a class containing primitive types.
 	 */
-	public static int sizeOf(Class c)
-	{
-		if (c.isPrimitive())
-		{
-			if (c == byte.class || c == boolean.class)
-			{
+	public static int sizeOf(Class c) {
+		if (c.isPrimitive()) {
+			if (c == byte.class || c == boolean.class) {
 				return 1;
 			}
-			else if (c == char.class || c == short.class)
-			{
+			else if (c == char.class || c == short.class) {
 				return 2;
 			}
-			else if (c == int.class || c == float.class)
-			{
+			else if (c == int.class || c == float.class) {
 				return 4;
 			}
-			else if (c == long.class || c == double.class)
-			{
+			else if (c == long.class || c == double.class) {
 				return 8;
 			}
 			else
 				throw new IllegalStateException(c.getName());
 		}
-		else
-		{
+		else {
 			int sizeof = 0;
 
-			while (c != null)
-			{
-				for (Field f : c.getDeclaredFields())
-				{
-					if (f.getType().isPrimitive())
-					{
+			while (c != null) {
+				for (Field f : c.getDeclaredFields()) {
+					if (f.getType().isPrimitive()) {
 						sizeof += sizeOf(f.getType());
 					}
-					else
-					{
+					else {
 						return - 1;
 					}
 				}
@@ -624,23 +507,19 @@ public class Clazz
 		}
 	}
 
-	public static void setFieldValue(Object target, String fieldName, Object value)
-	{
-		try
-		{
+	public static void setFieldValue(Object target, String fieldName, Object value) {
+		try {
 			Field f = target.getClass().getDeclaredField(fieldName);
 			f.setAccessible(true);
 			f.set(target, value);
 		}
 		catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-				| SecurityException e)
-		{
+				| SecurityException e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
-	public static RegularFile compile(String java, String classname, Directory d)
-	{
+	public static RegularFile compile(String java, String classname, Directory d) {
 		RegularFile f = new RegularFile(d, classname.replace('.', '/') + ".java");
 		f.setContent(java.getBytes());
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -648,8 +527,7 @@ public class Clazz
 		ByteArrayOutputStream err = new ByteArrayOutputStream();
 		int result = compiler.run(null, out, err, f.getPath());
 
-		if (result != 0)
-		{
+		if (result != 0) {
 			System.out.println(new String(out.toByteArray()));
 			System.err.println(new String(err.toByteArray()));
 			throw new IllegalStateException();
@@ -658,38 +536,36 @@ public class Clazz
 		return new RegularFile(classname + ".class");
 	}
 
-	public static Class loadClassfile(String classname, RegularFile f)
-	{
-		try
-		{
+	public static Class loadClassfile(String classname, RegularFile f) {
+		try {
 			URL url = f.getParent().javaFile.toURI().toURL();
 			URL[] urls = new URL[] { url };
 			ClassLoader cl = new URLClassLoader(urls);
 			return cl.loadClass(classname);
 		}
-		catch (Throwable e)
-		{
+		catch (Throwable e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
-	public static Class toClass(String javaSource, String classname)
-	{
+	public static Class toClass(String javaSource, String classname) {
 		RegularFile classFile = Clazz.compile(javaSource, classname,
 				Directory.getSystemTempDirectory());
 		return Clazz.loadClassfile(classname, classFile);
 
 	}
 
-	public static boolean hasField(Class c, String fieldname)
-	{
-		try
-		{
+	public static boolean hasField(Class c, String fieldname) {
+		try {
 			return c.getDeclaredField(fieldname) != null;
 		}
-		catch (NoSuchFieldException | SecurityException e)
-		{
+		catch (NoSuchFieldException | SecurityException e) {
 			return false;
 		}
+	}
+
+	public static String classNameWithoutPackage(String fullQualifiedName) {
+		int p = fullQualifiedName.lastIndexOf('.');
+		return p < 0 ? fullQualifiedName : fullQualifiedName.substring(p + 1);
 	}
 }

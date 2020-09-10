@@ -36,59 +36,9 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 */
  
- package toools.collections;
+ package toools;
 
-import java.util.Iterator;
-import java.util.List;
-
-public class NullSkippingIterator<T> implements Iterator<T>
+public interface NamedObject
 {
-	T nextValue;
-	int nextPosition;
-	final List<T> list;
-
-	public NullSkippingIterator(List<T> list)
-	{
-		this.list = list;
-		nextPosition = nextIndex(0);
-		nextValue = nextPosition == -1 ? null : list.get(nextPosition);
-	}
-
-	@Override
-	public boolean hasNext()
-	{
-		return nextValue != null;
-	}
-
-	@Override
-	public T next()
-	{
-		T tmp = nextValue;
-		nextPosition = nextIndex(nextPosition + 1);
-		nextValue = nextPosition == -1 ? null : list.get(nextPosition);
-		return tmp;
-	}
-
-	private int nextIndex(int start)
-	{
-		int sz = list.size();
-
-		for (int i = start; i < sz; ++i)
-		{
-			nextValue = list.get(i);
-
-			if (nextValue != null)
-			{
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
-	@Override
-	public void remove()
-	{
-		throw new IllegalStateException("not implemented");
-	}
+    String getFriendlyName();
 }

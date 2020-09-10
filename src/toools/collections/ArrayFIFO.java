@@ -2,7 +2,7 @@ package toools.collections;
 
 import java.util.ArrayList;
 
-public class ArrayListFIFO<E>
+public class ArrayFIFO<E>
 {
 	private static class A<E> extends ArrayList<E>
 	{
@@ -21,7 +21,7 @@ public class ArrayListFIFO<E>
 		l.add(e);
 	}
 
-	public E poll()
+	public E extract()
 	{
 		E e = l.get(indexOfFirst++);
 

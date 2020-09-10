@@ -44,7 +44,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
-import toools.collection.bigstuff.longset.LongCursor;
+import toools.collections.primitive.LongCursor;
 
 /**
  * A matrix made of primitive longs. Indices for lines and columns begin to 0.

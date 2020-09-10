@@ -2,30 +2,30 @@ package toools;
 
 import java.util.function.Supplier;
 
-public class SimpleCache<T>
+public class SimpleCache<E>
 {
-	private T value;
-	private final T invalidValue;
-	private final Supplier<T> supplier;
+	private E value;
+	private final E invalidValue;
+	private final Supplier<E> supplier;
 
-	public SimpleCache(T iv, Supplier<T> supplier)
+	public SimpleCache(E iv, Supplier<E> supplier)
 	{
 		this.invalidValue = iv;
 		this.supplier = supplier;
 	}
 
-	public T get()
+	public E get()
 	{
 		if ( ! isValid())
 		{
-			T computedValue = supplier.get();
+			E computedValue = supplier.get();
 			set(computedValue);
 		}
 
 		return value;
 	}
 
-	public T set(T t)
+	public E set(E t)
 	{
 		return this.value = t;
 	}

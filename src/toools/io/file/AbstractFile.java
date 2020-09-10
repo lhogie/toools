@@ -373,13 +373,6 @@ public abstract class AbstractFile implements Serializable
 
 	public abstract void create();
 
-	/**
-	 * Opens the file using the OS specific strategy.
-	 */
-	public void open()
-	{
-		OperatingSystem.getLocalOperatingSystem().open(this);
-	}
 
 	public abstract void rsyncTo(String remotePath);
 
