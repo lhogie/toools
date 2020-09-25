@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>toools</groupId>
+	<groupId>io.github.lhogie</groupId>
 	<artifactId>toools</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.2</version>
 	<name>Toools</name>
 	<description>A suite Java toools useful in the context of the development of scientific applications</description>
 	<url>https://github.com/lhogie/toools</url>
