@@ -13,14 +13,32 @@ public class SSHParms implements Serializable {
 		int indexOfAt = s.indexOf('@');
 		SSHParms p = new SSHParms();
 
-		if (indexOfAt == - 1) {
+		if (indexOfAt == -1) {
 			p.hostname = s;
-		}
-		else {
+		} else {
 			p.username = s.substring(0, indexOfAt);
 			p.hostname = s.substring(indexOfAt + 1);
 		}
 
 		return p;
+	}
+
+	@Override
+	public String toString() {
+		String s = "";
+
+		if (username != null) {
+			s += username + "@";
+		}
+
+		if (hostname != null) {
+			s += hostname;
+		}
+
+		if (port != 22) {
+			s += ":" + port;
+		}
+
+		return s;
 	}
 }

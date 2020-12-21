@@ -6,8 +6,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-import toools.io.Cout;
-
 public class Q<E> {
 	private final BlockingQueue<E> q;
 	public QListener<E> listener;
@@ -28,19 +26,17 @@ public class Q<E> {
 	public E get_blocking() {
 		try {
 			return q.take();
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
 	public E get_blocking(double timeout) {
 		try {
-			long tns = (long) (timeout*1000000000);
+			long tns = (long) (timeout * 1000000000);
 			E e = q.poll(tns, TimeUnit.NANOSECONDS);
 			return e;
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);
 		}
 	}
@@ -62,8 +58,7 @@ public class Q<E> {
 			if (listener != null) {
 				listener.newElement(this, in);
 			}
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);
 		}
 	}
@@ -82,6 +77,7 @@ public class Q<E> {
 		thread.start();
 		return thread;
 	}
+
 
 	public void cancelEventisation() {
 		if (thread != null) {

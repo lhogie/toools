@@ -46,11 +46,9 @@ import java.io.OutputStream;
 import toools.io.Utilities;
 import toools.text.TextUtilities;
 
-public abstract class TextSerializer<E> extends Serializer<E>
-{
+public abstract class TextSerializer<E> extends Serializer<E> {
 	@Override
-	public E read(InputStream is) throws IOException
-	{
+	public E read(InputStream is) throws IOException {
 		String s = new String(Utilities.readUntilEOF(is));
 		return toObject(s);
 	}
@@ -58,77 +56,61 @@ public abstract class TextSerializer<E> extends Serializer<E>
 	protected abstract E toObject(String s);
 
 	@Override
-	public void write(E o, OutputStream os) throws IOException
-	{
+	public void write(E o, OutputStream os) throws IOException {
 		os.write(toString((E) o).getBytes());
 	}
 
-	protected String toString(E o)
-	{
+	protected String toString(E o) {
 		return TextUtilities.toString(o);
 	}
 
 	@Override
-	public String getMIMEType()
-	{
+	public String getMIMEType() {
 		return "txt";
 	}
 
-	public static final TextSerializer<Integer> Int32 = new TextSerializer<Integer>()
-	{
+	public static final TextSerializer<Integer> Int32 = new TextSerializer<Integer>() {
 		@Override
-		protected Integer toObject(String s)
-		{
+		protected Integer toObject(String s) {
 			return Integer.parseInt(s.trim());
 		}
 	};
-	
-	public static final TextSerializer<Double> Float64 = new TextSerializer<Double>()
-	{
+
+	public static final TextSerializer<Double> Float64 = new TextSerializer<Double>() {
 		@Override
-		protected Double toObject(String s)
-		{
+		protected Double toObject(String s) {
 			return Double.parseDouble(s.trim());
 		}
 	};
 
-	public static final TextSerializer<Long> Int64= new  TextSerializer<Long>()
-	{
+	public static final TextSerializer<Long> Int64 = new TextSerializer<Long>() {
 		@Override
-		protected Long toObject(String s)
-		{
+		protected Long toObject(String s) {
 			return Long.parseLong(s.trim());
 		}
 	};
 
-	public static final TextSerializer<Boolean> Bool = new TextSerializer<Boolean>()
-	{
+	public static final TextSerializer<Boolean> Bool = new TextSerializer<Boolean>() {
 		@Override
-		protected Boolean toObject(String s)
-		{
+		protected Boolean toObject(String s) {
 			return Boolean.parseBoolean(s);
 		}
 	};
-	
-	public static final TextSerializer<String> String = new TextSerializer<String>()
-	{
+
+	public static final TextSerializer<String> String = new TextSerializer<String>() {
 		@Override
-		protected String toObject(String s)
-		{
+		protected String toObject(String s) {
 			return s;
 		}
 	};
 
-	public static final TextSerializer<int[]> IntArray = new   TextSerializer<int[]>()
-	{
+	public static final TextSerializer<int[]> IntArray = new TextSerializer<int[]>() {
 		@Override
-		protected int[] toObject(String s)
-		{
+		protected int[] toObject(String s) {
 			String[] lines = s.split("\n");
 			int[] r = new int[lines.length];
 
-			for (int i = 0; i < r.length; ++i)
-			{
+			for (int i = 0; i < r.length; ++i) {
 				r[i] = Integer.parseInt(lines[i]);
 			}
 
@@ -136,30 +118,25 @@ public abstract class TextSerializer<E> extends Serializer<E>
 		}
 
 		@Override
-		protected String toString(int[] o)
-		{
+		protected String toString(int[] o) {
 			StringBuilder r = new StringBuilder();
 
-			for (int i = 0; i < o.length; ++i)
-			{
+			for (int i = 0; i < o.length; ++i) {
 				r.append(o[i]);
 			}
 
 			return r.toString();
 		}
 	};
-	
-	public static final TextSerializer<Color> Color = new   TextSerializer<Color>()
-	{
+
+	public static final TextSerializer<Color> Color = new TextSerializer<Color>() {
 		@Override
-		protected Color toObject(String s)
-		{
+		protected Color toObject(String s) {
 			return java.awt.Color.decode(s);
 		}
 
 		@Override
-		protected String toString(Color c)
-		{
+		protected String toString(Color c) {
 			return c.toString();
 		}
 	};

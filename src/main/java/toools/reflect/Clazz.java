@@ -50,8 +50,10 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -61,12 +63,32 @@ import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
 public class Clazz {
+	public static Set<Class> getClasses2(Class c) {
+		Set<Class> r = new HashSet<>();
+		List<Class> q = new ArrayList<>();
+		q.add(c);
+
+		while (!q.isEmpty()) {
+			c = q.remove(0);
+			r.add(c);
+
+			if (c.getSuperclass() != null) {
+				q.add(c.getSuperclass());
+			}
+
+			for (Class i : c.getInterfaces()) {
+				q.add(i);
+			}
+		}
+
+		return r;
+	}
+	
 	public static <T> List<Class<T>> findImplementationsInTheSamePackage(Class<T> model) {
 		return findImplementations(model, Clazz.listAllClasses(model.getPackage()));
 	}
 
-	public static <T> List<Class<T>> findImplementationsInPackage(Class<T> model,
-			Package... pkg) {
+	public static <T> List<Class<T>> findImplementationsInPackage(Class<T> model, Package... pkg) {
 		return findImplementations(model, Clazz.listAllClasses(pkg));
 	}
 
@@ -74,13 +96,11 @@ public class Clazz {
 		return findImplementations(model, ClassPath.retrieveSystemClassPath());
 	}
 
-	public static <T> List<Class<T>> findImplementations(Class<T> model,
-			ClassPath classpath) {
+	public static <T> List<Class<T>> findImplementations(Class<T> model, ClassPath classpath) {
 		return findImplementations(model, classpath.listAllClasses());
 	}
 
-	public static <T> List<Class<T>> findImplementations(Class<T> model,
-			Iterable<Class<?>> classes) {
+	public static <T> List<Class<T>> findImplementations(Class<T> model, Iterable<Class<?>> classes) {
 		List<Class<T>> implementations = new ArrayList<Class<T>>();
 
 		for (Class<?> potentialImplementation : classes) {
@@ -92,21 +112,17 @@ public class Clazz {
 		return implementations;
 	}
 
-	public static boolean isAnImplementation(Class<?> potentialImplementation,
-			Class<?> model) {
-		return model.isAssignableFrom(potentialImplementation)
-				&& Clazz.isInstantiable(potentialImplementation);
+	public static boolean isAnImplementation(Class<?> potentialImplementation, Class<?> model) {
+		return model.isAssignableFrom(potentialImplementation) && Clazz.isInstantiable(potentialImplementation);
 	}
 
 	public static boolean classExists(String className) {
 		try {
 			Class.forName(className);
 			return true;
-		}
-		catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException e) {
 			return false;
-		}
-		catch (NoClassDefFoundError e) {
+		} catch (NoClassDefFoundError e) {
 			return false;
 		}
 	}
@@ -120,17 +136,15 @@ public class Clazz {
 	}
 
 	public static boolean isConcrete(Class<?> thisClass) {
-		return ! isInterface(thisClass) && ! isAbstract(thisClass);
+		return !isInterface(thisClass) && !isAbstract(thisClass);
 	}
 
 	public static <V> Constructor<V> findDefaultConstructor(Class<V> thisClass) {
 		try {
 			return thisClass.getConstructor(new Class[0]);
-		}
-		catch (SecurityException e) {
+		} catch (SecurityException e) {
 			return null;
-		}
-		catch (NoSuchMethodException e) {
+		} catch (NoSuchMethodException e) {
 			return null;
 		}
 	}
@@ -140,8 +154,7 @@ public class Clazz {
 	}
 
 	public static boolean isInstantiable(Class<?> thisClass) {
-		return Modifier.isPublic(thisClass.getModifiers()) && isConcrete(thisClass)
-				&& ! isInner(thisClass);
+		return Modifier.isPublic(thisClass.getModifiers()) && isConcrete(thisClass) && !isInner(thisClass);
 	}
 
 	public static boolean isInstantiableWithoutArguments(Class<?> thisClass) {
@@ -151,8 +164,7 @@ public class Clazz {
 	public static Class findClass(String className) {
 		try {
 			return findClassOrFail(className);
-		}
-		catch (NoClassDefFoundError e) {
+		} catch (NoClassDefFoundError e) {
 			return null;
 		}
 	}
@@ -171,25 +183,21 @@ public class Clazz {
 
 		try {
 			return Class.forName(className);
-		}
-		catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException e) {
 			throw new NoClassDefFoundError(className);
 		}
 	}
 
-	public static <T> T makeInstanceOrFail(Class<T> clazz)
-			throws ClassInstantiationException {
+	public static <T> T makeInstanceOrFail(Class<T> clazz) throws ClassInstantiationException {
 		if (clazz == null)
 			throw new NullPointerException("cannot instantiate the null class");
 
 		try {
 			return clazz.newInstance();
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			if (e.getCause() == null) {
 				throw new ClassInstantiationException(e);
-			}
-			else {
+			} else {
 				throw new ClassInstantiationException(e.getCause());
 			}
 		}
@@ -198,8 +206,7 @@ public class Clazz {
 	public static <T> T makeInstance(Class<T> clazz) {
 		try {
 			return makeInstanceOrFail(clazz);
-		}
-		catch (ClassInstantiationException e) {
+		} catch (ClassInstantiationException e) {
 			return null;
 		}
 	}
@@ -208,8 +215,7 @@ public class Clazz {
 		try {
 			constructor.setAccessible(true);
 			return constructor.newInstance(args);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			throw new IllegalStateException(e.getCause() == null ? e : e.getCause());
 		}
 	}
@@ -240,11 +246,9 @@ public class Clazz {
 
 	public static boolean isExecutable(Class<?> thisClass) {
 		try {
-			Method m = thisClass.getMethod("main",
-					new Class[] { (new String[0]).getClass() });
+			Method m = thisClass.getMethod("main", new Class[] { (new String[0]).getClass() });
 			return (m.getModifiers() & Modifier.STATIC) != 0;
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			return false;
 		}
 	}
@@ -257,11 +261,9 @@ public class Clazz {
 	public static boolean hasDefaultConstructor(Class<? extends Object> c) {
 		try {
 			return c.getConstructor(new Class[0]) != null;
-		}
-		catch (SecurityException e) {
+		} catch (SecurityException e) {
 			throw new IllegalStateException(e);
-		}
-		catch (NoSuchMethodException e) {
+		} catch (NoSuchMethodException e) {
 			return false;
 		}
 	}
@@ -271,8 +273,7 @@ public class Clazz {
 
 		if (p >= 0) {
 			return new ClassName(name.substring(0, p), name.substring(p + 1));
-		}
-		else {
+		} else {
 			return new ClassName(null, name);
 		}
 	}
@@ -291,14 +292,12 @@ public class Clazz {
 	public static <T> Constructor<T> getConstructor(Class<T> c, Class... types) {
 		try {
 			return c.getConstructor(types);
-		}
-		catch (NoSuchMethodException | SecurityException e) {
+		} catch (NoSuchMethodException | SecurityException e) {
 			return null;
 		}
 	}
 
-	public static <T> List<Constructor<T>> getConstructorsAccepting(Class<T> c,
-			Object... parms) {
+	public static <T> List<Constructor<T>> getConstructorsAccepting(Class<T> c, Object... parms) {
 		// System.out.println("searching constructor " +
 		// Clazz.toString(Clazz.getClasses(parms)) + " in class " + c);
 
@@ -314,6 +313,8 @@ public class Clazz {
 
 		return r;
 	}
+
+
 
 	public static Class[] getClasses(Object... objects) {
 		Class[] classes = new Class[objects.length];
@@ -373,8 +374,7 @@ public class Clazz {
 					if (dest[i].isPrimitive()) {
 						return false;
 					}
-				}
-				else {
+				} else {
 					// both are primitive
 					if (dest[i].isPrimitive() && src[i].isPrimitive()) {
 						if (dest[i] != src[i]) {
@@ -382,24 +382,20 @@ public class Clazz {
 						}
 					}
 					// none are primitive
-					else if ( ! dest[i].isPrimitive() && ! src[i].isPrimitive()) {
-						if ( ! dest[i].isAssignableFrom(src[i])) {
+					else if (!dest[i].isPrimitive() && !src[i].isPrimitive()) {
+						if (!dest[i].isAssignableFrom(src[i])) {
 							return false;
 						}
-					}
-					else if (dest[i].isPrimitive()) {
+					} else if (dest[i].isPrimitive()) {
 						Class correspondingPrimitiveType = class_primitives.get(src[i]);
 
-						if (correspondingPrimitiveType == null
-								|| correspondingPrimitiveType != dest[i]) {
+						if (correspondingPrimitiveType == null || correspondingPrimitiveType != dest[i]) {
 							return false;
 						}
-					}
-					else if (src[i].isPrimitive()) {
+					} else if (src[i].isPrimitive()) {
 						Class correspondingPrimitiveType = class_primitives.get(dest[i]);
 
-						if (correspondingPrimitiveType == null
-								|| correspondingPrimitiveType != src[i]) {
+						if (correspondingPrimitiveType == null || correspondingPrimitiveType != src[i]) {
 							return false;
 						}
 					}
@@ -407,8 +403,7 @@ public class Clazz {
 			}
 
 			return true;
-		}
-		else {
+		} else {
 			return false;
 		}
 	}
@@ -422,8 +417,7 @@ public class Clazz {
 			}
 
 			return sum;
-		}
-		else {
+		} else {
 			return Integer.MAX_VALUE;
 		}
 	}
@@ -431,8 +425,7 @@ public class Clazz {
 	public static int computeDistance(Class src, Class dest) {
 		if (src == dest) {
 			return 0;
-		}
-		else {
+		} else {
 			List<Class> l = new ArrayList<>();
 
 			for (Class i : src.getInterfaces()) {
@@ -467,36 +460,30 @@ public class Clazz {
 	}
 
 	/**
-	 * Returns the size of the given class. This assumes that the class is
-	 * either a primitive type or a class containing primitive types.
+	 * Returns the size of the given class. This assumes that the class is either a
+	 * primitive type or a class containing primitive types.
 	 */
 	public static int sizeOf(Class c) {
 		if (c.isPrimitive()) {
 			if (c == byte.class || c == boolean.class) {
 				return 1;
-			}
-			else if (c == char.class || c == short.class) {
+			} else if (c == char.class || c == short.class) {
 				return 2;
-			}
-			else if (c == int.class || c == float.class) {
+			} else if (c == int.class || c == float.class) {
 				return 4;
-			}
-			else if (c == long.class || c == double.class) {
+			} else if (c == long.class || c == double.class) {
 				return 8;
-			}
-			else
+			} else
 				throw new IllegalStateException(c.getName());
-		}
-		else {
+		} else {
 			int sizeof = 0;
 
 			while (c != null) {
 				for (Field f : c.getDeclaredFields()) {
 					if (f.getType().isPrimitive()) {
 						sizeof += sizeOf(f.getType());
-					}
-					else {
-						return - 1;
+					} else {
+						return -1;
 					}
 				}
 
@@ -512,9 +499,7 @@ public class Clazz {
 			Field f = target.getClass().getDeclaredField(fieldName);
 			f.setAccessible(true);
 			f.set(target, value);
-		}
-		catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException
-				| SecurityException e) {
+		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
 			throw new IllegalStateException(e);
 		}
 	}
@@ -542,15 +527,13 @@ public class Clazz {
 			URL[] urls = new URL[] { url };
 			ClassLoader cl = new URLClassLoader(urls);
 			return cl.loadClass(classname);
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
 	public static Class toClass(String javaSource, String classname) {
-		RegularFile classFile = Clazz.compile(javaSource, classname,
-				Directory.getSystemTempDirectory());
+		RegularFile classFile = Clazz.compile(javaSource, classname, Directory.getSystemTempDirectory());
 		return Clazz.loadClassfile(classname, classFile);
 
 	}
@@ -558,8 +541,7 @@ public class Clazz {
 	public static boolean hasField(Class c, String fieldname) {
 		try {
 			return c.getDeclaredField(fieldname) != null;
-		}
-		catch (NoSuchFieldException | SecurityException e) {
+		} catch (NoSuchFieldException | SecurityException e) {
 			return false;
 		}
 	}
