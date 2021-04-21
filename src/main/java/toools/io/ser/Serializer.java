@@ -49,56 +49,43 @@ import java.io.Serializable;
 
 import toools.io.IORuntimeException;
 
-public abstract class Serializer<E>
-{
+public abstract class Serializer<E> {
 	public abstract E read(InputStream is) throws IOException;
 
 	public abstract void write(E o, OutputStream os) throws IOException;
 
 	public abstract String getMIMEType();
 
-	public Object fromBytes(byte[] bytes)
-	{
-		try
-		{
+	public Object fromBytes(byte[] bytes) {
+		try {
 			return read(new ByteArrayInputStream(bytes));
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			throw new IORuntimeException(e);
 		}
 	}
 
-	public byte[] toBytes(E o)
-	{
-		try
-		{
+	public byte[] toBytes(E o) {
+		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			write(o, bos);
 			return bos.toByteArray();
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			throw new IORuntimeException(e);
 		}
 	}
 
-	public static Serializer[] serializers = new Serializer[] { new JavaSerializer(),
-			new FSTSerializer() };
+	public static Serializer[] serializers = new Serializer[] { new JavaSerializer(), new FSTSerializer() };
 
-	public static class UnserializationResult
-	{
+	public static class UnserializationResult {
 		public Serializer protocol;
 		public Object object;
 	}
 
-	public static Serializer getDefaultSerializer()
-	{
+	public static Serializer getDefaultSerializer() {
 		return serializers[0];
 	}
 
-	public static UnserializationResult unserialize(InputStream is) throws IOException
-	{
+	public static UnserializationResult unserialize(InputStream is) throws IOException {
 		int i = is.read();
 		UnserializationResult r = new UnserializationResult();
 		r.protocol = serializers[i];
@@ -106,12 +93,9 @@ public abstract class Serializer<E>
 		return r;
 	}
 
-	private static int indexOf(Serializer p)
-	{
-		for (int i = 0; i < serializers.length; ++i)
-		{
-			if (serializers[i] == p)
-			{
+	private static int indexOf(Serializer p) {
+		for (int i = 0; i < serializers.length; ++i) {
+			if (serializers[i] == p) {
 				return i;
 			}
 		}
@@ -119,20 +103,15 @@ public abstract class Serializer<E>
 		throw new IllegalArgumentException("unknown serialization protocol");
 	}
 
-	public static class CustomObjectInputStream extends ObjectInputStream
-	{
+	public static class CustomObjectInputStream extends ObjectInputStream {
 		private ClassLoader classLoader;
 
-		public CustomObjectInputStream(InputStream in, ClassLoader classLoader)
-				throws IOException
-		{
+		public CustomObjectInputStream(InputStream in, ClassLoader classLoader) throws IOException {
 			super(in);
 			this.classLoader = classLoader;
 		}
 
-		protected Class<?> resolveClass(ObjectStreamClass desc)
-				throws IOException, ClassNotFoundException
-		{
+		protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
 			// System.out.println("using classloader " +
 			// classLoader.getClass().getName() + " load class " +
 			// desc.getName());
@@ -140,16 +119,13 @@ public abstract class Serializer<E>
 		}
 	}
 
-	public Object clone(E msg)
-	{
-		return fromBytes(toBytes(msg));
+	public E clone(E msg) {
+		return (E) fromBytes(toBytes(msg));
 	}
 
-	public static final Object EOS = new Serializable()
-	{
+	public static final Object EOS = new Serializable() {
 		@Override
-		public boolean equals(Object o)
-		{
+		public boolean equals(Object o) {
 			return o.getClass() == getClass();
 		}
 	};

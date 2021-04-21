@@ -50,10 +50,8 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -63,8 +61,8 @@ import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
 public class Clazz {
-	public static Set<Class> getClasses2(Class c) {
-		Set<Class> r = new HashSet<>();
+	public static List<Class> bfs(Class c) {
+		List<Class> r = new ArrayList<>();
 		List<Class> q = new ArrayList<>();
 		q.add(c);
 
@@ -83,7 +81,7 @@ public class Clazz {
 
 		return r;
 	}
-	
+
 	public static <T> List<Class<T>> findImplementationsInTheSamePackage(Class<T> model) {
 		return findImplementations(model, Clazz.listAllClasses(model.getPackage()));
 	}
@@ -313,8 +311,6 @@ public class Clazz {
 
 		return r;
 	}
-
-
 
 	public static Class[] getClasses(Object... objects) {
 		Class[] classes = new Class[objects.length];

@@ -38,8 +38,10 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.text;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -934,6 +936,13 @@ public class TextUtilities {
 
 	public static boolean isAsciiPrintable(char ch) {
 		return ch >= 32 && ch < 127 || Character.isWhitespace(ch);
+	}
+
+	public static String exception2string(Throwable t) {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		PrintStream ps = new PrintStream(bos);
+		t.printStackTrace(ps);
+		return new String(bos.toByteArray());
 	}
 
 }

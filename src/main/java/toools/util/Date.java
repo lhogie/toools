@@ -54,7 +54,6 @@ public class Date {
 	}
 
 	public static String TIME = "HH:mm:ss";
-
 	public static String DATE_AND_TIME = "yyyy-MM-dd HH:mm:ss";
 
 	public static String now() {
