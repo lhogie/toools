@@ -38,43 +38,85 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.util;
 
-public class Conversion
-{
-	public static int long2int(long n)
-	{
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import toools.io.ser.JavaSerializer;
+
+public class Conversion {
+	public static int long2int(long n) {
 		int intValue = (int) n;
 
 		if (n != intValue)
-			throw new Error("too big to be converted to int: " + n +  " => " + intValue);
+			throw new Error("too big to be converted to int: " + n + " => " + intValue);
 
 		return intValue;
 	}
 
-	public static int[] toIntArray(long[] a)
-	{
+	public static int[] toIntArray(long[] a) {
 		int[] r = new int[a.length];
 
-		for (int i = 0; i < a.length; ++i)
-		{
+		for (int i = 0; i < a.length; ++i) {
 			r[i] = long2int(a[i]);
 		}
 
 		return r;
 	}
 
-	public static void main(String[] args)
-	{
-		System.out.println(long2int(5000000000L));
+	public static <E> E clone(E o) {
+		if (o instanceof Cloneable) {
+			try {
+				Method m = o.getClass().getMethod("clone");
+				m.setAccessible(true);
+				return (E) m.invoke(o);
+			} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+			// immutable types
+		} else if (o instanceof Number || o instanceof String) {
+			return (E) o;
+		} else if (o instanceof Collection) {
+			Collection l = (Collection) o;
+			Collection r = allocateCloneContainer(l, l.size());
+			r.addAll(l);
+			return (E) r;
+		} else if (o instanceof Map) {
+			Map l = (Map) o;
+			Map r = allocateCloneContainer(l, l.size());
+			r.putAll(l);
+			return (E) r;
+		} else if (o instanceof Serializable) {
+			return (E) new JavaSerializer().clone(o);
+		} else {
+			throw new IllegalArgumentException("unable to clone instances of " + o.getClass());
+		}
 	}
 
-	public static boolean text2boolean(String s)
-	{
-		if (s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("true"))
-		{
-			return true;
+	private static <E> E allocateCloneContainer(E o, int size) {
+		try {
+			E r = (E) o.getClass().getConstructor(int.class).newInstance(size);
+			return (E) r;
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			throw new RuntimeException(e);
 		}
-		else if (s.equalsIgnoreCase("no") || s.equalsIgnoreCase("false"))
-		{
+	}
+
+	public static void main(String[] args) {
+		Map o = new HashMap<>();
+		o.put("he", "fd");
+		System.out.println(clone(o));
+	}
+
+	public static boolean text2boolean(String s) {
+		if (s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("true")) {
+			return true;
+		} else if (s.equalsIgnoreCase("no") || s.equalsIgnoreCase("false")) {
 			return false;
 		}
 
@@ -83,18 +125,15 @@ public class Conversion
 
 	private static final char[] hexAlphabet = "0123456789ABCDEF".toCharArray();
 
-	public static char[] bytesToHex(byte[] b)
-	{
+	public static char[] bytesToHex(byte[] b) {
 		final char[] r = new char[hexAlphabet.length * 3 - 1];
 		int i = 0;
 
-		for (byte c : b)
-		{
+		for (byte c : b) {
 			r[i++] = hexAlphabet[(c >> 4) & 0x0f];
 			r[i++] = hexAlphabet[c & 0x0f];
 
-			if (i < r.length - 1)
-			{
+			if (i < r.length - 1) {
 				r[i++] = ' ';
 			}
 		}

@@ -19,7 +19,7 @@ public class JSONMap extends JSONElement
 		if (v == null)
 			throw new NullPointerException();
 		
-		l.add(new Pair(k, v));
+		l.add(new Pair(k, v, true));
 	}
 
 	@Override

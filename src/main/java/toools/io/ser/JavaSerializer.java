@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.ser;
+
+package toools.io.ser;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,13 +48,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
-public class JavaSerializer<E> extends Serializer<E>
-{
+public class JavaSerializer<E> extends Serializer<E> {
+	public static final JavaSerializer<?> instance = new JavaSerializer<>();
+
 	@Override
-	public E read(InputStream is) throws IOException
-	{
-		try
-		{
+	public E read(InputStream is) throws IOException {
+		try {
 			DataInputStream d = new DataInputStream(is);
 			int size = d.readInt();
 			byte[] b = new byte[size];
@@ -64,16 +63,13 @@ public class JavaSerializer<E> extends Serializer<E>
 			Object o = oos.readObject();
 			oos.close();
 			return (E) o;
-		}
-		catch (ClassNotFoundException e)
-		{
+		} catch (ClassNotFoundException e) {
 			throw new IOException(e);
 		}
 	}
 
 	@Override
-	public void write(E o, OutputStream os) throws IOException
-	{
+	public void write(E o, OutputStream os) throws IOException {
 		ByteArrayOutputStream bo = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(bo);
 		oos.writeObject(o);
@@ -85,8 +81,7 @@ public class JavaSerializer<E> extends Serializer<E>
 	}
 
 	@Override
-	public String getMIMEType()
-	{
+	public String getMIMEType() {
 		return "ser";
 	}
 
