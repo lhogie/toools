@@ -59,6 +59,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -194,6 +195,12 @@ public class RegularFile extends AbstractFile {
 	public Object getContentAsJavaObject() {
 		return getContentAsJavaObject(count -> {
 		});
+	}
+
+	public <A> void alterContent(Consumer<A> f) {
+		A a = (A) getContentAsJavaObject();
+		f.accept(a);
+		setContentAsJavaObject(a);
 	}
 
 	public Object getContentAsJavaObject(Consumer<Long> c) {
@@ -537,9 +544,14 @@ public class RegularFile extends AbstractFile {
 
 	public void setLines(Collection<String> lines) {
 		PrintStream out = new PrintStream(createWritingStream());
+		Iterator<String> i = lines.iterator();
 
-		for (String line : lines) {
-			out.println(line);
+		while (i.hasNext()) {
+			out.print(i.next());
+
+			if (i.hasNext()) {
+				out.println();
+			}
 		}
 
 		out.close();

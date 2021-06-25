@@ -45,6 +45,7 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.Field;
 import java.util.Random;
 
 import javax.swing.JFrame;
@@ -57,66 +58,52 @@ import toools.util.assertion.Assertions;
 /**
  * @author luc.hogie Created on Jun 18, 2004
  */
-public class Utilities
-{
-	public static Color getRandomColor(Random random)
-	{
+public class Utilities {
+	public static Color getRandomColor(Random random) {
 		return getRandomColor(false, random);
 	}
 
-	public static String toRGBHexa(Color c)
-	{
-		return Integer.toHexString(c.getRGB()).substring(2);
+	public static String toRGBHex(Color c) {
+		return "#" + Integer.toHexString(c.getRGB()).substring(2);
 	}
 
-	public static Color getColor(Color a, Color b, double r)
-	{
+	public static Color getColorGradient(Color a, Color b, double r) {
 		Assertions.ensure(0 <= r && r <= 1, "must be between 0 and 1");
 		return new Color((int) (a.getRed() * (1 - r) + b.getRed() * r),
-				(int) (a.getGreen() * (1 - r) + b.getGreen() * r),
-				(int) (a.getBlue() * (1 - r) + b.getBlue() * r));
+				(int) (a.getGreen() * (1 - r) + b.getGreen() * r), (int) (a.getBlue() * (1 - r) + b.getBlue() * r));
 	}
 
-	public static Dimension scale(Dimension d, double ratio)
-	{
+	public static Dimension scale(Dimension d, double ratio) {
 		return new Dimension((int) (d.getWidth() * ratio), (int) (d.getHeight() * ratio));
 	}
 
-	public static Dimension limit(Dimension d, Dimension bounds, double ratio)
-	{
-		ratio = ratio * Math.min(bounds.getWidth() / (double) d.getWidth(),
-				bounds.getHeight() / (double) d.getHeight());
+	public static Dimension limit(Dimension d, Dimension bounds, double ratio) {
+		ratio = ratio
+				* Math.min(bounds.getWidth() / (double) d.getWidth(), bounds.getHeight() / (double) d.getHeight());
 
 		return scale(d, ratio);
 	}
 
-	public static Color getRandomColor(boolean alpha, Random random)
-	{
+	public static Color getRandomColor(boolean alpha, Random random) {
 		int r = (int) toools.math.MathsUtilities.pickRandomBetween(0, 255, random);
 		int g = (int) toools.math.MathsUtilities.pickRandomBetween(0, 255, random);
 		int b = (int) toools.math.MathsUtilities.pickRandomBetween(0, 255, random);
-		int a = alpha ? 255
-				: (int) toools.math.MathsUtilities.pickRandomBetween(0, 255, random);
+		int a = alpha ? 255 : (int) toools.math.MathsUtilities.pickRandomBetween(0, 255, random);
 		return new Color(r, g, b, a);
 	}
 
-	public static Color setAlpha(Color color, int alpha)
-	{
+	public static Color setAlpha(Color color, int alpha) {
 		return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
 	}
 
-	public static String getCurrentLine(JTextArea ta)
-	{
-		try
-		{
+	public static String getCurrentLine(JTextArea ta) {
+		try {
 			int lineNumber = ta.getLineOfOffset(ta.getCaretPosition());
 			int a = ta.getLineStartOffset(lineNumber);
 			int b = ta.getLineEndOffset(lineNumber);
 			String line = ta.getText(a, b - a - 1);
 			return line;
-		}
-		catch (BadLocationException e)
-		{
+		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
@@ -124,15 +111,12 @@ public class Utilities
 
 	}
 
-	public static JFrame displayInJFrame(Component c, String title)
-	{
+	public static JFrame displayInJFrame(Component c, String title) {
 		final JFrame f = new JFrame(title);
 
-		f.addWindowListener(new WindowAdapter()
-		{
+		f.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e)
-			{
+			public void windowClosing(WindowEvent e) {
 				f.dispose();
 			}
 		});
@@ -147,11 +131,22 @@ public class Utilities
 		return f;
 	}
 
-	private static void centerOnScreen(JFrame f)
-	{
+	private static void centerOnScreen(JFrame f) {
 		Dimension sd = Toolkit.getDefaultToolkit().getScreenSize();
 		Dimension frameSize = f.getSize();
-		f.setLocation((sd.width - frameSize.width) / 2,
-				(sd.height - frameSize.height) / 2);
+		f.setLocation((sd.width - frameSize.width) / 2, (sd.height - frameSize.height) / 2);
+	}
+
+	public static Color parseColor(String s) {
+		try {
+			Field f = Color.class.getField(s);
+			return (Color) f.get(null);
+		} catch (Exception e) {
+			return Color.decode(s);
+		}
+	}
+
+	public String toHEX(Color c) {
+		return Integer.toHexString(c.getRGB());
 	}
 }
