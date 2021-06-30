@@ -43,7 +43,7 @@ import toools.extern.Proces;
 public class GraphViz {
 
 	public enum COMMAND {
-		dot, neato, fdp, twopi, circo
+		dot, neato, fdp, twopi, circo, osage, patchwork, sfdp
 	}
 
 	public enum OUTPUT_FORMAT {

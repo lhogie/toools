@@ -5,8 +5,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.lhogie</groupId>
 	<artifactId>toools</artifactId>
-	<version>0.0.6-SNAPSHOT</version>
-	<name>Toools</name>
+	<version>0.0.6</version>
+	<name>toools</name>
 	<description>A suite Java toools useful in the context of the development of scientific applications</description>
 	<url>https://github.com/lhogie/toools</url>
 	<properties>
