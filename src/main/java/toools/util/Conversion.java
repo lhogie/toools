@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import toools.io.ser.JavaSerializer;
 import toools.reflect.Clazz;
 import toools.text.TextUtilities;
@@ -159,6 +160,9 @@ public class Conversion {
 			return (E) (Long) Long.parseLong(from.toString());
 
 		if (Collection.class.isAssignableFrom(to)) {
+			if (to.isAssignableFrom(LongArrayList.class))
+				to = (Class<E>) LongArrayList.class;
+			
 			if (from instanceof String) {
 				return (E) string2collectionOfLongs((Class<Collection<Long>>) to, (String) from);
 			}
@@ -181,6 +185,10 @@ public class Conversion {
 
 	public static Collection<Long> string2collectionOfLongs(Class<? extends Collection<Long>> c, String from) {
 		var cc = Clazz.makeInstance(c);
+
+		if (cc == null)
+			throw new IllegalArgumentException("cannot instanciate " + c);
+		
 		var a = ((String) from).split(",");
 
 		for (String i : a) {
