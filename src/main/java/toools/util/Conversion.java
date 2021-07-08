@@ -38,6 +38,8 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,6 +48,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import toools.io.ser.JavaSerializer;
+import toools.reflect.Clazz;
+import toools.text.TextUtilities;
 
 public class Conversion {
 	public static int long2int(long n) {
@@ -57,7 +61,7 @@ public class Conversion {
 		return intValue;
 	}
 
-	public static int[] toIntArray(long[] a) {
+	public static int[] toIntArray(long... a) {
 		int[] r = new int[a.length];
 
 		for (int i = 0; i < a.length; ++i) {
@@ -82,13 +86,13 @@ public class Conversion {
 			return (E) o;
 		} else if (o instanceof Collection) {
 			Collection l = (Collection) o;
-			Collection r = allocateCloneContainer(l, l.size());
+			Collection r = allocateContainer(l, l.size());
 			r.addAll(l);
 			return (E) r;
 		} else if (o instanceof Map) {
-			Map l = (Map) o;
-			Map r = allocateCloneContainer(l, l.size());
-			r.putAll(l);
+			Map m = (Map) o;
+			Map r = allocateContainer(m, m.size());
+			r.putAll(m);
 			return (E) r;
 		} else if (o instanceof Serializable) {
 			return (E) new JavaSerializer().clone(o);
@@ -97,7 +101,7 @@ public class Conversion {
 		}
 	}
 
-	private static <E> E allocateCloneContainer(E o, int size) {
+	private static <E> E allocateContainer(E o, int size) {
 		try {
 			E r = (E) o.getClass().getConstructor(int.class).newInstance(size);
 			return (E) r;
@@ -139,5 +143,50 @@ public class Conversion {
 		}
 
 		return r;
+	}
+
+	public static <E> E convert(Object from, Class<E> to) throws IllegalArgumentException {
+		if (to.isAssignableFrom(from.getClass()))
+			return (E) from;
+
+		if (to == double.class || to == Double.class)
+			return (E) Double.valueOf(from.toString());
+
+		if (to == int.class || to == Integer.class)
+			return (E) (Integer) Integer.parseInt(from.toString());
+
+		if (to == long.class || to == Long.class)
+			return (E) (Long) Long.parseLong(from.toString());
+
+		if (Collection.class.isAssignableFrom(to)) {
+			if (from instanceof String) {
+				return (E) string2collectionOfLongs((Class<Collection<Long>>) to, (String) from);
+			}
+		}
+
+		if (byte[].class.isAssignableFrom(to)) {
+			if (from instanceof InputStream) {
+				try {
+					return (E) ((InputStream) from).readAllBytes();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			return (E) TextUtilities.toString(from).getBytes();
+		}
+
+		throw new IllegalArgumentException(from.getClass() + " cannot be converted to " + to);
+	}
+
+	public static Collection<Long> string2collectionOfLongs(Class<? extends Collection<Long>> c, String from) {
+		var cc = Clazz.makeInstance(c);
+		var a = ((String) from).split(",");
+
+		for (String i : a) {
+			cc.add(Long.parseLong(i));
+		}
+
+		return cc;
 	}
 }
