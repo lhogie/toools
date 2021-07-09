@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.lhogie</groupId>
 	<artifactId>toools</artifactId>
-	<version>0.0.6</version>
+	<version>0.0.6.1</version>
 	<name>toools</name>
 	<description>A suite Java toools useful in the context of the development of scientific applications</description>
 	<url>https://github.com/lhogie/toools</url>
@@ -67,11 +67,21 @@
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
 			<version>5.7.0</version>
-			<scope>test</scope> 
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>**/*.java</include>
+					<include>**/*.js</include>
+					<include>**/*.html</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
