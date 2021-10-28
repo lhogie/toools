@@ -344,7 +344,7 @@ public class TextUtilities {
 	}
 
 	public static String toHex(byte[] bytes, char sep) {
-		StringBuilder buf = new StringBuilder();
+		StringBuilder buf = new StringBuilder(bytes.length * 3);
 
 		for (int i = 0; i < bytes.length; ++i) {
 			byte b = bytes[i];

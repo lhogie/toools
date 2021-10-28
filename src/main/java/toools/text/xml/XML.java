@@ -48,36 +48,26 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class XML
-{
+public class XML {
 	private static Document xml2dom(String xml, boolean validating) throws SAXException
 
 	{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setValidating(validating);
 
-		try
-		{
-			return dbf.newDocumentBuilder()
-					.parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
+		try {
+			return dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xml.getBytes("UTF-8")));
+		} catch (Exception e) {
 			throw new IllegalStateException(e);
-
 		}
 	}
 
-	private static <V extends DNode> DNode dom2node(Node node)
-	{
+	private static <V extends DNode> DNode dom2node(Node node) {
 		DNode n = new DNode(node.getNodeName());
 		NamedNodeMap attributes = node.getAttributes();
 
-		if (attributes != null)
-		{
-			for (int i = 0; i < attributes.getLength(); ++i)
-			{
+		if (attributes != null) {
+			for (int i = 0; i < attributes.getLength(); ++i) {
 				Node a = attributes.item(i);
 				String name = a.getNodeName();
 				String value = a.getTextContent();
@@ -87,23 +77,18 @@ public class XML
 
 		NodeList domChildren = node.getChildNodes();
 
-		for (int i = 0; i < domChildren.getLength(); ++i)
-		{
+		for (int i = 0; i < domChildren.getLength(); ++i) {
 			Node childDomNode = domChildren.item(i);
 
-			if (childDomNode.getNodeName().equals("#text"))
-			{
+			if (childDomNode.getNodeName().equals("#text")) {
 				String content = childDomNode.getTextContent().trim();
 
-				if ( ! content.isEmpty())
-				{
+				if (!content.isEmpty()) {
 					TextNode textNode = new TextNode();
 					textNode.setText(content);
 					textNode.setParent(n);
 				}
-			}
-			else
-			{
+			} else {
 				DNode child = dom2node(childDomNode);
 				child.setParent(n);
 			}
@@ -112,8 +97,7 @@ public class XML
 		return n;
 	}
 
-	public static DNode parseXML(String xml, boolean validating) throws SAXException
-	{
+	public static DNode parseXML(String xml, boolean validating) throws SAXException {
 		Document dom = xml2dom(xml, validating);
 		return dom2node(dom.getDocumentElement());
 	}
