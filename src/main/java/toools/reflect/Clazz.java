@@ -546,4 +546,14 @@ public class Clazz {
 		int p = fullQualifiedName.lastIndexOf('.');
 		return p < 0 ? fullQualifiedName : fullQualifiedName.substring(p + 1);
 	}
+
+	public static boolean hasMethod(Class c, String name, Class<?>[] parameterTypes) {
+		try {
+			return c.getMethod(name, parameterTypes) != null;
+		} catch (NoSuchMethodException e) {
+			return false;
+		} catch (SecurityException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

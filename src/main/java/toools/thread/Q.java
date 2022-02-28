@@ -1,12 +1,13 @@
 package toools.thread;
 
+import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-public class Q<E> {
+public class Q<E>  implements Iterable<E> {
 	private final BlockingQueue<E> q;
 	public QListener<E> listener;
 	private Thread thread;
@@ -83,5 +84,10 @@ public class Q<E> {
 		if (thread != null) {
 			thread.interrupt();
 		}
+	}
+
+	@Override
+	public Iterator<E> iterator() {
+		return q.iterator();
 	}
 }

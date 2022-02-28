@@ -48,6 +48,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
+import it.unimi.dsi.fastutil.objects.Object2BooleanFunction;
+import it.unimi.dsi.fastutil.objects.Object2ObjectFunction;
+
 public class JavaSerializer<E> extends Serializer<E> {
 	public static final JavaSerializer<?> instance = new JavaSerializer<>();
 
@@ -83,6 +86,13 @@ public class JavaSerializer<E> extends Serializer<E> {
 	@Override
 	public String getMIMEType() {
 		return "ser";
+	}
+
+	static class ReplacementRule{
+
+		public Object2BooleanFunction test;
+		public Object2ObjectFunction replacer;
+		
 	}
 
 }

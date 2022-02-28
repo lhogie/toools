@@ -35,24 +35,19 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.collections;
 
-
+package toools.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ListSet<E> extends ArrayList<E> implements Set<E>
-{
-	public ListSet()
-	{
+public class ListSet<E> extends ArrayList<E> implements Set<E> {
+	public ListSet() {
 	}
 
-	public ListSet(final Collection<E> list)
-	{
+	public ListSet(final Collection<E> list) {
 		if (list == null)
 			throw new NullPointerException("list");
 
@@ -61,43 +56,33 @@ public class ListSet<E> extends ArrayList<E> implements Set<E>
 	}
 
 	@Override
-	public boolean add(E e)
-	{
-		if (this.contains(e))
-		{
+	public boolean add(E e) {
+		if (this.contains(e)) {
 			return false;
-		}
-		else
-		{
+		} else {
 			return super.add(e);
 		}
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends E> collection)
-	{
+	public boolean addAll(Collection<? extends E> collection) {
 		Collection<E> copy = new ArrayList<E>(collection);
 		copy.removeAll(this);
 		return super.addAll(copy);
 	}
 
 	@Override
-	public boolean addAll(int index, Collection<? extends E> collection)
-	{
+	public boolean addAll(int index, Collection<? extends E> collection) {
 		Collection<E> copy = new ArrayList<E>(collection);
 		copy.removeAll(this);
 		return super.addAll(index, copy);
 	}
 
 	@Override
-	public void add(int index, E element)
-	{
-		if (this.contains(element))
-		{
+	public void add(int index, E element) {
+		if (this.contains(element)) {
 			return;
-		}
-		else
-		{
+		} else {
 			super.add(index, element);
 		}
 	}

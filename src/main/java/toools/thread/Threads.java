@@ -115,6 +115,10 @@ public class Threads {
 
 		return ms;
 	}
+	
+	public static double sleep(double s) {
+		return sleepMs((long) (1000*s))/1000d;
+	}
 
 	public static void uninterruptibleSleepMs(long ms) {
 		while (ms > 0) {

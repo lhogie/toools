@@ -129,4 +129,6 @@ public abstract class Serializer<E> {
 			return o.getClass() == getClass();
 		}
 	};
+
+
 }
