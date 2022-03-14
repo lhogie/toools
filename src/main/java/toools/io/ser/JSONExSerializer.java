@@ -36,37 +36,40 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 */
 
-package toools.collections;
+package toools.io.ser;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
-public class Maps {
+import org.jsonex.jsoncoder.JSONCoder;
+import org.jsonex.jsoncoder.JSONCoderOption;
 
-	public static Map<String, String> propertiesToMap(Properties properties) {
-		Map<String, String> map = new HashMap<String, String>();
-		Enumeration e = properties.keys();
+import toools.exceptions.NotYetImplementedException;
 
-		while (e.hasMoreElements()) {
-			String k = (String) e.nextElement();
-			map.put(k, properties.getProperty(k));
-		}
+public class JSONExSerializer<E> extends Serializer<E> {
+	public static final JSONExSerializer<?> instance = new JSONExSerializer<>();
+	JSONCoder e;
 
-		return map;
+	public  JSONExSerializer() {
+		JSONCoderOption opt = new JSONCoderOption();
+		e = new JSONCoder(null);
 	}
 
-	public static <A, B> StringBuilder toJSON(Map<A, B> m) {
-		StringBuilder b = new StringBuilder();
-		b.append('{');
-
-		for (Entry<?, ?> e : m.entrySet()) {
-			b.append('"' + e.getKey().toString() + "\": \"" + e.getValue() + '"');
-		}
-
-		b.append('}');
-		return b;
+	@Override
+	public E read(InputStream is) throws IOException {
+		throw new NotYetImplementedException();
 	}
+
+	@Override
+	public void write(E o, OutputStream os) throws IOException {
+		e.encode(o, new OutputStreamWriter(os));
+	}
+
+	@Override
+	public String getMIMEType() {
+		return "toml";
+	}
+
 }
