@@ -1,6 +1,5 @@
 package toools.text.json;
 
-public interface JSONable
-{
+public interface JSONable {
 	JSONElement toJSONElement();
 }

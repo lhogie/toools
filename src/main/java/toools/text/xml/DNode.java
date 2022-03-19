@@ -55,82 +55,61 @@ import java.util.TreeMap;
 
 import toools.text.TextUtilities;
 
-public class DNode
-{
+public class DNode {
 	private String name;
 	private DNode parent;
 	private final List<DNode> children = new ArrayList<>();
 	private final Map<String, String> attributes;
 
-	public DNode(String title)
-	{
+	public DNode(String title) {
 		this(title, true);
 	}
 
-	public DNode(String title, boolean sortAttributes)
-	{
+	public DNode(String title, boolean sortAttributes) {
 		setName(title);
 
-		if (sortAttributes)
-		{
+		if (sortAttributes) {
 			attributes = new TreeMap<>((o1, o2) -> o1.compareTo(o2));
-		}
-		else
-		{
+		} else {
 			attributes = new HashMap<>();
 		}
 	}
 
-	public String getName()
-	{
+	public String getName() {
 		return name;
 	}
 
-	public void setName(String name)
-	{
+	public void setName(String name) {
 		if (name == null)
 			throw new NullPointerException();
 
 		this.name = name;
 	}
 
-	public List<DNode> getChildren()
-	{
+	public List<DNode> getChildren() {
 		return Collections.unmodifiableList(children);
 	}
 
-	public Map<String, String> getAttributes()
-	{
-		return attributes;
-	}
-
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return toXML(0);
 	}
 
-	public String toXML(int tab)
-	{
+	public String toXML(int tab) {
 		StringBuilder b = new StringBuilder();
 		toXML(b, tab);
 		return b.toString();
 	}
 
-	public void toXML(StringBuilder b, int tab)
-	{
-		if (this instanceof TextNode)
-		{
+	public void toXML(StringBuilder b, int tab) {
+		if (this instanceof TextNode) {
 			b.append(this);
-		}
-		else
-		{
+		} else {
 			b.append(TextUtilities.repeat('\t', tab));
 			b.append('<');
 			b.append(name);
 
-			for (String k : getAttributes().keySet())
-			{
+			for (String k : getAttributes().keySet()) {
 				b.append(' ');
 				b.append(k);
 				b.append('=');
@@ -139,32 +118,70 @@ public class DNode
 				b.append('"');
 			}
 
-			if (getChildren().isEmpty())
-			{
+			if (getChildren().isEmpty()) {
 				b.append(" />");
-			}
-			else
-			{
+			} else {
 				b.append('>');
 				int numberOfTextNodes = 0;
 
-				for (DNode c : getChildren())
-				{
-					if (c.getClass() == TextNode.class)
-					{
+				for (DNode c : getChildren()) {
+					if (c.getClass() == TextNode.class) {
 						++numberOfTextNodes;
 						c.toXML(b, 0);
-					}
-					else
-					{
+					} else {
 						b.append('\n');
 						c.toXML(b, tab + 1);
 					}
 				}
 
 				// if there are no text children
-				if (numberOfTextNodes == 0)
-				{
+				if (numberOfTextNodes == 0) {
+					b.append('\n');
+					b.append(TextUtilities.repeat('\t', tab));
+				}
+
+				b.append('<');
+				b.append('/');
+				b.append(name);
+				b.append('>');
+			}
+		}
+	}
+	
+	public void toJSON(StringBuilder b, int tab) {
+		if (this instanceof TextNode) {
+			b.append(this);
+		} else {
+			b.append(TextUtilities.repeat('\t', tab));
+			b.append('{');
+
+			for (String k : getAttributes().keySet()) {
+				b.append(' ');
+				b.append(k);
+				b.append('=');
+				b.append('"');
+				b.append(getAttributes().get(k));
+				b.append('"');
+			}
+
+			if (getChildren().isEmpty()) {
+				b.append(" />");
+			} else {
+				b.append('>');
+				int numberOfTextNodes = 0;
+
+				for (DNode c : getChildren()) {
+					if (c.getClass() == TextNode.class) {
+						++numberOfTextNodes;
+						c.toXML(b, 0);
+					} else {
+						b.append('\n');
+						c.toXML(b, tab + 1);
+					}
+				}
+
+				// if there are no text children
+				if (numberOfTextNodes == 0) {
 					b.append('\n');
 					b.append(TextUtilities.repeat('\t', tab));
 				}
@@ -177,90 +194,68 @@ public class DNode
 		}
 	}
 
-	public byte[] toBytes()
-	{
-		try
-		{
+	public byte[] toBytes() {
+		try {
 			ByteArrayOutputStream o = new ByteArrayOutputStream();
 			toBytes(o);
 			return o.toByteArray();
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			throw new IllegalStateException();
 		}
 	}
 
-	public void toBytes(OutputStream os) throws IOException
-	{
+	public void toBytes(OutputStream os) throws IOException {
 
 		DataOutputStream b = new DataOutputStream(os);
 		boolean compact = isCompactOk();
 		b.writeBoolean(compact);
 
-		if (this instanceof TextNode)
-		{
+		if (this instanceof TextNode) {
 			b.writeBoolean(true);
 			writeString(b, this.toString(), compact);
-		}
-		else
-		{
+		} else {
 			b.writeBoolean(false);
 			writeString(b, getName(), compact);
 			b.writeInt(getAttributes().keySet().size());
 
-			for (String k : getAttributes().keySet())
-			{
+			for (String k : getAttributes().keySet()) {
 				writeString(b, k, compact);
 				writeString(b, getAttributes().get(k), compact);
 			}
 
 			b.writeInt(getChildren().size());
 
-			for (DNode c : getChildren())
-			{
+			for (DNode c : getChildren()) {
 				c.toBytes(b);
 			}
 		}
 	}
 
-	private static void writeString(DataOutputStream os, String s, boolean compact)
-			throws IOException
-	{
-		if (compact)
-		{
+	private static void writeString(DataOutputStream os, String s, boolean compact) throws IOException {
+		if (compact) {
 			os.writeInt(s.length());
 			os.write(s.getBytes());
-		}
-		else
-		{
+		} else {
 			os.writeUTF(s);
 		}
 	}
 
-	private static String readString(DataInputStream os, boolean compact)
-			throws IOException
-	{
-		if (compact)
-		{
+	private static String readString(DataInputStream os, boolean compact) throws IOException {
+		if (compact) {
 			int sz = os.readInt();
 			byte[] b = new byte[sz];
 			os.readFully(b);
 			return new String(b);
-		}
-		else
-		{
+		} else {
 			return os.readUTF();
 		}
 	}
 
-	private boolean isCompactOk()
-	{
+	private boolean isCompactOk() {
 		if (name.length() > 255)
 			return false;
 
-		for (String k : attributes.keySet())
-		{
+		for (String k : attributes.keySet()) {
 			if (k.length() > 255)
 				return false;
 
@@ -271,47 +266,37 @@ public class DNode
 		return true;
 	}
 
-	public static DNode fromBytes(byte[] bytes)
-	{
+	public static DNode fromBytes(byte[] bytes) {
 		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
 
-		try
-		{
+		try {
 			return fromBytes(is);
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			e.printStackTrace();
 			throw new IllegalStateException();
 		}
 	}
 
-	public static DNode fromBytes(InputStream is) throws IOException
-	{
+	public static DNode fromBytes(InputStream is) throws IOException {
 		DataInputStream b = new DataInputStream(is);
 		boolean compact = b.readBoolean();
 		boolean textNode = b.readBoolean();
 
-		if (textNode)
-		{
+		if (textNode) {
 			TextNode tn = new TextNode();
 			tn.setText(readString(b, compact));
 			return tn;
-		}
-		else
-		{
+		} else {
 			DNode n = new DNode(readString(b, compact));
 			int numberOfAttributes = b.readInt();
 
-			for (int i = 0; i < numberOfAttributes; ++i)
-			{
+			for (int i = 0; i < numberOfAttributes; ++i) {
 				n.getAttributes().put(readString(b, compact), readString(b, compact));
 			}
 
 			int numberOfChildren = b.readInt();
 
-			for (int i = 0; i < numberOfChildren; ++i)
-			{
+			for (int i = 0; i < numberOfChildren; ++i) {
 				DNode c = fromBytes(is);
 				c.setParent(n);
 			}
@@ -320,19 +305,15 @@ public class DNode
 		}
 	}
 
-	public List<DNode> findChildren(String regex, boolean recursive)
-	{
+	public List<DNode> findChildren(String regex, boolean recursive) {
 		List<DNode> c = new ArrayList<DNode>();
 
-		for (DNode n : getChildren())
-		{
-			if (n.getName().matches(regex))
-			{
+		for (DNode n : getChildren()) {
+			if (n.getName().matches(regex)) {
 				c.add(n);
 			}
 
-			if (recursive)
-			{
+			if (recursive) {
 				c.addAll(n.findChildren(regex, recursive));
 			}
 		}
@@ -340,15 +321,12 @@ public class DNode
 		return c;
 	}
 
-	public List<DNode> findDescendents(String regex)
-	{
+	public List<DNode> findDescendents(String regex) {
 		List<DNode> c = new ArrayList<DNode>();
 		DNode n = this;
 
-		while ((n = n.getParent()) != null)
-		{
-			if (n.getName().matches(regex))
-			{
+		while ((n = n.getParent()) != null) {
+			if (n.getName().matches(regex)) {
 				c.add(n);
 			}
 		}
@@ -356,24 +334,19 @@ public class DNode
 		return c;
 	}
 
-	public void setParent(DNode newParent)
-	{
+	public void setParent(DNode newParent) {
 		setParent(newParent, newParent.getChildren().size());
 	}
 
-	public void setParent(DNode newParent, int childIndex)
-	{
-		if (newParent != this.parent)
-		{
+	public void setParent(DNode newParent, int childIndex) {
+		if (newParent != this.parent) {
 			// detach from old parent
-			if (this.parent != null)
-			{
+			if (this.parent != null) {
 				this.parent.children.remove(this);
 			}
 
 			// attach to new parent
-			if (newParent != null)
-			{
+			if (newParent != null) {
 				newParent.children.add(childIndex, this);
 			}
 
@@ -381,25 +354,21 @@ public class DNode
 		}
 	}
 
-	public DNode getParent()
-	{
+	public DNode getParent() {
 		return parent;
 	}
 
-	public List<DNode> dfs()
-	{
+	public List<DNode> dfs() {
 		List<DNode> r = new ArrayList<DNode>();
 
 		Stack<DNode> stack = new Stack<DNode>();
 		stack.push(this);
 
-		while ( ! stack.isEmpty())
-		{
+		while (!stack.isEmpty()) {
 			DNode n = stack.pop();
 			r.add(n);
 
-			for (DNode c : n.getChildren())
-			{
+			for (DNode c : n.getChildren()) {
 				stack.push(c);
 			}
 		}
@@ -407,13 +376,11 @@ public class DNode
 		return r;
 	}
 
-	public DNode getRoot()
-	{
+	public DNode getRoot() {
 		return parent == null ? this : parent.getRoot();
 	}
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		DNode n = new DNode("test");
 		DNode c = new DNode("child");
 		c.setParent(n);
@@ -426,12 +393,10 @@ public class DNode
 		System.out.println(fromBytes(n.toBytes()));
 	}
 
-	public String getText(boolean recursive)
-	{
+	public String getText(boolean recursive) {
 		String s = "";
 
-		for (DNode n : findChildren("#text", recursive))
-		{
+		for (DNode n : findChildren("#text", recursive)) {
 			s += ((TextNode) n).getText();
 		}
 

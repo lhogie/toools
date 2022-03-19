@@ -39,95 +39,99 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 package toools.reflect;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Introspector
-{
-	public static class FF
-	{
+public class Introspector {
+	public static class FF {
 		private final Field f;
 
-		public FF(Field f)
-		{
+		public FF(Field f) {
 			this.f = f;
 		}
 
-		public String getName()
-		{
+		public String getName() {
 			return f.getName();
 		}
 
-		public boolean is(int m)
-		{
+		public boolean is(int m) {
 			return (f.getModifiers() & m) != 0;
 		}
 
-		public Object get(Object target)
-		{
-			try
-			{
+		public boolean isStatic() {
+			return is(Modifier.STATIC);
+		}
+
+		public boolean isFinal() {
+			return is(Modifier.FINAL);
+		}
+
+		public boolean isPrivate() {
+			return is(Modifier.PRIVATE);
+		}
+
+		public boolean isProtected() {
+			return is(Modifier.PROTECTED);
+		}
+
+		public boolean isPublic() {
+			return is(Modifier.PUBLIC);
+		}
+
+		public boolean isTransient() {
+			return is(Modifier.TRANSIENT);
+		}
+
+		public Object get(Object target) {
+			try {
 				return f.get(target);
-			}
-			catch (Throwable e)
-			{
+			} catch (Throwable e) {
 				throw new IllegalStateException(e);
 			}
 		}
 
-		public void setFieldValue(Object target, Object value)
-		{
-			try
-			{
+		public void setFieldValue(Object target, Object value) {
+			try {
 				f.set(target, value);
-			}
-			catch (Throwable e)
-			{
+			} catch (Throwable e) {
 				throw new IllegalStateException(e);
 			}
 		}
 
-		public Class<?> getType()
-		{
+		public Class<?> getType() {
 			return f.getType();
 		}
 	}
 
 	private final List<FF> fields = new ArrayList<>();
 
-	private Introspector(Class<?> c)
-	{
-		for (Field f : c.getDeclaredFields())
-		{
+	private Introspector(Class<?> c) {
+		for (Field f : c.getDeclaredFields()) {
 			f.setAccessible(true);
 			fields.add(new FF(f));
 		}
 
 		// adds also the fields declared in the superclass, if any
-		if (c.getSuperclass() != null)
-		{
-			for (FF f : getIntrospector(c.getSuperclass()).getFields())
-			{
+		if (c.getSuperclass() != null) {
+			for (FF f : getIntrospector(c.getSuperclass()).getFields()) {
 				fields.add(f);
 			}
 		}
 	}
 
-	public List<FF> getFields()
-	{
+	public List<FF> getFields() {
 		return fields;
 	}
 
 	public static final Map<Class<?>, Introspector> map = new HashMap();
 
-	public static Introspector getIntrospector(Class<?> c)
-	{
+	public static Introspector getIntrospector(Class<?> c) {
 		Introspector b = map.get(c);
 
-		if (b == null)
-		{
+		if (b == null) {
 			map.put(c, b = new Introspector(c));
 		}
 

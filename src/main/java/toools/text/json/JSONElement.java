@@ -1,19 +1,16 @@
 package toools.text.json;
 
-public abstract class JSONElement
-{
+public abstract class JSONElement {
 	public static String tabText = "   ";
-	
+
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return toString(0, true);
 	}
 
 	public abstract String toString(int tab, boolean alwaysQuote);
 
-	public static String quoteIfNecessary(String s, boolean alwaysQuote)
-	{
+	public static String quoteIfNecessary(String s, boolean alwaysQuote) {
 		if (alwaysQuote || s.contains(" ") || s.contains("\t") || s.contains("\n"))
 			return "\"" + s + "\"";
 

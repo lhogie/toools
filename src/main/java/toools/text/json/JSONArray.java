@@ -6,54 +6,42 @@ import java.util.List;
 
 import toools.text.TextUtilities;
 
-public class JSONArray extends JSONElement
-{
+public class JSONArray extends JSONElement {
 	List l = new ArrayList<>();
 
-	public JSONArray(Object... e)
-	{
+	public JSONArray(Object... e) {
 		l.addAll(Arrays.asList(e));
 	}
 
-	public JSONArray(int... e)
-	{
-		for (int n : e)
-		{
+	public JSONArray(int... e) {
+		for (int n : e) {
 			l.add(n);
 		}
 	}
-	
-	public int size()
-	{
+
+	public int size() {
 		return l.size();
 	}
 
-	public Object get(int i)
-	{
+	public Object get(int i) {
 		return l.get(i);
 	}
 
-	public String toString(int tab, boolean alwaysQuote)
-	{
+	public String toString(int tab, boolean alwaysQuote) {
 		String s = "[";
 
-		for (int i = 0; i < l.size(); ++i)
-		{
+		for (int i = 0; i < l.size(); ++i) {
 			s += "\n";
 			s += TextUtilities.repeat(tabText, tab + 1);
 			Object e = l.get(i);
 
-			if (e instanceof JSONElement)
-			{
+			if (e instanceof JSONElement) {
 				s += ((JSONElement) e).toString(tab + 1, alwaysQuote);
-			}
-			else
-			{
+			} else {
 				s += quoteIfNecessary(e.toString(), alwaysQuote);
 			}
 
-			if (i < l.size() - 1)
-			{
+			if (i < l.size() - 1) {
 				s += ",";
 			}
 		}
@@ -61,6 +49,5 @@ public class JSONArray extends JSONElement
 		s += "\n" + TextUtilities.repeat(tabText, tab) + "]";
 		return s;
 	}
-
 
 }
