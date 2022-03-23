@@ -90,6 +90,10 @@ public class DNode {
 		return Collections.unmodifiableList(children);
 	}
 
+	public Map<String, String> getAttributes() {
+		return attributes;
+	}
+
 	@Override
 	public String toString() {
 		return toXML(0);
@@ -108,52 +112,6 @@ public class DNode {
 			b.append(TextUtilities.repeat('\t', tab));
 			b.append('<');
 			b.append(name);
-
-			for (String k : getAttributes().keySet()) {
-				b.append(' ');
-				b.append(k);
-				b.append('=');
-				b.append('"');
-				b.append(getAttributes().get(k));
-				b.append('"');
-			}
-
-			if (getChildren().isEmpty()) {
-				b.append(" />");
-			} else {
-				b.append('>');
-				int numberOfTextNodes = 0;
-
-				for (DNode c : getChildren()) {
-					if (c.getClass() == TextNode.class) {
-						++numberOfTextNodes;
-						c.toXML(b, 0);
-					} else {
-						b.append('\n');
-						c.toXML(b, tab + 1);
-					}
-				}
-
-				// if there are no text children
-				if (numberOfTextNodes == 0) {
-					b.append('\n');
-					b.append(TextUtilities.repeat('\t', tab));
-				}
-
-				b.append('<');
-				b.append('/');
-				b.append(name);
-				b.append('>');
-			}
-		}
-	}
-	
-	public void toJSON(StringBuilder b, int tab) {
-		if (this instanceof TextNode) {
-			b.append(this);
-		} else {
-			b.append(TextUtilities.repeat('\t', tab));
-			b.append('{');
 
 			for (String k : getAttributes().keySet()) {
 				b.append(' ');

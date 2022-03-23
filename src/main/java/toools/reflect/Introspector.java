@@ -46,10 +46,10 @@ import java.util.List;
 import java.util.Map;
 
 public class Introspector {
-	public static class FF {
-		private final Field f;
+	public static class JasetoField {
+		public final Field f;
 
-		public FF(Field f) {
+		public JasetoField(Field f) {
 			this.f = f;
 		}
 
@@ -106,23 +106,23 @@ public class Introspector {
 		}
 	}
 
-	private final List<FF> fields = new ArrayList<>();
+	private final List<JasetoField> fields = new ArrayList<>();
 
 	private Introspector(Class<?> c) {
 		for (Field f : c.getDeclaredFields()) {
 			f.setAccessible(true);
-			fields.add(new FF(f));
+			fields.add(new JasetoField(f));
 		}
 
 		// adds also the fields declared in the superclass, if any
 		if (c.getSuperclass() != null) {
-			for (FF f : getIntrospector(c.getSuperclass()).getFields()) {
+			for (JasetoField f : getIntrospector(c.getSuperclass()).getFields()) {
 				fields.add(f);
 			}
 		}
 	}
 
-	public List<FF> getFields() {
+	public List<JasetoField> getFields() {
 		return fields;
 	}
 
