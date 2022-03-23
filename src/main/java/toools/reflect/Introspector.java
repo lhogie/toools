@@ -39,11 +39,13 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 package toools.reflect;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Introspector {
 	public static class JasetoField {
@@ -108,15 +110,19 @@ public class Introspector {
 
 	private final List<JasetoField> fields = new ArrayList<>();
 
-	private Introspector(Class<?> c) {
+	private Introspector(Class<?> c, Consumer<Exception> warnings) {
 		for (Field f : c.getDeclaredFields()) {
-			f.setAccessible(true);
-			fields.add(new JasetoField(f));
+			try {
+				f.setAccessible(true);
+				fields.add(new JasetoField(f));
+			} catch (InaccessibleObjectException e) {
+				warnings.accept(e);
+			}
 		}
 
 		// adds also the fields declared in the superclass, if any
 		if (c.getSuperclass() != null) {
-			for (JasetoField f : getIntrospector(c.getSuperclass()).getFields()) {
+			for (JasetoField f : getIntrospector(c.getSuperclass(), warnings).getFields()) {
 				fields.add(f);
 			}
 		}
@@ -128,11 +134,11 @@ public class Introspector {
 
 	public static final Map<Class<?>, Introspector> map = new HashMap();
 
-	public static Introspector getIntrospector(Class<?> c) {
+	public static Introspector getIntrospector(Class<?> c, Consumer<Exception> warnings) {
 		Introspector b = map.get(c);
 
 		if (b == null) {
-			map.put(c, b = new Introspector(c));
+			map.put(c, b = new Introspector(c, warnings));
 		}
 
 		return b;
