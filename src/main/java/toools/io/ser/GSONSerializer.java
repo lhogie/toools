@@ -83,5 +83,9 @@ public class GSONSerializer<E> extends Serializer<E> {
 		byte[] bytes = GSONSerializer.instance.toBytes(in);
 		Object out = GSONSerializer.instance.fromBytes(bytes);
 		System.out.println(in.equals(out));
+	}	@Override
+	public boolean isBinary() {
+		return false;
 	}
+
 }

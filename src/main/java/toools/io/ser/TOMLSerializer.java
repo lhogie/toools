@@ -63,5 +63,9 @@ public class TOMLSerializer<E> extends Serializer<E> {
 	public String getMIMEType() {
 		return "toml";
 	}
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
 
 }

@@ -71,5 +71,9 @@ public class JSONExSerializer<E> extends Serializer<E> {
 	public String getMIMEType() {
 		return "toml";
 	}
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
 
 }

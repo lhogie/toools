@@ -22,7 +22,6 @@ public class JacksonJSONSerializer<E> extends Serializer<E> {
 		objectMapper.activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(),
 				ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.WRAPPER_OBJECT);
 	}
-	
 
 	@Override
 	public E read(InputStream is) throws IOException {
@@ -44,11 +43,17 @@ public class JacksonJSONSerializer<E> extends Serializer<E> {
 		o.add(4);
 		o.add("coucou");
 		o.add(new Vector<>());
-		
+
 		System.out.println(o);
-		
+
 		var b = instance.toBytes(o);
 		System.out.println(new String(b));
 		System.out.println(instance.fromBytes(b));
 	}
+
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
+
 }

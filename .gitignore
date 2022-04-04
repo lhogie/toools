@@ -1,1 +1,9 @@
+.gitignore
 /target/
+.classpath
+.settings/
+luc.gpg
+mvn.md
+pom.xml.releaseBackup
+release.properties
+release2maven.sh

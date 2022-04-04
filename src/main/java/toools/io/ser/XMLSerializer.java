@@ -25,4 +25,10 @@ public class XMLSerializer<E> extends Serializer<E> {
 	public String getMIMEType() {
 		return "XML";
 	}
+
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
+
 }

@@ -26,4 +26,10 @@ public class ToStringSerializer<E> extends Serializer<E> {
 	public String getMIMEType() {
 		return "toString()";
 	}
+
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
+
 }

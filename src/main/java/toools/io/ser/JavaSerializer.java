@@ -95,4 +95,8 @@ public class JavaSerializer<E> extends Serializer<E> {
 		
 	}
 
+	@Override
+	public boolean isBinary() {
+		return true;
+	}
 }

@@ -66,4 +66,9 @@ public class YAMLSerializer<E> extends Serializer<E> {
 		return "toml";
 	}
 
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
+
 }

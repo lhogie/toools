@@ -54,8 +54,7 @@ public class FSTSerializer<E> extends Serializer<E> {
 			E result = (E) in.readObject();
 			// in.close();
 			return result;
-		}
-		catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException e) {
 			throw new IOException(e);
 		}
 	}
@@ -70,6 +69,11 @@ public class FSTSerializer<E> extends Serializer<E> {
 	@Override
 	public String getMIMEType() {
 		return "fst";
+	}
+
+	@Override
+	public boolean isBinary() {
+		return true;
 	}
 
 }

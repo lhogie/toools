@@ -68,6 +68,10 @@ public abstract class TextSerializer<E> extends Serializer<E> {
 	public String getMIMEType() {
 		return "txt";
 	}
+	@Override
+	public boolean isBinary() {
+		return false;
+	}
 
 	public static final TextSerializer<Integer> Int32 = new TextSerializer<Integer>() {
 		@Override

@@ -130,5 +130,7 @@ public abstract class Serializer<E> {
 		}
 	};
 
+	public abstract boolean isBinary();
+
 
 }
