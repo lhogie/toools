@@ -1,13 +1,15 @@
 package toools.thread;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-public class Q<E>  implements Iterable<E> {
+public class Q<E> implements Iterable<E> {
 	private final BlockingQueue<E> q;
 	public QListener<E> listener;
 	private Thread thread;
@@ -20,11 +22,11 @@ public class Q<E>  implements Iterable<E> {
 		return q.size();
 	}
 
-	public E get_non_blocking() {
+	public E poll_async() {
 		return q.poll();
 	}
 
-	public E get_blocking() {
+	public E poll_sync() {
 		try {
 			return q.take();
 		} catch (InterruptedException e) {
@@ -32,7 +34,7 @@ public class Q<E>  implements Iterable<E> {
 		}
 	}
 
-	public E get_blocking(double timeout) {
+	public E poll_sync(double timeout) {
 		try {
 			long tns = (long) (timeout * 1000000000);
 			E e = q.poll(tns, TimeUnit.NANOSECONDS);
@@ -42,8 +44,8 @@ public class Q<E>  implements Iterable<E> {
 		}
 	}
 
-	public E get_blockingOrFail(double timeout) {
-		E e = get_blocking(timeout);
+	public E pollOrFail_sync(double timeout) {
+		E e = poll_sync(timeout);
 
 		if (e != null) {
 			return e;
@@ -52,7 +54,7 @@ public class Q<E>  implements Iterable<E> {
 		throw new TimeoutException();
 	}
 
-	public void add_blocking(E in) {
+	public void add_sync(E in) {
 		try {
 			q.put(in);
 
@@ -70,7 +72,7 @@ public class Q<E>  implements Iterable<E> {
 
 		thread = new Thread(() -> {
 			while (runCondition.getAsBoolean()) {
-				E msg = get_blocking();
+				E msg = poll_sync();
 				l.accept(msg);
 			}
 		});
@@ -78,7 +80,6 @@ public class Q<E>  implements Iterable<E> {
 		thread.start();
 		return thread;
 	}
-
 
 	public void cancelEventisation() {
 		if (thread != null) {
@@ -89,5 +90,15 @@ public class Q<E>  implements Iterable<E> {
 	@Override
 	public Iterator<E> iterator() {
 		return q.iterator();
+	}
+
+	public List<E> toList() {
+		var r = new ArrayList<E>();
+
+		for (var m : this) {
+			r.add(m);
+		}
+
+		return r;
 	}
 }
