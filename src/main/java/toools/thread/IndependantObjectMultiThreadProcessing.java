@@ -42,30 +42,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class IndependantObjectMultiThreadProcessing<T>
-{
-	public IndependantObjectMultiThreadProcessing(Collection<T> input)
-	{
+public abstract class IndependantObjectMultiThreadProcessing<T> {
+	public IndependantObjectMultiThreadProcessing(Collection<T> input) {
 		this(input, new NCoresNThreadsPolicy(2));
 	}
 
-	public IndependantObjectMultiThreadProcessing(Collection<T> input,
-			MultiThreadPolicy policy)
-	{
+	public IndependantObjectMultiThreadProcessing(Collection<T> input, MultiThreadPolicy policy) {
 		this(input, policy.getNbThreads());
 	}
 
-	public IndependantObjectMultiThreadProcessing(Collection<T> input, int nbThreads)
-	{
+	public IndependantObjectMultiThreadProcessing(Collection<T> input, int nbThreads) {
 		final ConcurrentIterator<T> i = new ConcurrentIterator<>(input);
 
-		new MultiThreadProcessing(nbThreads, null)
-		{
+		new MultiThreadProcessing(nbThreads, null) {
 			@Override
-			protected void runInParallel(ThreadSpecifics s) throws Throwable
-			{
-				while (true)
-				{
+			protected void runInParallel(ThreadSpecifics s) throws Throwable {
+				while (true) {
 					T next = i.next();
 
 					if (next == null)
@@ -79,20 +71,17 @@ public abstract class IndependantObjectMultiThreadProcessing<T>
 
 	protected abstract void process(T element) throws Throwable;
 
-	public static void main(String[] args) throws Throwable
-	{
+	public static void main(String[] args) throws Throwable {
 		List<String> l = new ArrayList<>();
 
 		l.add("couc");
 		l.add("luc");
 		l.add("anne");
 
-		new IndependantObjectMultiThreadProcessing<String>(l, new NThreadsPolicy(2))
-		{
+		new IndependantObjectMultiThreadProcessing<String>(l, new NThreadsPolicy(2)) {
 
 			@Override
-			protected void process(String o)
-			{
+			protected void process(String o) {
 				System.out.println(o.length());
 				Threads.sleepMs(1000);
 			}

@@ -36,8 +36,8 @@ public class Q<E> implements Iterable<E> {
 
 	public E poll_sync(double timeout) {
 		try {
-			long tns = (long) (timeout * 1000000000);
-			E e = q.poll(tns, TimeUnit.NANOSECONDS);
+			long timeOutNS = (long) (timeout * 1000000000);
+			E e = q.poll(timeOutNS, TimeUnit.NANOSECONDS);
 			return e;
 		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);
@@ -93,12 +93,8 @@ public class Q<E> implements Iterable<E> {
 	}
 
 	public List<E> toList() {
-		var r = new ArrayList<E>();
-
-		for (var m : this) {
-			r.add(m);
-		}
-
+		var r = new ArrayList<E>(size());
+		forEach(m -> r.add(m));
 		return r;
 	}
 }

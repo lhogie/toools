@@ -40,11 +40,8 @@ package toools.thread;
 
 import java.util.Collection;
 
-public abstract class OneElementOneThreadProcessing<T>
-		extends IndependantObjectMultiThreadProcessing<T>
-{
-	public OneElementOneThreadProcessing(Collection<T> input)
-	{
+public abstract class OneElementOneThreadProcessing<T> extends IndependantObjectMultiThreadProcessing<T> {
+	public OneElementOneThreadProcessing(Collection<T> input) {
 		super(input, input.size());
 	}
 }

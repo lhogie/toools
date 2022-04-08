@@ -59,8 +59,7 @@ import toools.progression.Sensor;
  *
  */
 
-public abstract class MultiThreadProcessing
-{
+public abstract class MultiThreadProcessing {
 	public static int NB_THREADS_TO_USE = Runtime.getRuntime().availableProcessors() * 2;
 
 	private final List<Thread> threads = new ArrayList<Thread>();
@@ -68,48 +67,39 @@ public abstract class MultiThreadProcessing
 	private final String threadNamePrefix;
 	private final int nbThreads;
 
-	public MultiThreadProcessing()
-	{
+	public MultiThreadProcessing() {
 		this(NB_THREADS_TO_USE, null);
 	}
 
-	public MultiThreadProcessing(int nbThreads, LongProcess lp)
-	{
+	public MultiThreadProcessing(int nbThreads, LongProcess lp) {
 		this(nbThreads, lp == null ? null : lp.getDescription(), lp);
 	}
 
-	public MultiThreadProcessing(int nbThreads, String threadName, LongProcess lp)
-	{
-		if (lp != null)
-		{
-			lp.sensor = new Sensor()
-			{
+	public MultiThreadProcessing(int nbThreads, String threadName, LongProcess lp) {
+		if (lp != null) {
+			lp.sensor = new Sensor() {
 				boolean terminated = false;
 
 				@Override
-				public double getProgress()
-				{
+				public double getProgress() {
 					return terminated ? progressStatus : progress();
 				}
 
 				@Override
-				public void set(double target)
-				{
+				public void set(double target) {
 					terminated = true;
 					super.set(target);
 				}
 			};
 		}
-		
+
 		this.threadNamePrefix = threadName;
 		this.nbThreads = nbThreads;
 	}
-	
-	public void execute()
-	{
+
+	public void execute() {
 		// first instantiate the threads
-		for (int rank = 0; rank < nbThreads; ++rank)
-		{
+		for (int rank = 0; rank < nbThreads; ++rank) {
 			ThreadSpecifics s = new ThreadSpecifics(rank);
 			s.threads = threads;
 			_Thread thread = new _Thread(s);
@@ -118,53 +108,40 @@ public abstract class MultiThreadProcessing
 		}
 
 		// then start them later because they need the complete thread list
-		for (Thread thread : threads)
-		{
+		for (Thread thread : threads) {
 			thread.start();
 		}
 
 		// All threads are finished, join with them to cleanup and collect
 		// exceptions
-		for (Thread thread : threads)
-		{
-			try
-			{
+		for (Thread thread : threads) {
+			try {
 				thread.join();
-			}
-			catch (InterruptedException e)
-			{
+			} catch (InterruptedException e) {
 				errors.getThreadLocalExceptions().add(e);
 				throw errors;
 			}
 		}
 
 		// if some errors happened in threads
-		if ( ! errors.getThreadLocalExceptions().isEmpty())
-		{
+		if (!errors.getThreadLocalExceptions().isEmpty()) {
 			throw errors;
 		}
 	}
 
-	private class _Thread extends Thread
-	{
+	private class _Thread extends Thread {
 		private final ThreadSpecifics specifics;
 
-		public _Thread(ThreadSpecifics s)
-		{
+		public _Thread(ThreadSpecifics s) {
 			this.specifics = s;
 		}
 
 		@Override
-		public void run()
-		{
-			try
-			{
+		public void run() {
+			try {
 				runInParallel(specifics);
-			}
-			catch (Throwable t)
-			{
-				synchronized (MultiThreadProcessing.this)
-				{
+			} catch (Throwable t) {
+				synchronized (MultiThreadProcessing.this) {
 					errors.getThreadLocalExceptions().add(t);
 				}
 			}
@@ -173,21 +150,16 @@ public abstract class MultiThreadProcessing
 
 	/**
 	 * 
-	 * @param threadRank
-	 *            the rank of the thread, from 0 to the number of threads minus
-	 *            one.
-	 * @param threads
-	 *            the list of all threads in the set. The current thread is a
-	 *            member of this list.
+	 * @param threadRank the rank of the thread, from 0 to the number of threads
+	 *                   minus one.
+	 * @param threads    the list of all threads in the set. The current thread is a
+	 *                   member of this list.
 	 * @throws Throwable
 	 */
-	protected abstract void runInParallel(ThreadSpecifics s)
-			throws Throwable;
+	protected abstract void runInParallel(ThreadSpecifics s) throws Throwable;
 
-	public static class ThreadSpecifics
-	{
-		ThreadSpecifics(int rank)
-		{
+	public static class ThreadSpecifics {
+		ThreadSpecifics(int rank) {
 			this.rank = rank;
 		}
 
@@ -196,28 +168,21 @@ public abstract class MultiThreadProcessing
 		public List<Thread> threads;
 	}
 
-	public double progress()
-	{
+	public double progress() {
 		double p = 0;
 
-		for (Thread t : threads)
-		{
+		for (Thread t : threads) {
 			p += ((_Thread) t).specifics.progressStatus;
 		}
 
 		return p;
 	}
 
-	public static void main(String[] args) throws Throwable
-	{
-		for (int i = 0; i < 1; ++i)
-		{
-			new MultiThreadProcessing(20, null)
-			{
+	public static void main(String[] args) throws Throwable {
+		for (int i = 0; i < 1; ++i) {
+			new MultiThreadProcessing(20, null) {
 				@Override
-				protected void runInParallel(ThreadSpecifics s)
-						throws Throwable
-				{
+				protected void runInParallel(ThreadSpecifics s) throws Throwable {
 					s.progressStatus++;
 					Cout.debug(progress());
 				}
