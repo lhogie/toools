@@ -35,8 +35,8 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io;
+
+package toools.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,25 +55,21 @@ import toools.reflect.ClassPath;
 import toools.thread.Generator;
 import toools.thread.GeneratorChain;
 
-public class JavaResource
-{
+public class JavaResource {
 	private String name;
 	private Class<?> refClass;
 
 	// where is stored the resource
 	private ClassContainer container;
 
-	public JavaResource(String name)
-	{
-		if ( ! name.startsWith("/"))
-			throw new IllegalArgumentException(
-					"resource name should start with a slash: " + name);
+	public JavaResource(String name) {
+		if (!name.startsWith("/"))
+			throw new IllegalArgumentException("resource name should start with a slash: " + name);
 
 		this.name = name;
 	}
 
-	public JavaResource(Class<?> clazz, String name)
-	{
+	public JavaResource(Class<?> clazz, String name) {
 		if (name.startsWith("/"))
 			throw new IllegalArgumentException(
 					"no slash allowed in resource name since its location is already characterized by a class");
@@ -82,149 +78,119 @@ public class JavaResource
 		this.name = '/' + clazz.getPackage().getName().replace('.', '/') + '/' + name;
 	}
 
-	public String getPath()
-	{
+	public String getPath() {
 		return name;
 	}
 
-	public void setName(String newName)
-	{
+	public void setName(String newName) {
 		if (newName == null)
 			throw new IllegalArgumentException();
 
 		name = newName;
 	}
 
-	public InputStream getInputStream()
-	{
+	public InputStream getInputStream() {
 		return (refClass == null ? getClass() : refClass).getResourceAsStream(getPath());
 	}
 
-	public URL getURL()
-	{
+	public URL getURL() {
 		return refClass.getResource(getPath());
 	}
 
-	public byte[] getByteArray()
-	{
+	public byte[] getByteArray() {
 		InputStream is = getInputStream();
 
-		if (is == null)
-		{
+		if (is == null) {
 			throw new IORuntimeException("cannot get an input stream for resource " + getPath());
-		}
-		else
-		{
+		} else {
 			return Utilities.readUntilEOF(is);
 		}
 	}
 
-	public static Generator<JavaResource> listResources()
-	{
+	public static Generator<JavaResource> listResources() {
 		return listResources(ClassPath.retrieveSystemClassPath());
 	}
 
-	public static Generator<JavaResource> listResources(ClassPath urls)
-	{
+	public static Generator<JavaResource> listResources(ClassPath urls) {
 		GeneratorChain<JavaResource> gc = new GeneratorChain<>();
 
-		for (ClassContainer thisClassPathEntry : urls)
-		{
+		for (ClassContainer thisClassPathEntry : urls) {
 			gc.getChain().add(listResources(thisClassPathEntry));
 		}
 
 		return gc;
 	}
 
-	public static Generator<JavaResource> listResources(
-			final ClassContainer classPathEntry)
-	{
-		return new Generator<JavaResource>()
-		{
+	public static Generator<JavaResource> listResources(final ClassContainer classPathEntry) {
+		return new Generator<JavaResource>() {
 
 			@Override
-			public void produce()
-			{
+			public void produce() {
 				AbstractFile entryFile = classPathEntry.getFile();
 
-				if ( ! entryFile.exists())
-					throw new IllegalStateException(
-							"classpath entry not found: " + entryFile.getPath());
+				if (!entryFile.exists())
+					throw new IllegalStateException("classpath entry not found: " + entryFile.getPath());
 
-				if (entryFile instanceof Directory)
-				{
-					for (AbstractFile sf : ((Directory) entryFile).retrieveTree(
-							toools.io.file.FileFilter.regularFileFilter, null))
-					{
-						String resname = sf.getPath().replace(entryFile.getPath(), "");
-						JavaResource res = new JavaResource(resname);
-						res.setContainer(classPathEntry);
-						deliver(res);
-					}
-				}
-				else if (entryFile.getName().matches(".*\\.(jar|zip)$"))
-				{
-					try
-					{
+				if (entryFile instanceof Directory) {
+					((Directory) entryFile).search(sf -> {
+						if (toools.io.file.FileFilter.regularFileFilter.test(sf)) {
+							String resname = sf.getPath().replace(entryFile.getPath(), "");
+							JavaResource res = new JavaResource(resname);
+							res.setContainer(classPathEntry);
+							deliver(res);
+						}
+
+						return true;
+					});
+				} else if (entryFile.getName().matches(".*\\.(jar|zip)$")) {
+					try {
 						ZipFile zf = new ZipFile(new File(entryFile.getPath()));
 						Enumeration entries = zf.entries();
 
-						while (entries.hasMoreElements())
-						{
+						while (entries.hasMoreElements()) {
 							ZipEntry e = (ZipEntry) entries.nextElement();
 							String entryName = e.getName();
 
-							if ( ! entryName.startsWith("/"))
+							if (!entryName.startsWith("/"))
 								entryName = "/" + entryName;
 
 							JavaResource thisResource = new JavaResource(entryName);
 							thisResource.setContainer(classPathEntry);
 							deliver(thisResource);
 						}
-					}
-					catch (ZipException e1)
-					{
+					} catch (ZipException e1) {
+						System.err.println("File " + entryFile.getPath());
+						e1.printStackTrace();
+					} catch (IOException e1) {
 						System.err.println("File " + entryFile.getPath());
 						e1.printStackTrace();
 					}
-					catch (IOException e1)
-					{
-						System.err.println("File " + entryFile.getPath());
-						e1.printStackTrace();
-					}
-				}
-				else
-				{
+				} else {
 					// throw new IllegalStateException("dunno how to handle " +
 					// thisClassPathEntry.getName());
-					System.err.println("dunno how to handle " + entryFile.getName()
-							+ " of class " + entryFile.getClass());
+					System.err.println(
+							"dunno how to handle " + entryFile.getName() + " of class " + entryFile.getClass());
 				}
 
 			}
 		};
 	}
 
-	public ClassContainer getContainer()
-	{
+	public ClassContainer getContainer() {
 		return this.container;
 	}
 
-	public void setContainer(ClassContainer container)
-	{
+	public void setContainer(ClassContainer container) {
 		this.container = container;
 	}
 
-	public static ClassPath findResourceContainer(String name, ClassPath classpath)
-	{
+	public static ClassPath findResourceContainer(String name, ClassPath classpath) {
 		ClassPath urls = new ClassPath();
 
 		// for all the resources found in the classpath
-		for (JavaResource r : JavaResource.listResources(classpath))
-		{
+		for (JavaResource r : JavaResource.listResources(classpath)) {
 			// if this resource has the same name as the resource looked for
-			if (r.getPath().equals(name))
-			{
+			if (r.getPath().equals(name)) {
 				urls.add(r.getContainer());
 			}
 		}
@@ -232,63 +198,47 @@ public class JavaResource
 		return urls;
 	}
 
-	public boolean exists()
-	{
+	public boolean exists() {
 		InputStream is = getInputStream();
 
-		if (is == null)
-		{
+		if (is == null) {
 			return false;
-		}
-		else
-		{
-			try
-			{
+		} else {
+			try {
 				is.close();
-			}
-			catch (IOException e)
-			{
+			} catch (IOException e) {
 			}
 
 			return true;
 		}
 	}
 
-	public void exportToFile(RegularFile f) throws IOException
-	{
-		if ( ! f.getParent().exists())
+	public void exportToFile(RegularFile f) throws IOException {
+		if (!f.getParent().exists())
 			f.getParent().mkdirs();
 
 		f.setContent(getByteArray());
 	}
 
-	public static void exportToFile(String resourceName, RegularFile dest)
-			throws IOException
-	{
-		if ( ! dest.getParent().exists())
+	public static void exportToFile(String resourceName, RegularFile dest) throws IOException {
+		if (!dest.getParent().exists())
 			dest.getParent().mkdirs();
 
 		new JavaResource(resourceName).exportToFile(dest);
 	}
 
-	public static void loadLibrary(String resourceName) throws IOException
-	{
+	public static void loadLibrary(String resourceName) throws IOException {
 		RegularFile f = new RegularFile(Directory.getSystemTempDirectory(), resourceName);
 		exportToFile(resourceName, f);
 		System.load(f.getPath());
 	}
 
-	public String getName()
-	{
+	public String getName() {
 		return name.substring(name.lastIndexOf('/') + 1);
 	}
 
-	public static JavaResource getAttachedResource(Class<?> referenceClass,
-			String resourceName)
-	{
-		return new JavaResource(
-				'/' + referenceClass.getPackage().getName().replace('.', '/') + '/'
-						+ resourceName);
+	public static JavaResource getAttachedResource(Class<?> referenceClass, String resourceName) {
+		return new JavaResource('/' + referenceClass.getPackage().getName().replace('.', '/') + '/' + resourceName);
 	}
 
 }

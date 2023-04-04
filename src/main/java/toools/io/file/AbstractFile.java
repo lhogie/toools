@@ -38,6 +38,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.io.file;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -48,111 +49,82 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
-import toools.os.OperatingSystem;
+import toools.io.Hasher;
 
 @SuppressWarnings("serial")
-public abstract class AbstractFile implements Serializable
-{
+public abstract class AbstractFile implements Serializable {
 	public File javaFile;
 	private boolean temporary = false;
 
-	public static String findUnusedNameIn(Directory location, String prefix,
-			String suffix)
-	{
-		for (int i = 0;; ++i)
-		{
+	public static String findUnusedNameIn(Directory location, String prefix, String suffix) {
+		for (int i = 0;; ++i) {
 			String filename = prefix + i + suffix;
 			RegularFile f = new RegularFile(location, filename);
 
-			if ( ! f.exists())
-			{
+			if (!f.exists()) {
 				return filename;
 			}
 		}
 	}
 
-	public AbstractFile(String path)
-	{
+	public AbstractFile(String path) {
 		if (path.trim().isEmpty())
 			throw new IllegalArgumentException("empty file name");
 
-		if (path.startsWith("~/"))
-		{
+		if (path.startsWith("~/")) {
 			path = Directory.getHomeDirectory().getPath() + '/' + path.substring(2);
-		}
-		else if (path.startsWith("$HOME/"))
-		{
+		} else if (path.startsWith("$HOME/")) {
 			path = Directory.getHomeDirectory().getPath() + '/' + path.substring(6);
 		}
 
 		javaFile = new File(path).getAbsoluteFile();
 	}
 
-	public void createLink(AbstractFile f) throws IOException
-	{
+	public void createLink(AbstractFile f) throws IOException {
 		Files.createSymbolicLink(f.javaFile.toPath(), javaFile.toPath());
 	}
 
-	public boolean isTemporary()
-	{
+	public boolean isTemporary() {
 		return temporary;
 	}
 
-	public void setTemporary(boolean temporary)
-	{
+	public void setTemporary(boolean temporary) {
 		this.temporary = temporary;
 	}
 
-	public boolean isNewerThan(AbstractFile f)
-	{
+	public boolean isNewerThan(AbstractFile f) {
 		return getLastModificationDateMs() > f.getLastModificationDateMs();
 	}
 
-	public static <F extends AbstractFile> F map(String path, Class<F> defaultClass)
-	{
+	public static <F extends AbstractFile> F map(String path, Class<F> defaultClass) {
 		if (path.trim().isEmpty())
 			throw new IllegalArgumentException("empty file name");
 
 		return map(new File(path).getAbsoluteFile(), defaultClass);
 	}
 
-	public static <F extends AbstractFile> F map(File file, Class<F> defaultClass)
-	{
-		if (file.exists())
-		{
-			if (file.isDirectory())
-			{
+	public static <F extends AbstractFile> F map(File file, Class<F> defaultClass) {
+		if (file.exists()) {
+			if (file.isDirectory()) {
 				return (F) new Directory(file.getAbsolutePath());
-			}
-			else
-			{
+			} else {
 				return (F) new RegularFile(file.getAbsolutePath());
 			}
-		}
-		else
-		{
+		} else {
 			// we may be in the situation of a symbolic link targeting a
 			// non-existing file, so let's suppose this non-existing file was a
 			// regular
 			// files
-			if (defaultClass == null)
-			{
+			if (defaultClass == null) {
 				return (F) new RegularFile(file.getAbsolutePath());
 				// throw new
 				// IllegalArgumentException("file was expected to be found: " +
 				// file.getAbsolutePath());
-			}
-			else
-			{
-				try
-				{
-					return defaultClass.getConstructor(String.class)
-							.newInstance(file.getAbsolutePath());
-				}
-				catch (InstantiationException | IllegalAccessException
-						| IllegalArgumentException | InvocationTargetException
-						| NoSuchMethodException | SecurityException e)
-				{
+			} else {
+				try {
+					return defaultClass.getConstructor(String.class).newInstance(file.getAbsolutePath());
+				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
 					throw new IllegalStateException(e);
 				}
 			}
@@ -160,12 +132,10 @@ public abstract class AbstractFile implements Serializable
 	}
 
 	@Override
-	protected void finalize() throws Throwable
-	{
+	protected void finalize() throws Throwable {
 		super.finalize();
 
-		if (isTemporary())
-		{
+		if (isTemporary()) {
 			delete();
 		}
 	}
@@ -175,49 +145,39 @@ public abstract class AbstractFile implements Serializable
 	 * 
 	 * @return the age of this file, in milliseconds.
 	 */
-	public long getAgeMs()
-	{
+	public long getAgeMs() {
 		return System.currentTimeMillis() - getLastModificationDateMs();
 	}
 
 	/*
 	 * public boolean isAbsolute() { return jf.isAbsolute(); }
 	 */
-	public long getLastModificationDateMs()
-	{
-		if ( ! exists())
-			throw new IllegalStateException(
-					"cannot get the date of a non-existing file " + this);
+	public long getLastModificationDateMs() {
+		if (!exists())
+			throw new IllegalStateException("cannot get the date of a non-existing file " + this);
 
 		return javaFile.lastModified();
 	}
 
-	public void setLastModifiedMs(long i)
-	{
-		if ( ! this.javaFile.setLastModified(i))
+	public void setLastModifiedMs(long i) {
+		if (!this.javaFile.setLastModified(i))
 			throw new IllegalStateException();
 	}
 
-	public String getName()
-	{
+	public String getName() {
 		return javaFile.getName();
 	}
 
-	public String getPathRelativeToCurrentDir()
-	{
+	public String getPathRelativeToCurrentDir() {
 		return getNameRelativeTo(Directory.getCurrentDirectory());
 	}
 
-	public String getNameRelativeTo(Directory d)
-	{
+	public String getNameRelativeTo(Directory d) {
 		// if this file is somewhere in a subdirection of d
-		if (getPath().startsWith(d.getPath()))
-		{
+		if (getPath().startsWith(d.getPath())) {
 			// simply remove the path to d
 			return getPath().substring(d.getPath().length() + File.separator.length());
-		}
-		else
-		{
+		} else {
 			return getPath();
 		}
 	}
@@ -226,76 +186,67 @@ public abstract class AbstractFile implements Serializable
 
 	public abstract void delete();
 
-	public Directory getParent()
-	{
+	public Directory getParent() {
 		return new Directory(javaFile.getParent());
 	}
 
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return getPath();
 	}
 
-	public String toString2()
-	{
+	public String toString2() {
 		Map<String, Object> l = new HashMap<String, Object>();
 		l.put("name", getPath());
 		l.put("type", this instanceof Directory ? "directory" : "plain file");
 		l.put("exist", exists());
 
-		if (exists())
-		{
+		if (exists()) {
 			l.put("size", getSize());
 		}
 
 		return l.toString();
 	}
 
-	public String getPath()
-	{
+	public String getPath() {
 		return javaFile.getAbsolutePath();
 	}
 
-	public boolean exists()
-	{
+	public boolean exists() {
 		return javaFile.exists();
 	}
 
 	@Override
-	public boolean equals(Object obj)
-	{
+	public boolean equals(Object obj) {
 		return obj instanceof AbstractFile && equals((AbstractFile) obj);
 	}
 
-	public boolean equals(AbstractFile f)
-	{
+	public boolean equals(AbstractFile f) {
 		return getPath().equals(f.getPath());
 	}
 
 	@Override
-	public int hashCode()
-	{
+	public int hashCode() {
 		return getPath().hashCode();
 	}
 
-	public void renameTo(String newPath) throws IOException
-	{
+	public void hashContents(Hasher h) {
+		h.add(getPath());
+	}
+
+	public void renameTo(String newPath) throws IOException {
 		File newFile = new File(newPath).getAbsoluteFile();
 		boolean ok = javaFile.renameTo(newFile);
 
 		// if renaming failed, try copying+deleting
-		if ( ! ok)
-		{
-			throw new IOException("failed at renaming file " + getPath() + " to "
-					+ newFile.getAbsolutePath());
+		if (!ok) {
+			throw new IOException("failed at renaming file " + getPath() + " to " + newFile.getAbsolutePath());
 		}
 
 		javaFile = newFile;
 	}
 
-	public static void main(String[] args) throws Throwable
-	{
+	public static void main(String[] args) throws Throwable {
 		RegularFile f = new RegularFile("/tmp/vfkdsjh");
 		f.setContent("coucou".getBytes());
 		System.out.println(f);
@@ -303,81 +254,70 @@ public abstract class AbstractFile implements Serializable
 		System.out.println(f);
 	}
 
-	public File toFile()
-	{
+	public File toFile() {
 		return this.javaFile;
 	}
 
-	public boolean canRead()
-	{
-		if ( ! exists())
-			throw new IllegalStateException(
-					"cannot get the status of a non-existing file " + this.getPath());
+	public boolean canRead() {
+		if (!exists())
+			throw new IllegalStateException("cannot get the status of a non-existing file " + this.getPath());
 
 		return javaFile.canRead();
 	}
 
-	public void setWriteable(boolean b)
-	{
+	public void setWriteable(boolean b) {
 		javaFile.setWritable(b);
 	}
 
-	public void setReadable(boolean b)
-	{
+	public void setReadable(boolean b) {
 		javaFile.setWritable(b);
 	}
 
-	public boolean canWrite()
-	{
-		if ( ! exists())
-		{
+	public boolean canWrite() {
+		if (!exists()) {
 			return getParent().canWrite();
-		}
-		else
-		{
+		} else {
 			return javaFile.canWrite();
 		}
 	}
 
-	public boolean isExecutable()
-	{
-		if ( ! exists())
-			throw new IllegalStateException(
-					"cannot get the status of a non-existing file " + this.getPath());
+	public boolean isExecutable() {
+		if (!exists())
+			throw new IllegalStateException("cannot get the status of a non-existing file " + this.getPath());
 
 		return javaFile.canExecute();
 	}
 
-	public void setExecutable(boolean b)
-	{
+	public void setExecutable(boolean b) {
 		javaFile.setExecutable(b);
 	}
 
-	public URL toURL()
-	{
-		try
-		{
+	public URL toURL() {
+		try {
 			return this.javaFile.toURI().toURL();
-		}
-		catch (MalformedURLException e)
-		{
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			throw new IllegalStateException();
 		}
 	}
 
-	public boolean isEmpty()
-	{
+	public boolean isEmpty() {
 		return getSize() == 0;
 	}
 
 	public abstract void create();
 
-
 	public abstract void rsyncTo(String remotePath);
 
-	public boolean isSymbolicLink()
-	{
+	public boolean isSymbolicLink() {
 		return Files.isSymbolicLink(javaFile.toPath());
+	}
+
+	public void open() {
+		try {
+			Desktop.getDesktop().open(javaFile);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

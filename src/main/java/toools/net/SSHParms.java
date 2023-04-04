@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class SSHParms implements Serializable {
 	// SSH hostname may be different than DNS name
-	public String hostname;
+	public String host;
 	public String username;// = System.getProperty("user.name");
 	public int port = 22;
 	public int timeoutS = 10;
@@ -14,10 +14,10 @@ public class SSHParms implements Serializable {
 		SSHParms p = new SSHParms();
 
 		if (indexOfAt == -1) {
-			p.hostname = s;
+			p.host = s;
 		} else {
 			p.username = s.substring(0, indexOfAt);
-			p.hostname = s.substring(indexOfAt + 1);
+			p.host = s.substring(indexOfAt + 1);
 		}
 
 		return p;
@@ -31,8 +31,8 @@ public class SSHParms implements Serializable {
 			s += username + "@";
 		}
 
-		if (hostname != null) {
-			s += hostname;
+		if (host != null) {
+			s += host;
 		}
 
 		if (port != 22) {

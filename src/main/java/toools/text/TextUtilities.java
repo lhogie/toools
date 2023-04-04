@@ -631,7 +631,7 @@ public class TextUtilities {
 		int sz = elements.size();
 
 		for (int i = 0; i < sz; ++i) {
-			b.append(toString.apply(elements.get(0)));
+			b.append(toString.apply(elements.get(i)));
 
 			if (i < sz - 1) {
 				b.append(separator);
@@ -835,13 +835,8 @@ public class TextUtilities {
 	public static String toString(Object o) {
 		if (o == null) {
 			return "null";
-		} else if (o instanceof Throwable) {
-			Throwable ex = (Throwable) o;
-			StringWriter w = new StringWriter();
-			PrintWriter pw = new PrintWriter(w);
-			ex.printStackTrace(pw);
-			pw.flush();
-			return w.getBuffer().toString();
+		} else if (o instanceof String) {
+			return (String) o;
 		} else if (o instanceof byte[]) {
 			return Arrays.toString((byte[]) o);
 		} else if (o instanceof boolean[]) {
@@ -858,6 +853,13 @@ public class TextUtilities {
 			return Arrays.toString((double[]) o);
 		} else if (o instanceof long[]) {
 			return Arrays.toString((long[]) o);
+		} else if (o instanceof Throwable) {
+			Throwable ex = (Throwable) o;
+			StringWriter w = new StringWriter();
+			PrintWriter pw = new PrintWriter(w);
+			ex.printStackTrace(pw);
+			pw.flush();
+			return w.getBuffer().toString();
 		} else if (o instanceof Object[]) {
 			StringBuilder b = new StringBuilder();
 			b.append("[");

@@ -46,6 +46,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import toools.io.ser.JavaSerializer;
@@ -146,41 +147,54 @@ public class Conversion {
 		return r;
 	}
 
-	public static <E> E convert(Object from, Class<E> to) throws IllegalArgumentException {
-		if (to.isAssignableFrom(from.getClass()))
-			return (E) from;
+	public static interface Converter<FROM, TO> extends Function<FROM, TO> {
+		boolean support(FROM from, Class<?> to);
+	}
+	
+//	public static <TO> TO convert(Object initialObject, Class<TO> destinationClass, Iterable<Converter<?, ?>> converters) throws IllegalArgumentException {
+	public static <TO> TO convert(Object initialObject, Class<TO> destinationClass) throws IllegalArgumentException {
+		if (destinationClass.isAssignableFrom(initialObject.getClass()))
+			return (TO) initialObject;
 
-		if (to == double.class || to == Double.class)
-			return (E) Double.valueOf(from.toString());
+		if (destinationClass == double.class || destinationClass == Double.class)
+			return (TO) Double.valueOf(initialObject.toString());
 
-		if (to == int.class || to == Integer.class)
-			return (E) (Integer) Integer.parseInt(from.toString());
+		if (destinationClass == int.class || destinationClass == Integer.class)
+			return (TO) (Integer) Integer.parseInt(initialObject.toString());
 
-		if (to == long.class || to == Long.class)
-			return (E) (Long) Long.parseLong(from.toString());
+		if (destinationClass == long.class || destinationClass == Long.class)
+			return (TO) (Long) Long.parseLong(initialObject.toString());
 
-		if (Collection.class.isAssignableFrom(to)) {
-			if (to.isAssignableFrom(LongArrayList.class))
-				to = (Class<E>) LongArrayList.class;
+		if (Collection.class.isAssignableFrom(destinationClass)) {
+			if (destinationClass.isAssignableFrom(LongArrayList.class))
+				destinationClass = (Class<TO>) LongArrayList.class;
 			
-			if (from instanceof String) {
-				return (E) string2collectionOfLongs((Class<Collection<Long>>) to, (String) from);
+			if (initialObject instanceof String) {
+				return (TO) string2collectionOfLongs((Class<Collection<Long>>) destinationClass, (String) initialObject);
 			}
 		}
 
-		if (byte[].class.isAssignableFrom(to)) {
-			if (from instanceof InputStream) {
+		if (byte[].class.isAssignableFrom(destinationClass)) {
+			if (initialObject instanceof InputStream) {
 				try {
-					return (E) ((InputStream) from).readAllBytes();
+					return (TO) ((InputStream) initialObject).readAllBytes();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
 			}
 
-			return (E) TextUtilities.toString(from).getBytes();
+			return (TO) TextUtilities.toString(initialObject).getBytes();
 		}
-
-		throw new IllegalArgumentException(from.getClass() + " cannot be converted to " + to);
+/*
+		if (converters != null) {
+			for (var c : converters) {
+				if (c.support(initialObject, destinationClass.getClass())) {
+					return (TO) c.apply(initialObject);
+				}
+			}
+		}
+		*/
+		throw new IllegalArgumentException(initialObject.getClass() + " cannot be converted to " + destinationClass);
 	}
 
 	public static Collection<Long> string2collectionOfLongs(Class<? extends Collection<Long>> c, String from) {

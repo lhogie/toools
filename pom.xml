@@ -5,44 +5,15 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.github.lhogie</groupId>
 	<artifactId>toools</artifactId>
-	<version>0.0.7</version>
+	<version>0.0.9-SNAPSHOT</version>
 	<name>toools</name>
 	<description>A suite Java toools useful in the context of the development of scientific applications</description>
 	<url>https://github.com/lhogie/toools</url>
 	<properties>
-		<maven.compiler.target>10</maven.compiler.target>
-		<maven.compiler.source>10</maven.compiler.source>
+		<maven.compiler.target>18</maven.compiler.target>
+		<maven.compiler.source>18</maven.compiler.source>
 	</properties>
-	<licenses>
-		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-			<comments>A business-friendly OSS license</comments>
-		</license>
-	</licenses>
-	<developers>
-		<developer>
-			<name>Luc Hogie</name>
-			<email>luc.hogie@cnrs.fr</email>
-			<organization>Cnrs/I3S/Inria/University of Nice Sophia Antipolis</organization>
-			<organizationUrl>https://www.i3s.unice.fr/en</organizationUrl>
-		</developer>
-	</developers>
-	<scm>
-		<connection>scm:git:git@github.com:lhogie/toools.git</connection>
-		<developerConnection>scm:git:git@github.com:lhogie/toools.git</developerConnection>
-		<url>https://github.com/lhogie/toools</url>
-		<tag>HEAD</tag>
-	</scm>
-	<repositories>
-		<repository>
-			<id>jtoml</id>
-			<url>https://raw.github.com/agrison/jtoml/mvn-repo/</url>
-		</repository>
-	</repositories>
-
-	<dependencies>
+		<dependencies>
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
@@ -113,6 +84,36 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Luc Hogie</name>
+			<email>luc.hogie@cnrs.fr</email>
+			<organization>Cnrs/I3S/Inria/University of Nice Sophia Antipolis</organization>
+			<organizationUrl>https://www.i3s.unice.fr/en</organizationUrl>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:git@github.com:lhogie/toools.git</connection>
+		<developerConnection>scm:git:git@github.com:lhogie/toools.git</developerConnection>
+		<url>https://github.com/lhogie/toools</url>
+		<tag>HEAD</tag>
+	</scm>
+	<repositories>
+		<repository>
+			<id>jtoml</id>
+			<url>https://raw.github.com/agrison/jtoml/mvn-repo/</url>
+		</repository>
+	</repositories>
+
+
 
 	<build>
 		<resources>
@@ -144,8 +145,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.0</version>
 				<configuration>
-					<source>10</source>
-					<target>10</target>
+					<source>18</source>
+					<target>18</target>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -200,7 +201,7 @@
 					<plugin><!-- Plugin to publish on Maven Central -->
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
+						<version>1.6.13</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>
@@ -226,5 +227,4 @@
 			</build>
 		</profile>
 	</profiles>
-
 </project>

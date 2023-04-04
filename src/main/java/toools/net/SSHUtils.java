@@ -98,7 +98,7 @@ public class SSHUtils {
 	public static List<String> execShAndWait(SSHParms sshparms, String shText) {
 		List<String> sshOptions = new ArrayList<>();
 		addSSHOptions(sshOptions, sshparms);
-		sshOptions.add(sshparms.hostname);
+		sshOptions.add(sshparms.host);
 		sshOptions.add("bash");
 		sshOptions.add("--posix");
 		byte[] r = Proces.exec(sshCmd(), shText.getBytes(),
@@ -111,7 +111,7 @@ public class SSHUtils {
 		List<String> args = new ArrayList<>();
 		args.add(sshCmd());
 		addSSHOptions(args, sshparms);
-		args.add(sshparms.hostname);
+		args.add(sshparms.host);
 		Arrays.stream(cmd).forEach(a -> args.add(a));
 		// System.out.println("****" + args);
 		return Runtime.getRuntime().exec(args.toArray(new String[0]));

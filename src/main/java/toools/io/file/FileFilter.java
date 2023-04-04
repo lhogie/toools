@@ -35,44 +35,26 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools.io.file;
 
-public interface FileFilter
-{
-	public abstract boolean accept(AbstractFile f);
+package toools.io.file;
 
-	public static final FileFilter regularFileFilter = new FileFilter()
-	{
-		@Override
-		public boolean accept(AbstractFile f)
-		{
-			return f instanceof RegularFile;
-		}
-	};
+import java.util.function.Predicate;
 
-	public static final FileFilter directoryFilter = new FileFilter()
-	{
-		@Override
-		public boolean accept(AbstractFile f)
-		{
-			return f instanceof Directory;
-		}
-	};
+public interface FileFilter extends Predicate<AbstractFile> {
 
+	public static final FileFilter regularFileFilter = f -> f instanceof RegularFile;
 
-	public static class RegexFilter implements FileFilter
-	{
+	public static final FileFilter directoryFilter = f -> f instanceof Directory;
+
+	public static class RegexFilter implements FileFilter {
 		private String re;
 
-		public RegexFilter(String re)
-		{
+		public RegexFilter(String re) {
 			this.re = re;
 		}
 
 		@Override
-		public boolean accept(AbstractFile f)
-		{
+		public boolean test(AbstractFile f) {
 			return f.getName().matches(re);
 		}
 	}

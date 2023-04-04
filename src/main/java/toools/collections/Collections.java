@@ -66,17 +66,13 @@ import toools.reflect.beans.BeanProperty;
 /**
  * @author luc.hogie
  */
-public class Collections
-{
-	public static final List<?> emptyCollection = java.util.Collections
-			.unmodifiableList(new ArrayList<>());
+public class Collections {
+	public static final List<?> emptyCollection = java.util.Collections.unmodifiableList(new ArrayList<>());
 
-	public static <A, B> Map<A, Integer> map_distribution(Map<A, Collection<B>> in)
-	{
+	public static <A, B> Map<A, Integer> map_distribution(Map<A, Collection<B>> in) {
 		Map<A, Integer> m = new HashMap<>();
 
-		for (Map.Entry<A, Collection<B>> e : in.entrySet())
-		{
+		for (Map.Entry<A, Collection<B>> e : in.entrySet()) {
 			m.put(e.getKey(), e.getValue().size());
 		}
 
@@ -84,12 +80,9 @@ public class Collections
 	}
 
 	@SafeVarargs
-	public static <V> Collection<V> getFirstSetContaining(V v, Collection<V>... set)
-	{
-		for (Collection<V> s : set)
-		{
-			if (s.contains(v))
-			{
+	public static <V> Collection<V> getFirstSetContaining(V v, Collection<V>... set) {
+		for (Collection<V> s : set) {
+			if (s.contains(v)) {
 				return s;
 			}
 		}
@@ -97,25 +90,20 @@ public class Collections
 		return null;
 	}
 
-	public static <E> Collection<E> singleton(E element)
-	{
+	public static <E> Collection<E> singleton(E element) {
 		Collection<E> c = new HashSet<E>();
 		c.add(element);
 		return c;
 	}
 
-	public static <T> Collection<Collection<T>> getLargestCollections(
-			Collection<? extends Collection<T>> collections)
-	{
+	public static <T> Collection<Collection<T>> getLargestCollections(Collection<? extends Collection<T>> collections) {
 		Iterator<? extends Collection<T>> i = collections.iterator();
 		int largestSize = i.next().size();
 
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			Collection<T> thisCollection = i.next();
 
-			if (thisCollection.size() > largestSize)
-			{
+			if (thisCollection.size() > largestSize) {
 				largestSize = thisCollection.size();
 			}
 		}
@@ -123,15 +111,12 @@ public class Collections
 		return getCollectionsOfSize(collections, largestSize);
 	}
 
-	public static <T> Collection<Collection<T>> getCollectionsOfSize(
-			Collection<? extends Collection<T>> collections, int requestedSize)
-	{
+	public static <T> Collection<Collection<T>> getCollectionsOfSize(Collection<? extends Collection<T>> collections,
+			int requestedSize) {
 		Collection<Collection<T>> result = new ArrayList<Collection<T>>();
 
-		for (Collection<T> thisCollection : collections)
-		{
-			if (thisCollection.size() == requestedSize)
-			{
+		for (Collection<T> thisCollection : collections) {
+			if (thisCollection.size() == requestedSize) {
 				result.add(thisCollection);
 			}
 		}
@@ -139,9 +124,7 @@ public class Collections
 		return result;
 	}
 
-	public static <E> List<Collection<Collection<E>>> combine(Collection<E> elements,
-			int stop)
-	{
+	public static <E> List<Collection<Collection<E>>> combine(Collection<E> elements, int stop) {
 		List<Collection<Collection<E>>> combinaisons = new ArrayList<Collection<Collection<E>>>();
 
 		// adds the combinaisons with 0 elements
@@ -149,14 +132,11 @@ public class Collections
 		a0.add(new HashSet<E>());
 		combinaisons.add(a0);
 
-		for (int i = 1; i <= stop; ++i)
-		{
+		for (int i = 1; i <= stop; ++i) {
 			Collection<Collection<E>> newCombinaisons = new ArrayList<Collection<E>>();
 
-			for (E e : elements)
-			{
-				for (Collection<E> thisCombinaison : combinaisons.get(i - 1))
-				{
+			for (E e : elements) {
+				for (Collection<E> thisCombinaison : combinaisons.get(i - 1)) {
 					Collection<E> c = new ArrayList<E>();
 					c.addAll(thisCombinaison);
 
@@ -178,27 +158,22 @@ public class Collections
 	/*
 	 * Returns a list of the elements at the given index in the given lists
 	 */
-	public static <T> List<T> getElementsAt(Collection<List<T>> lists, int index)
-	{
+	public static <T> List<T> getElementsAt(Collection<List<T>> lists, int index) {
 		List<T> res = new Vector<T>();
 
-		for (List<T> list : lists)
-		{
+		for (List<T> list : lists) {
 			res.add(list.get(index));
 		}
 
 		return res;
 	}
 
-	public static List<Collection<?>> sortBySize(Collection<Collection<?>> collections)
-	{
+	public static List<Collection<?>> sortBySize(Collection<Collection<?>> collections) {
 		List<Collection<?>> list = new Vector<Collection<?>>(collections);
-		java.util.Collections.sort(list, new Comparator<Collection<?>>()
-		{
+		java.util.Collections.sort(list, new Comparator<Collection<?>>() {
 
 			@Override
-			public int compare(Collection<?> c1, Collection<?> c2)
-			{
+			public int compare(Collection<?> c1, Collection<?> c2) {
 				return new Integer(c1.size()).compareTo(new Integer(c2.size()));
 			}
 
@@ -207,57 +182,46 @@ public class Collections
 		return list;
 	}
 
-	public static <T> List<T> convertEnumerationToList(Enumeration<T> e)
-	{
+	public static <T> List<T> convertEnumerationToList(Enumeration<T> e) {
 		List<T> c = new ArrayList<T>();
 
-		while (e.hasMoreElements())
-		{
+		while (e.hasMoreElements()) {
 			c.add(e.nextElement());
 		}
 
 		return c;
 	}
 
-	public static <T> List<T> convertIteratorToList(Iterator<T> e)
-	{
+	public static <T> List<T> convertIteratorToList(Iterator<T> e) {
 		List<T> c = new ArrayList<T>();
 
-		while (e.hasNext())
-		{
+		while (e.hasNext()) {
 			c.add(e.next());
 		}
 
 		return c;
 	}
 
-	public static <T> Collection<T> filter(Collection<T> inputSet, Filter<T> filter)
-	{
+	public static <T> Collection<T> filter(Collection<T> inputSet, Filter<T> filter) {
 		@SuppressWarnings("unchecked")
 		Collection<T> output = Clazz.makeInstance(inputSet.getClass());
 		filter(inputSet, filter, output);
 		return output;
 	}
 
-	public static <T> void filter(Collection<T> inputSet, Filter<T> filter,
-			Collection<T> output)
-	{
-		for (T thisElement : inputSet)
-		{
-			if (filter.accept(thisElement))
-			{
+	public static <T> void filter(Collection<T> inputSet, Filter<T> filter, Collection<T> output) {
+		for (T thisElement : inputSet) {
+			if (filter.accept(thisElement)) {
 				output.add(thisElement);
 			}
 		}
 	}
 
 	@SafeVarargs
-	public static <T, E extends Collection<T>> Set<T> union(E... sets)
-	{
+	public static <T, E extends Collection<T>> Set<T> union(E... sets) {
 		Set<T> c = new HashSet<T>();
 
-		for (Collection<T> set : sets)
-		{
+		for (Collection<T> set : sets) {
 			c.addAll(set);
 		}
 
@@ -265,13 +229,10 @@ public class Collections
 	}
 
 	@SafeVarargs
-	public static <T, E extends Collection<T>> Set<T> unionTo(
-			Class<? extends Collection<T>> targetClass, E... sets)
-	{
+	public static <T, E extends Collection<T>> Set<T> unionTo(Class<? extends Collection<T>> targetClass, E... sets) {
 		Set<T> target = (Set<T>) Clazz.makeInstance(targetClass);
 
-		for (Collection<T> set : sets)
-		{
+		for (Collection<T> set : sets) {
 			target.addAll(set);
 		}
 
@@ -282,83 +243,68 @@ public class Collections
 	 * slow method!!!
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public static <T> Collection<T> intersection(Collection<T>... sets)
-	{
+	public static <T> Collection<T> intersection(Collection<T>... sets) {
 		Set<T> t = new HashSet<T>();
 		intersectionToTarget(t, sets);
 		return t;
 	}
 
 	@SafeVarargs
-	private static <T> void intersectionToTarget(Collection<T> target,
-			Collection<T>... sets)
-	{
+	private static <T> void intersectionToTarget(Collection<T> target, Collection<T>... sets) {
 		target.addAll(sets[0]);
 
-		for (int i = 1; i < sets.length; ++i)
-		{
+		for (int i = 1; i < sets.length; ++i) {
 			target.retainAll(sets[i]);
 		}
 	}
 
 	@SafeVarargs
-	public static <T> Set<T> difference(Collection<T> a, Collection<T>... b)
-	{
+	public static <T> Set<T> difference(Collection<T> a, Collection<T>... b) {
 		Set<T> c = new HashSet<T>(a);
 
-		for (Collection<T> _b : b)
-		{
+		for (Collection<T> _b : b) {
 			c.removeAll(_b);
 		}
 
 		return c;
 	}
 
-	public static <T> Set<T> difference(Collection<T> a, T e)
-	{
+	public static <T> Set<T> difference(Collection<T> a, T e) {
 		Set<T> c = new HashSet<T>(a);
 		c.remove(e);
 		return c;
 	}
 
-	public static <T> Collection<T> pickRandomSubset(Collection<T> c, Random random)
-	{
+	public static <T> Collection<T> pickRandomSubset(Collection<T> c, Random random) {
 		int n = (int) MathsUtilities.pickRandomBetween(0, c.size(), random);
 		return pickRandomSubset(c, n, false, random);
 	}
 
-	public static <T> Collection<T> pickRandomSubset(Collection<T> c, int size,
-			boolean allowDuplicates, Random random)
-	{
+	public static <T> Collection<T> pickRandomSubset(Collection<T> c, int size, boolean allowDuplicates,
+			Random random) {
 		if (size > c.size())
 			throw new IllegalArgumentException("too many elements requested");
 
 		Collection<T> result = allowDuplicates ? new ArrayList<T>() : new HashSet<T>();
 
-		while (size-- > 0)
-		{
+		while (size-- > 0) {
 			result.add(pickRandomObject(c, random));
 		}
 
 		return result;
 	}
 
-	public static <T> T getRandomObjectNot(Collection<T> c, Random random,
-			Collection<T> forbiddenValues)
-	{
-		while (true)
-		{
+	public static <T> T getRandomObjectNot(Collection<T> c, Random random, Collection<T> forbiddenValues) {
+		while (true) {
 			T randomElement = pickRandomObject(c, random);
 
-			if ( ! forbiddenValues.contains(randomElement))
-			{
+			if (!forbiddenValues.contains(randomElement)) {
 				return randomElement;
 			}
 		}
 	}
 
-	public static <T> T pickRandomObject(Collection<T> c, Random random)
-	{
+	public static <T> T pickRandomObject(Collection<T> c, Random random) {
 		if (random == null)
 			throw new NullPointerException();
 
@@ -368,26 +314,20 @@ public class Collections
 		int pos = (int) MathsUtilities.pickRandomBetween(0, c.size(), random);
 		Iterator<T> i = c.iterator();
 
-		while (pos-- > 0)
-		{
+		while (pos-- > 0) {
 			i.next();
 		}
 
 		return i.next();
 	}
 
-	public static <E> Collection<E> find(Collection<E> set, String propertyName,
-			Object value)
-	{
+	public static <E> Collection<E> find(Collection<E> set, String propertyName, Object value) {
 		Collection<E> c = new Vector<E>();
 
-		for (E e : set)
-		{
-			Object v = new Bean(e.getClass()).getProperties().get(propertyName)
-					.getValue(e);
+		for (E e : set) {
+			Object v = new Bean(e.getClass()).getProperties().get(propertyName).getValue(e);
 
-			if (v.equals(value))
-			{
+			if (v.equals(value)) {
 				c.add(e);
 			}
 		}
@@ -395,12 +335,9 @@ public class Collections
 		return c;
 	}
 
-	public static <E> E find(Collection<E> set, Predicate<E> p)
-	{
-		for (E e : set)
-		{
-			if (p.test(e))
-			{
+	public static <E> E find(Collection<E> set, Predicate<E> p) {
+		for (E e : set) {
+			if (p.test(e)) {
 				return e;
 			}
 		}
@@ -408,39 +345,30 @@ public class Collections
 		return null;
 	}
 
-	public static <E> E ensureSingleton(Collection<E> set)
-	{
-		if (set.size() == 1)
-		{
+	public static <E> E ensureSingleton(Collection<E> set) {
+		if (set.size() == 1) {
 			return set.iterator().next();
-		}
-		else
-		{
+		} else {
 			throw new IllegalArgumentException("set is not a singleton");
 		}
 	}
 
 	/*
-	 * public static <T> Collection<T> getRandomSubset(Collection<T> elements,
-	 * int numberOfElementsRequested, Random random) { if
-	 * (numberOfElementsRequested > elements.size()) throw new
-	 * IllegalArgumentException("you ask for too much");
+	 * public static <T> Collection<T> getRandomSubset(Collection<T> elements, int
+	 * numberOfElementsRequested, Random random) { if (numberOfElementsRequested >
+	 * elements.size()) throw new IllegalArgumentException("you ask for too much");
 	 * 
 	 * return getElementAtIndexes(elements, getRandomIndexes(elements.size(),
 	 * numberOfElementsRequested, random)); }
 	 */
 
 	@SuppressWarnings("unused")
-	private static <T> Collection<T> getElementAtIndexes(Collection<T> elements,
-			Collection<Integer> indexes)
-	{
+	private static <T> Collection<T> getElementAtIndexes(Collection<T> elements, Collection<Integer> indexes) {
 		List<T> res = new ArrayList<T>();
 		int i = 0;
 
-		for (T t : elements)
-		{
-			if (indexes.contains(i++))
-			{
+		for (T t : elements) {
+			if (indexes.contains(i++)) {
 				res.add(t);
 			}
 		}
@@ -455,15 +383,12 @@ public class Collections
 	 * @param index
 	 * @return
 	 */
-	public static List<List<?>> sort(Collection<List<?>> src, final int index)
-	{
+	public static List<List<?>> sort(Collection<List<?>> src, final int index) {
 		List<List<?>> dest = new ArrayList<List<?>>(src);
 
-		java.util.Collections.sort(dest, new Comparator<List<?>>()
-		{
+		java.util.Collections.sort(dest, new Comparator<List<?>>() {
 			@Override
-			public int compare(List<?> o1, List<?> o2)
-			{
+			public int compare(List<?> o1, List<?> o2) {
 				return MathsUtilities.compare(o1.get(index), o2.get(index));
 			}
 		});
@@ -478,17 +403,13 @@ public class Collections
 	 * @param index
 	 * @return
 	 */
-	public static <E> List<E> sort(List<E> src, String propertyName)
-	{
-		final BeanProperty prop = new Bean(src.iterator().next().getClass())
-				.getProperties().get(propertyName);
+	public static <E> List<E> sort(List<E> src, String propertyName) {
+		final BeanProperty prop = new Bean(src.iterator().next().getClass()).getProperties().get(propertyName);
 		List<E> dest = new ArrayList<E>(src);
 
-		java.util.Collections.sort(dest, new Comparator<E>()
-		{
+		java.util.Collections.sort(dest, new Comparator<E>() {
 			@Override
-			public int compare(E e, E f)
-			{
+			public int compare(E e, E f) {
 				return MathsUtilities.compare(prop.getValue(e), prop.getValue(f));
 			}
 		});
@@ -496,17 +417,13 @@ public class Collections
 		return dest;
 	}
 
-	public static <E> List<E> findElementsWhosePropertyValueMatches(Collection<E> src,
-			String propertyName, String value)
-	{
-		final BeanProperty prop = new Bean(src.iterator().next().getClass())
-				.getProperties().get(propertyName);
+	public static <E> List<E> findElementsWhosePropertyValueMatches(Collection<E> src, String propertyName,
+			String value) {
+		final BeanProperty prop = new Bean(src.iterator().next().getClass()).getProperties().get(propertyName);
 		List<E> dest = new ArrayList<E>(src);
 
-		for (E e : src)
-		{
-			if (prop.getValue(e).equals(value))
-			{
+		for (E e : src) {
+			if (prop.getValue(e).equals(value)) {
 				dest.add(e);
 			}
 		}
@@ -514,10 +431,8 @@ public class Collections
 		return dest;
 	}
 
-	public static void reverse(int[] b, int a, int z)
-	{
-		for (int left = a, right = z - 1; left < right; left++, right--)
-		{
+	public static void reverse(int[] b, int a, int z) {
+		for (int left = a, right = z - 1; left < right; left++, right--) {
 			// exchange the first and last
 			int temp = b[left];
 			b[left] = b[right];
@@ -526,10 +441,8 @@ public class Collections
 
 	}
 
-	public static void reverse(long[] b, int a, int z)
-	{
-		for (int left = a, right = z - 1; left < right; left++, right--)
-		{
+	public static void reverse(long[] b, int a, int z) {
+		for (int left = a, right = z - 1; left < right; left++, right--) {
 			// exchange the first and last
 			long temp = b[left];
 			b[left] = b[right];
@@ -538,28 +451,23 @@ public class Collections
 
 	}
 
-	public static void reverse(int[] b)
-	{
+	public static void reverse(int[] b) {
 		reverse(b, 0, b.length);
 	}
 
-	public static void reverse(long[] b)
-	{
+	public static void reverse(long[] b) {
 		reverse(b, 0, b.length);
 	}
 
-	public static String toString(Collection<?> c, String separator)
-	{
+	public static String toString(Collection<?> c, String separator) {
 		StringBuilder b = new StringBuilder();
 
 		Iterator<?> i = c.iterator();
 
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			b.append(i.next());
 
-			if (i.hasNext())
-			{
+			if (i.hasNext()) {
 				b.append(separator);
 			}
 		}
@@ -567,19 +475,15 @@ public class Collections
 		return b.toString();
 	}
 
-	public static <E> String toString(Iterable<E> c, Function<E, Object> f,
-			String separator)
-	{
+	public static <E> String toString(Iterable<E> c, Function<E, Object> f, String separator) {
 		StringBuilder b = new StringBuilder();
 
 		Iterator<E> i = c.iterator();
 
-		while (i.hasNext())
-		{
+		while (i.hasNext()) {
 			b.append(f.apply(i.next()).toString());
 
-			if (i.hasNext())
-			{
+			if (i.hasNext()) {
 				b.append(separator);
 			}
 		}
@@ -587,12 +491,10 @@ public class Collections
 		return b.toString();
 	}
 
-	public static IntArrayList toArrayList(String s)
-	{
+	public static IntArrayList toArrayList(String s) {
 		IntArrayList r = new IntArrayList();
 
-		for (String t : s.replaceAll("[^0-9]", " ").trim().split(" +"))
-		{
+		for (String t : s.replaceAll("[^0-9]", " ").trim().split(" +")) {
 			r.add(Integer.parseInt(t));
 		}
 

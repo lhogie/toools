@@ -49,12 +49,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import toools.extern.Proces;
 import toools.io.Cout;
+import toools.io.Hasher;
 import toools.io.IORuntimeException;
-import toools.io.ScannerListener;
-import toools.io.Utilities;
 import toools.text.TextUtilities;
 
 @SuppressWarnings("serial")
@@ -65,6 +66,15 @@ public class Directory extends AbstractFile {
 		if (!tempDirectory.exists()) {
 			tempDirectory.mkdirs();
 		}
+	}
+
+	@Override
+	public void hashContents(Hasher h) {
+		super.hashContents(h);
+		search(f -> {
+			f.hashContents(h);
+			return false;
+		});
 	}
 
 	public static Directory getSystemTempDirectory() {
@@ -183,13 +193,7 @@ public class Directory extends AbstractFile {
 	}
 
 	public List<AbstractFile> getChildren() {
-		return getChildFiles(new FileFilter() {
-
-			@Override
-			public boolean accept(AbstractFile f) {
-				return true;
-			}
-		});
+		return getChildFiles(f -> true);
 	}
 
 	public List<Directory> getChildDirectories() {
@@ -208,55 +212,44 @@ public class Directory extends AbstractFile {
 	}
 
 	public List<AbstractFile> retrieveTree() {
-		return retrieveTree(null, null);
+		var l = new ArrayList<AbstractFile>();
+		search(f -> l.add(f));
+		return l;
 	}
 
-	public List<AbstractFile> retrieveTree(FileFilter filter, ScannerListener l) {
-		List<AbstractFile> files = new ArrayList<AbstractFile>();
 
-		if (false)//Utilities.operatingSystemIsUNIX()) {
+	public void search(Predicate<AbstractFile> p) {
+		if (false)// Utilities.operatingSystemIsUNIX()) {
 		{
 			Cout.debugSuperVisible(new String(Proces.exec("find", getPath())));
 			for (String line : TextUtilities.splitInLines(new String(Proces.exec("find", getPath())))) {
 				AbstractFile f = AbstractFile.map(line, null);
 
-				if (filter == null || filter.accept(f)) {
-					files.add(f);
-
-					if (l != null) {
-						l.foundFile(f);
-					}
+				if (p.test(f)) {
+					return;
 				}
 			}
 		} else {
-			Stack<Directory> stack = new Stack<Directory>();
+			Stack<AbstractFile> stack = new Stack<>();
 			stack.push(this);
 
 			while (!stack.isEmpty()) {
-				Directory f = stack.pop();
+				AbstractFile f = stack.pop();
 
-				for (AbstractFile child : f.getChildren()) {
-					if (filter == null || filter.accept(child)) {
-						files.add(child);
+				if (p.test(f)) {
+					return;
+				}
 
-						if (l != null) {
-							l.foundFile(child);
-						}
-					}
-
-					if (child instanceof Directory) {
-						stack.push((Directory) child);
-					}
+				if (f instanceof Directory) {
+					stack.addAll(((Directory) f).getChildren());
 				}
 			}
 		}
-
-		return files;
 	}
 
 	private boolean accept(AbstractFile f, FileFilter... ffs) {
 		for (FileFilter ff : ffs) {
-			if (!ff.accept(f)) {
+			if (!ff.test(f)) {
 				return false;
 			}
 		}

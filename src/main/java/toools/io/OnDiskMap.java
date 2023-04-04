@@ -50,68 +50,55 @@ import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 import toools.io.ser.Serializer;
 
-public class OnDiskMap<K, V> implements Map<K, V>
-{
+public class OnDiskMap<K, V> implements Map<K, V> {
 
 	private final Directory location;
 
-	public OnDiskMap(Directory location)
-	{
+	public OnDiskMap(Directory location) {
 		if (location == null)
 			throw new NullPointerException();
 
 		this.location = location;
 
-		if ( ! location.exists())
-		{
+		if (!location.exists()) {
 			location.mkdirs();
 		}
 	}
 
 	@Override
-	public void clear()
-	{
-		for (AbstractFile f : location.getChildren())
-		{
+	public void clear() {
+		for (AbstractFile f : location.getChildren()) {
 			f.delete();
 		}
 	}
 
 	@Override
-	public boolean containsKey(Object arg0)
-	{
+	public boolean containsKey(Object arg0) {
 		return location.getChild(arg0.toString(), RegularFile.class).exists();
 	}
 
 	@Override
-	public boolean containsValue(Object value)
-	{
+	public boolean containsValue(Object value) {
 		throw new NotYetImplementedException();
 	}
 
 	@Override
-	public Set<java.util.Map.Entry<K, V>> entrySet()
-	{
+	public Set<java.util.Map.Entry<K, V>> entrySet() {
 		throw new NotYetImplementedException();
 	}
 
 	@Override
-	public V get(Object key)
-	{
+	public V get(Object key) {
 		RegularFile f = getFileForObject(key);
 
-		if (f == null || ! f.exists())
-		{
+		if (f == null || !f.exists()) {
 			return null;
-		}
-		else
-		{
+		} else {
 			return (V) Serializer.getDefaultSerializer().fromBytes(f.getContent());
 		}
 	}
 
-	public static void main(String[] args) throws IOException
-	{
+	public static void main(String[] args) throws IOException {
 		OnDiskMap<Object, Object> db = new OnDiskMap<Object, Object>(
 				new Directory(System.getProperty("user.home") + "/coucou"));
 		db.put("coucou", new ArrayList());
@@ -119,65 +106,54 @@ public class OnDiskMap<K, V> implements Map<K, V>
 		db.delete();
 	}
 
-	public void delete()
-	{
+	public void delete() {
 		getLocation().delete();
 	}
 
-	private RegularFile getFileForObject(Object id)
-	{
+	private RegularFile getFileForObject(Object id) {
 		return new RegularFile(getLocation().getPath() + '/' + id.toString());
 	}
 
-	public Directory getLocation()
-	{
+	public Directory getLocation() {
 		return location;
 	}
 
 	@Override
-	public boolean isEmpty()
-	{
+	public boolean isEmpty() {
 		return getLocation().getChildren().isEmpty();
 	}
 
 	@Override
-	public Set<K> keySet()
-	{
+	public Set<K> keySet() {
 		throw new NotYetImplementedException();
 	}
 
 	@Override
-	public V put(K key, V value)
-	{
-		getFileForObject(key)
-				.setContent(Serializer.getDefaultSerializer().toBytes(value));
+	public V put(K key, V value) {
+		getFileForObject(key).setContent(Serializer.getDefaultSerializer().toBytes(value));
 		return value;
 
 	}
 
 	@Override
-	public void putAll(Map<? extends K, ? extends V> m)
-	{
+	public void putAll(Map<? extends K, ? extends V> m) {
 
 	}
 
 	@Override
-	public V remove(Object key)
-	{
+	public V remove(Object key) {
 		V v = get(key);
 		getFileForObject(key).delete();
 		return v;
 	}
 
 	@Override
-	public int size()
-	{
+	public int size() {
 		return getLocation().getChildren().size();
 	}
 
 	@Override
-	public Collection<V> values()
-	{
+	public Collection<V> values() {
 		throw new NotYetImplementedException();
 	}
 

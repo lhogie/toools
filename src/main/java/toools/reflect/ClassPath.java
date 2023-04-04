@@ -46,14 +46,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import toools.collections.Collections;
 import toools.io.FileUtilities;
-import toools.io.Utilities;
+import toools.io.RSync;
 import toools.io.file.AbstractFile;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 import toools.net.SSHParms;
-import toools.net.SSHUtils;
 import toools.thread.Generator;
 import toools.thread.GeneratorChain;
 
@@ -67,11 +65,10 @@ public class ClassPath extends ArrayList<ClassContainer> {
 		if (systemClassPath == null) {
 			systemClassPath = new ClassPath();
 
-			for (String entry : System.getProperty("java.class.path")
-					.split(File.pathSeparator)) {
+			for (String entry : System.getProperty("java.class.path").split(File.pathSeparator)) {
 				entry = entry.trim();
 
-				if ( ! entry.isEmpty()) {
+				if (!entry.isEmpty()) {
 					AbstractFile f = AbstractFile.map(entry, Directory.class);
 					systemClassPath.add(new ClassContainer(f));
 				}
@@ -112,13 +109,11 @@ public class ClassPath extends ArrayList<ClassContainer> {
 
 				if (f instanceof RegularFile) {
 					zipFiles.add((RegularFile) cc.getFile());
-				}
-				else {
+				} else {
 					Directory d = (Directory) f;
-					RegularFile zz = new RegularFile(
-							"/tmp/" + d.getPath().replace('/', '_') + ".jar");
+					RegularFile zz = new RegularFile("/tmp/" + d.getPath().replace('/', '_') + ".jar");
 
-					if ( ! d.getChildren().isEmpty()) {
+					if (!d.getChildren().isEmpty()) {
 						FileUtilities.zip(zz, d, null);
 						zipFiles.add(zz);
 					}
@@ -137,10 +132,8 @@ public class ClassPath extends ArrayList<ClassContainer> {
 				AbstractFile f = cc.getFile();
 
 				if (f instanceof RegularFile) {
-					map.put(cc.getFile().getName(),
-							((RegularFile) cc.getFile()).getContent());
-				}
-				else {
+					map.put(cc.getFile().getName(), ((RegularFile) cc.getFile()).getContent());
+				} else {
 					RegularFile zz = new RegularFile("/tmp/sdfsdfjskjfshkjhqg");
 					FileUtilities.zip(zz, (Directory) f, null);
 					map.put(f.getPath().replace('/', '-') + ".jar", zz.getContent());
@@ -165,8 +158,7 @@ public class ClassPath extends ArrayList<ClassContainer> {
 		StringBuilder b = new StringBuilder();
 
 		for (ClassContainer cc : this) {
-			b.append(cc.getFile().getPath() + (cc.getFile().exists() ? "" : "(not found)")
-					+ "\n");
+			b.append(cc.getFile().getPath() + (cc.getFile().exists() ? "" : "(not found)") + "\n");
 		}
 
 		return b.toString();
@@ -184,51 +176,12 @@ public class ClassPath extends ArrayList<ClassContainer> {
 		return s;
 	}
 
-	public void rsyncTo(String destIP, String destPath) throws IOException {
-		rsyncTo(null, destIP, destPath, stdout -> {
-		}, stderr -> {
-		});
+	public void rsyncTo(SSHParms sshParameters, String destPath, Consumer<String> stdout, Consumer<String> stderr)
+			throws IOException {
+		RSync.rsyncTo(sshParameters, files(), destPath, stdout, stderr);
 	}
 
-	public int rsyncTo(SSHParms sshParameters, String destIP, String destPath,
-			Consumer<String> stdout, Consumer<String> stderr) throws IOException {
-		List<String> args = new ArrayList<>();
-		args.add("rsync");
-
-		if (sshParameters != null) {
-			args.add("-e");
-			List<String> ssh = new ArrayList<>();
-			ssh.add(SSHUtils.sshCmd());
-			SSHUtils.addSSHOptions(ssh, sshParameters);
-			args.add(Collections.toString(ssh, " "));
-		}
-
-		args.add("-a");
-		args.add("--delete");
-		args.add("--copy-links");
-		args.add("-v");
-
-		for (ClassContainer e : this) {
-			if (e.getFile() instanceof Directory) {
-				args.add(e.getFile().getPath() + "/");
-			}
-			else {
-				args.add(e.getFile().getPath());
-			}
-		}
-
-		args.add(destIP + ":" + destPath);
-
-		try {
-			// System.out.println(args);
-			Process rsync = Runtime.getRuntime().exec(args.toArray(new String[0]));
-			Utilities.grabLines(rsync.getInputStream(), stdout, err -> {}) ;
-			Utilities.grabLines(rsync.getErrorStream(), stderr, err -> {});
-			rsync.waitFor();
-			return rsync.exitValue();
-		}
-		catch (InterruptedException e1) {
-			throw new IllegalStateException(e1);
-		}
+	public List<AbstractFile> files() {
+		return stream().map(c -> c.getFile()).toList();
 	}
 }

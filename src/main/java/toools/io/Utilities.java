@@ -50,8 +50,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -67,8 +69,7 @@ import toools.math.MathsUtilities;
 
 public class Utilities {
 
-	public static void grabLines(InputStream in, Consumer<String> newLineConsumer,
-			Consumer<IOException> error) {
+	public static void grabLines(InputStream in, Consumer<String> newLineConsumer, Consumer<IOException> error) {
 		Thread t = new Thread(() -> {
 			try {
 				BufferedReader r = new BufferedReader(new InputStreamReader(in));
@@ -84,14 +85,31 @@ public class Utilities {
 
 					newLineConsumer.accept(line);
 				}
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				error.accept(e);
 			}
 		});
-		
+
 //		t.setDaemon(true);
 		t.start();
+	}
+
+	public static Map<String, String> csv2map(String s) {
+		s.replace(',', '\n');
+		var p = new Properties();
+		try {
+			p.load(new StringReader(s));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		var m = new HashMap<String, String>();
+
+		for (var e : p.entrySet()) {
+			m.put((String) e.getKey(), (String) e.getValue());
+		}
+
+		return m;
 	}
 
 	public static byte getNbBytesRequireToEncode(long n) {
@@ -113,16 +131,14 @@ public class Utilities {
 			return 8;
 	}
 
-	public long getOffsetofFirstDifference(InputStream a, InputStream b)
-			throws IOException {
+	public long getOffsetofFirstDifference(InputStream a, InputStream b) throws IOException {
 		for (long i = 0;; ++i) {
 			int ia = a.read();
 			int ib = b.read();
 
 			if (ia != ib) {
 				return i;
-			}
-			else if (ia == - 1) {
+			} else if (ia == -1) {
 				return i;
 			}
 		}
@@ -137,8 +153,7 @@ public class Utilities {
 			Properties properties = new Properties();
 			properties.load(new ByteArrayInputStream(text.getBytes()));
 			return Maps.propertiesToMap(properties);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new CodeShouldNotHaveBeenReachedException();
 		}
 	}
@@ -150,8 +165,7 @@ public class Utilities {
 			gos.write(data);
 			gos.close();
 			return bos.toByteArray();
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			throw new IllegalStateException();
 		}
 	}
@@ -162,8 +176,7 @@ public class Utilities {
 			GZIPInputStream gis = new GZIPInputStream(bis);
 			byte[] uncompressedData = readUntilEOF(gis);
 			return uncompressedData;
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			throw new IllegalStateException(ex);
 		}
 	}
@@ -173,8 +186,7 @@ public class Utilities {
 		public boolean eof;
 	}
 
-	public static ReadUntilResult readUntil(InputStream is, byte endChar)
-			throws IOException {
+	public static ReadUntilResult readUntil(InputStream is, byte endChar) throws IOException {
 		if (is == null)
 			throw new NullPointerException("null stream");
 
@@ -183,7 +195,7 @@ public class Utilities {
 		while (true) {
 			int i = is.read();
 
-			if (i == - 1) {
+			if (i == -1) {
 				r.eof = true;
 				return r;
 			}
@@ -218,15 +230,13 @@ public class Utilities {
 			while (true) {
 				int nbBytesRead = is.read(buffer);
 
-				if (nbBytesRead == - 1) {
+				if (nbBytesRead == -1) {
 					break;
-				}
-				else {
+				} else {
 					bos.write(buffer, 0, nbBytesRead);
 				}
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new IORuntimeException(e);
 		}
 	}
@@ -252,14 +262,11 @@ public class Utilities {
 
 				if (regexp == null || answer == null || answer.matches(regexp)) {
 					return answer;
-				}
-				else {
-					System.err.println(
-							"Input error, the string must match " + regexp + "\n");
+				} else {
+					System.err.println("Input error, the string must match " + regexp + "\n");
 				}
 			}
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.err.println("Error while reading user input");
 			return null;
 		}
@@ -288,12 +295,10 @@ public class Utilities {
 	public static <E> E select(String prompt, List<E> choices) {
 		if (choices.isEmpty()) {
 			throw new IllegalArgumentException("No choice possible!");
-		}
-		else if (choices.size() == 1) {
+		} else if (choices.size() == 1) {
 			System.out.println("Only 1 choice available: " + choices.get(0));
 			return choices.get(0);
-		}
-		else {
+		} else {
 			for (int i = 0; i < choices.size(); ++i) {
 				System.out.println((i + 1) + ") " + choices.get(i));
 			}
@@ -304,8 +309,7 @@ public class Utilities {
 				if (MathsUtilities.isNumber(in)) {
 					int n = Integer.valueOf(in);
 					return choices.get(n - 1);
-				}
-				else {
+				} else {
 					for (E c : choices) {
 						if (c.toString().equals(in)) {
 							return c;
@@ -324,10 +328,9 @@ public class Utilities {
 		while (true) {
 			int c = is.read();
 
-			if (c == - 1) {
+			if (c == -1) {
 				return nbRead;
-			}
-			else {
+			} else {
 				++nbRead;
 
 				if (c == '\n')
@@ -350,13 +353,11 @@ public class Utilities {
 			r.lastChar = is.read();
 			++r.n;
 
-			if (r.lastChar == - 1) {
+			if (r.lastChar == -1) {
 				return r;
-			}
-			else if (Character.isDigit(r.lastChar)) {
+			} else if (Character.isDigit(r.lastChar)) {
 				r.v = r.v * 10 + Character.digit(r.lastChar, 10);
-			}
-			else {
+			} else {
 				return r;
 			}
 		}

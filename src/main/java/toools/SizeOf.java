@@ -35,10 +35,70 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools;
 
-public interface MemoryObject
-{
-    long getMemoryFootprintInBytes();
+package toools;
+
+import java.util.Collection;
+import java.util.Map;
+
+public interface SizeOf {
+	long sizeOf();
+
+	public static <A extends SizeOf> long sizeOf(Iterable<A> c) {
+		if (c == null) {
+			return 0;
+		}
+
+		long sum = 8;
+
+		for (var o : c) {
+			sum += o.sizeOf();
+		}
+
+		return sum;
+	}
+
+	public static long sizeOf(String s) {
+		if (s == null) {
+			return 0;
+		}
+
+		return 8 + s.length() * 2;
+	}
+
+	public static long sizeOf(Object s) {
+		if (s == null) {
+			return 0;
+		}
+
+		throw new IllegalArgumentException();
+	}
+
+	public static <A extends SizeOf, C extends Collection<? extends SizeOf>> long sizeOfM(Map<A, C> m) {
+		long r = 0;
+
+		for (var k : m.keySet()) {
+			r += 8 + k.sizeOf();
+		}
+
+		for (var v : m.values()) {
+			r += 8 + sizeOf(v);
+		}
+
+		return r;
+	}
+	
+	public static <C extends Collection<? extends SizeOf>> long sizeOf(Map<String, C> m) {
+		long r = 0;
+
+		for (var k : m.keySet()) {
+			r += 8 + sizeOf(k);
+		}
+
+		for (var v : m.values()) {
+			r += 8 + sizeOf(v);
+		}
+
+		return r;
+	}
 }

@@ -119,8 +119,8 @@ public abstract class Serializer<E> {
 		}
 	}
 
-	public E clone(E msg) {
-		return (E) fromBytes(toBytes(msg));
+	public E clone(E a) {
+		return (E) fromBytes(toBytes(a));
 	}
 
 	public static final Object EOS = new Serializable() {

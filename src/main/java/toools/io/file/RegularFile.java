@@ -38,6 +38,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.io.file;
 
+import java.awt.Desktop;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -53,6 +54,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
@@ -72,6 +74,7 @@ import org.apache.commons.io.input.CountingInputStream;
 
 import toools.extern.Proces;
 import toools.io.CSVStream;
+import toools.io.Hasher;
 import toools.io.IORuntimeException;
 import toools.io.Utilities;
 import toools.reflect.Clazz;
@@ -556,5 +559,36 @@ public class RegularFile extends AbstractFile {
 
 		out.close();
 	}
+
+	@Override
+	public void hashContents(Hasher h) {
+		var is = createReadingStream();
+
+		while (true) {
+			try {
+				int i = is.read();
+
+				if (i == -1)
+					break;
+
+				h.add(i);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	public byte[] read(int offset, int len) {
+		RandomAccessFile fs;
+		try {
+			fs = new RandomAccessFile(javaFile, "r");
+			var b = new byte[len];
+			fs.read(b, offset, len);
+			return b;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 
 }
