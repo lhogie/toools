@@ -75,7 +75,7 @@ public class GSONSerializer<E> extends Serializer<E> {
 
 	@Override
 	public String getMIMEType() {
-		return "Google GSON";
+		return "gson";
 	}
 
 	public static void main(String[] args) {

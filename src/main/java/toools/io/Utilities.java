@@ -52,6 +52,10 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.math.BigInteger;
+import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -92,6 +96,12 @@ public class Utilities {
 
 //		t.setDaemon(true);
 		t.start();
+	}
+
+	public BigInteger md5(File f) throws IOException, NoSuchAlgorithmException {
+		byte[] data = Files.readAllBytes(f.toPath());
+		byte[] hash = MessageDigest.getInstance("MD5").digest(data);
+		return new BigInteger(1, hash);
 	}
 
 	public static Map<String, String> csv2map(String s) {

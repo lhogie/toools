@@ -53,6 +53,7 @@ import toools.io.Hasher;
 
 @SuppressWarnings("serial")
 public abstract class AbstractFile implements Serializable {
+
 	public File javaFile;
 	private boolean temporary = false;
 
@@ -78,6 +79,10 @@ public abstract class AbstractFile implements Serializable {
 		}
 
 		javaFile = new File(path).getAbsoluteFile();
+	}
+
+	public boolean isChildOf(Directory d) {
+		return getPath().startsWith(d.getPath());
 	}
 
 	public void createLink(AbstractFile f) throws IOException {
@@ -113,8 +118,7 @@ public abstract class AbstractFile implements Serializable {
 		} else {
 			// we may be in the situation of a symbolic link targeting a
 			// non-existing file, so let's suppose this non-existing file was a
-			// regular
-			// files
+			// regular file
 			if (defaultClass == null) {
 				return (F) new RegularFile(file.getAbsolutePath());
 				// throw new
@@ -123,9 +127,8 @@ public abstract class AbstractFile implements Serializable {
 			} else {
 				try {
 					return defaultClass.getConstructor(String.class).newInstance(file.getAbsolutePath());
-				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException | NoSuchMethodException | SecurityException e) {
-					throw new IllegalStateException(e);
+				} catch (Throwable err) {
+					throw new IllegalStateException(err);
 				}
 			}
 		}
@@ -187,12 +190,20 @@ public abstract class AbstractFile implements Serializable {
 	public abstract void delete();
 
 	public Directory getParent() {
-		return new Directory(javaFile.getParent());
+		var p = javaFile.getParent();
+		return p == null ? null : new Directory(p);
 	}
 
 	@Override
 	public String toString() {
-		return getPath();
+		var p = getPath();
+		var h = Directory.getHomeDirectory().getPath();
+
+		if (p.startsWith(h)) {
+			return "$HOME" + p.substring(h.length());
+		} else {
+			return p;
+		}
 	}
 
 	public String toString2() {
@@ -234,16 +245,24 @@ public abstract class AbstractFile implements Serializable {
 		h.add(getPath());
 	}
 
-	public void renameTo(String newPath) throws IOException {
-		File newFile = new File(newPath).getAbsoluteFile();
-		boolean ok = javaFile.renameTo(newFile);
+	public void renameTo(String newName) throws IOException {
+		try {
+			renameTo(getClass().getConstructor(String.class).newInstance(newName));
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException | IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void renameTo(AbstractFile newPath) throws IOException {
+		boolean ok = javaFile.renameTo(newPath.javaFile);
 
 		// if renaming failed, try copying+deleting
 		if (!ok) {
-			throw new IOException("failed at renaming file " + getPath() + " to " + newFile.getAbsolutePath());
+			throw new IOException("failed at renaming file " + getPath() + " to " + newPath);
 		}
 
-		javaFile = newFile;
+		javaFile = newPath.javaFile;
 	}
 
 	public static void main(String[] args) throws Throwable {

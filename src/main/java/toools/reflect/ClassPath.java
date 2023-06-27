@@ -178,10 +178,19 @@ public class ClassPath extends ArrayList<ClassContainer> {
 
 	public void rsyncTo(SSHParms sshParameters, String destPath, Consumer<String> stdout, Consumer<String> stderr)
 			throws IOException {
-		RSync.rsyncTo(sshParameters, files(), destPath, stdout, stderr);
+		if (!isEmpty()) {
+			RSync.rsyncTo(sshParameters, files(), destPath, stdout, stderr);
+		}
+
 	}
 
 	public List<AbstractFile> files() {
 		return stream().map(c -> c.getFile()).toList();
+	}
+
+	public void rsyncTo(Directory jarsDirectory, Consumer<String> stdout, Consumer<String> stderr) throws IOException {
+		if (!isEmpty()) {
+			RSync.rsyncTo(files(), jarsDirectory, stdout, stderr);
+		}
 	}
 }

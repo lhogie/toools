@@ -12,6 +12,46 @@ import toools.net.SSHParms;
 import toools.net.SSHUtils;
 
 public class RSync {
+	public static void rsyncTo(List<AbstractFile> files, Directory dest, Consumer<String> stdout,
+			Consumer<String> stderr) throws IOException {
+		dest.mkdirs();
+		List<String> args = new ArrayList<>();
+		args.add("rsync");
+
+		args.add("-a");
+		args.add("--delete");
+		args.add("--copy-links");
+		args.add("-v");
+
+		for (AbstractFile e : files) {
+			if (e instanceof Directory) {
+				args.add(e.getPath() + "/");
+			} else {
+				args.add(e.getPath());
+			}
+		}
+
+		args.add(dest.getPath());
+		
+		try {
+//			System.out.println(args);
+			Process rsync = Runtime.getRuntime().exec(args.toArray(new String[0]));
+			Utilities.grabLines(rsync.getInputStream(), stdout, err -> {
+			});
+			Utilities.grabLines(rsync.getErrorStream(), stderr, err -> {
+			});
+			rsync.waitFor();
+			var exitCode = rsync.exitValue();
+
+			if (exitCode != 0) {
+				throw new Error("Error: rsync to " + dest + " exited with value " + exitCode);
+			}
+		} catch (InterruptedException e1) {
+			throw new IllegalStateException(e1);
+		}
+	}
+
+	
 	public static void rsyncTo(SSHParms sshParameters, List<AbstractFile> files, String destPath, Consumer<String> stdout,
 			Consumer<String> stderr) throws IOException {
 		List<String> args = new ArrayList<>();

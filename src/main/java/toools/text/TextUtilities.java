@@ -61,12 +61,76 @@ import toools.math.MathsUtilities;
 import toools.reflect.Clazz;
 
 public class TextUtilities {
+	public static List<String> matchesGroups(String s, String re) {
+		Pattern r = Pattern.compile(re);
+		Matcher m = r.matcher(s);
+
+		if (m.find()) {
+			int n = m.groupCount();
+			var l = new ArrayList<String>(n);
+
+			for (int i = 0; i < n; ++i) {
+				l.add(m.group(i));
+			}
+
+			return l;
+		} else {
+			return null;
+		}
+	}
+
+	public static List<List<String>> matchesGroups(List<String> lines, String re) {
+		return lines.stream().map(s -> matchesGroups(s, re)).toList();
+	}
+
+	public static List<String> grep(List<String> lines, String re) {
+		return lines.stream().filter(s -> s.matches(re)).toList();
+	}
+
+	public static List<String> lines(byte[] bytes) {
+		return lines(new String(bytes));
+	}
+
+	public static String itemize(List<? extends Object> lines) {
+		return bullets(lines, false);
+	}
+
+	public static String enumerate(List<? extends Object> lines) {
+		return bullets(lines, true);
+	}
+
+	public static String bullets(List<? extends Object> lines, boolean order) {
+		var b = new StringBuilder();
+
+		for (int i = 0; i < lines.size(); ++i) {
+			b.append("\t" + (order ? i + ".\t" : "- ") + lines.get(i));
+
+			if (i < lines.size()) {
+				b.append("\n");
+			}
+		}
+
+		return b.toString();
+	}
+
 	public enum HORIZONTAL_ALIGNMENT {
 		RIGHT, CENTER, LEFT
 	}
 
 	public enum VERTICAL_ALIGNMENT {
 		TOP, MIDDLE, BOTTOM
+	}
+
+	public static int toInt(String s) {
+		return Integer.valueOf(s);
+	}
+
+	public static long toLong(String s) {
+		return Long.valueOf(s);
+	}
+
+	public static double toDouble(String s) {
+		return Double.valueOf(s);
 	}
 
 	public static String box(String s) {
@@ -172,6 +236,16 @@ public class TextUtilities {
 	 * 
 	 * return a + "." + b + u; } }
 	 */
+	public static class HumanNumber {
+		public String value;
+		public char multiplier;
+
+		@Override
+		public String toString() {
+			return value + multiplier;
+		}
+	}
+
 	public static String toHumanString(long n) {
 		if (n < 0) {
 			return "-" + toHumanString(-n);
@@ -225,15 +299,15 @@ public class TextUtilities {
 
 	}
 
-	public static String min(String a, String b) {
+	public static <T extends Comparable<T>> T min(T a, T b) {
 		return a.compareTo(b) > 0 ? b : a;
 	}
 
-	public static String max(String a, String b) {
+	public static <T extends Comparable<T>> T max(T a, T b) {
 		return a.compareTo(b) > 0 ? a : b;
 	}
 
-	public static List<String> splitInLines(String text) {
+	public static List<String> lines(String text) {
 		return Arrays.asList(text.split("\\n"));
 	}
 
@@ -401,6 +475,14 @@ public class TextUtilities {
 		}
 	}
 
+	public static boolean isLong(String s) {
+		try {
+			Long.valueOf(s);
+			return true;
+		} catch (NumberFormatException ex) {
+			return false;
+		}
+	}
 	/**
 	 * @return a nice representation of the name of the given array class.
 	 *         org.lucci.Boh -> org.lucci.Boh [String9 - String[]
@@ -626,14 +708,14 @@ public class TextUtilities {
 		return b.toString();
 	}
 
-	public static <E> String concat(String separator, List<E> elements, Function<E, String> toString) {
+	public static <E> String concat(String separator, Iterable<E> elements, Function<E, String> toString) {
 		StringBuilder b = new StringBuilder();
-		int sz = elements.size();
+		var i = elements.iterator();
 
-		for (int i = 0; i < sz; ++i) {
-			b.append(toString.apply(elements.get(i)));
+		while (i.hasNext()) {
+			b.append(toString.apply(i.next()));
 
-			if (i < sz - 1) {
+			if (i.hasNext()) {
 				b.append(separator);
 			}
 		}
@@ -641,19 +723,8 @@ public class TextUtilities {
 		return b.toString();
 	}
 
-	public static String concat(String separator, Object... strings) {
-		StringBuilder b = new StringBuilder();
-		int sz = strings.length;
-
-		for (int i = 0; i < sz; ++i) {
-			b.append(strings[i]);
-
-			if (i < sz - 1) {
-				b.append(separator);
-			}
-		}
-
-		return b.toString();
+	public static <E> String concat(String separator, Iterable<E> elements) {
+		return concat(separator, elements, e -> e.toString());
 	}
 
 	public static List<String> wrap(String text, int size) {

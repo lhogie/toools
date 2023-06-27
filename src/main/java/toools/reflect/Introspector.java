@@ -48,10 +48,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class Introspector {
-	public static class JasetoField {
+	public static class AField {
 		public final Field f;
 
-		public JasetoField(Field f) {
+		public AField(Field f) {
 			this.f = f;
 		}
 
@@ -108,13 +108,13 @@ public class Introspector {
 		}
 	}
 
-	private final List<JasetoField> fields = new ArrayList<>();
+	private final List<AField> fields = new ArrayList<>();
 
 	private Introspector(Class<?> c, Consumer<Exception> warnings) {
 		for (Field f : c.getDeclaredFields()) {
 			try {
 				f.setAccessible(true);
-				fields.add(new JasetoField(f));
+				fields.add(new AField(f));
 			} catch (InaccessibleObjectException e) {
 				warnings.accept(e);
 			}
@@ -122,13 +122,13 @@ public class Introspector {
 
 		// adds also the fields declared in the superclass, if any
 		if (c.getSuperclass() != null) {
-			for (JasetoField f : getIntrospector(c.getSuperclass(), warnings).getFields()) {
+			for (AField f : getIntrospector(c.getSuperclass(), warnings).getFields()) {
 				fields.add(f);
 			}
 		}
 	}
 
-	public List<JasetoField> getFields() {
+	public List<AField> getFields() {
 		return fields;
 	}
 

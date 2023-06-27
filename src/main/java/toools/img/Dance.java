@@ -30,7 +30,7 @@ public class Dance
 	{
 		System.out.println("euhuhu");
 		Directory d = new Directory(args[0]);
-		List<RegularFile> mp3Files = d.getChildRegularFilesMatching(".*.mp3");
+		List<RegularFile> mp3Files = d.getChildRegularFiles().stream().filter(f -> f.getName().endsWith(".mp3")).toList();
 
 		if ( ! mp3Files.isEmpty())
 			throw new IllegalStateException("no mp3 files in " + d);
@@ -88,7 +88,7 @@ public class Dance
 		else
 		{
 			List<ImageIcon> imgs = Collections.synchronizedList(new ArrayList<>());
-			List<RegularFile> imgFiles = d.getChildRegularFilesMatching(".*jpg");
+			List<RegularFile> imgFiles = d.getChildRegularFiles().stream().filter(f -> f.getName().endsWith(".jpg")).toList(); 
 
 			new Thread(new Runnable()
 			{

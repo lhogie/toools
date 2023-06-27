@@ -115,7 +115,7 @@ public class Source
 
 	public static List<String> getSourceCodeLines()
 	{
-		return TextUtilities.splitInLines(getSourceCode());
+		return TextUtilities.lines(getSourceCode());
 	}
 
 	public static String getSourceCode()

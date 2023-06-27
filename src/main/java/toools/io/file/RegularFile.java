@@ -38,7 +38,6 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools.io.file;
 
-import java.awt.Desktop;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -66,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
@@ -423,7 +423,7 @@ public class RegularFile extends AbstractFile {
 	}
 
 	public List<String> getLines() {
-		return TextUtilities.splitInLines(new String(getContent()));
+		return TextUtilities.lines(new String(getContent()));
 	}
 
 	public boolean isArchive() {
@@ -588,6 +588,19 @@ public class RegularFile extends AbstractFile {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static Set<String> imgExtensions = Set.of("jpg", "png", "pef", "dng");
+	public static Set<String> movieExtensions = Set.of("mov", "mpg", "mp2", "mpeg2", "mp4", "mpeg4", "avi", "mkv");
+
+	public boolean isImage() {
+		var ext = getExtension();
+		return ext != null && imgExtensions.contains(ext.toLowerCase());
+	}
+
+	public boolean isMovie() {
+		var ext = getExtension();
+		return ext != null && movieExtensions.contains(ext.toLowerCase());
 	}
 
 

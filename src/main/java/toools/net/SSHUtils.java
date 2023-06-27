@@ -104,7 +104,7 @@ public class SSHUtils {
 		byte[] r = Proces.exec(sshCmd(), shText.getBytes(),
 				sshOptions.toArray(new String[0]));
 		return r.length == 0 ? new ArrayList<String>()
-				: TextUtilities.splitInLines(new String(r));
+				: TextUtilities.lines(new String(r));
 	}
 
 	public static Process exec(SSHParms sshparms, String... cmd) throws IOException {

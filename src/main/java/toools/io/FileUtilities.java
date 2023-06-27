@@ -494,7 +494,7 @@ public class FileUtilities {
 		List<File> files = new ArrayList<File>();
 
 		if (Utilities.operatingSystemIsUNIX()) {
-			for (String line : TextUtilities.splitInLines(new String(Proces.exec("find", root.getAbsolutePath())))) {
+			for (String line : TextUtilities.lines(new String(Proces.exec("find", root.getAbsolutePath())))) {
 				File f = new File(line).getAbsoluteFile();
 
 				if (filter == null || filter.accept(f)) {

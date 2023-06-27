@@ -22,6 +22,7 @@ public class ToBytesSerializer<E> extends Serializer<E> {
 	public String getMIMEType() {
 		return "raw data";
 	}
+
 	@Override
 	public boolean isBinary() {
 		return true;

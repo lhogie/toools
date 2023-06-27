@@ -45,12 +45,15 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.Stream;
 
 import toools.collections.Collections;
 import toools.exceptions.NotYetImplementedException;
 import toools.io.Utilities;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
+import toools.text.TextUtilities;
 
 public class Proces {
 
@@ -172,6 +175,8 @@ public class Proces {
 
 		}
 	}
+	
+	
 
 	public final static List<Directory> path = retrieveSystemPath();
 

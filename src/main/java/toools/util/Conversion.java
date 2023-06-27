@@ -150,11 +150,18 @@ public class Conversion {
 	public static interface Converter<FROM, TO> extends Function<FROM, TO> {
 		boolean support(FROM from, Class<?> to);
 	}
-	
+
 //	public static <TO> TO convert(Object initialObject, Class<TO> destinationClass, Iterable<Converter<?, ?>> converters) throws IllegalArgumentException {
-	public static <TO> TO convert(Object initialObject, Class<TO> destinationClass) throws IllegalArgumentException {
+	public static <TO> TO convert(Object initialObject, Class<TO> destinationClass) {
 		if (destinationClass.isAssignableFrom(initialObject.getClass()))
 			return (TO) initialObject;
+
+		if (initialObject.getClass() == String.class && destinationClass == Class.class)
+			try {
+				return (TO) Class.forName(initialObject.toString());
+			} catch (ClassNotFoundException e1) {
+				throw new RuntimeException(e1);
+			}
 
 		if (destinationClass == double.class || destinationClass == Double.class)
 			return (TO) Double.valueOf(initialObject.toString());
@@ -168,9 +175,10 @@ public class Conversion {
 		if (Collection.class.isAssignableFrom(destinationClass)) {
 			if (destinationClass.isAssignableFrom(LongArrayList.class))
 				destinationClass = (Class<TO>) LongArrayList.class;
-			
+
 			if (initialObject instanceof String) {
-				return (TO) string2collectionOfLongs((Class<Collection<Long>>) destinationClass, (String) initialObject);
+				return (TO) string2collectionOfLongs((Class<Collection<Long>>) destinationClass,
+						(String) initialObject);
 			}
 		}
 
@@ -185,15 +193,11 @@ public class Conversion {
 
 			return (TO) TextUtilities.toString(initialObject).getBytes();
 		}
-/*
-		if (converters != null) {
-			for (var c : converters) {
-				if (c.support(initialObject, destinationClass.getClass())) {
-					return (TO) c.apply(initialObject);
-				}
-			}
-		}
-		*/
+		/*
+		 * if (converters != null) { for (var c : converters) { if
+		 * (c.support(initialObject, destinationClass.getClass())) { return (TO)
+		 * c.apply(initialObject); } } }
+		 */
 		throw new IllegalArgumentException(initialObject.getClass() + " cannot be converted to " + destinationClass);
 	}
 
@@ -202,7 +206,7 @@ public class Conversion {
 
 		if (cc == null)
 			throw new IllegalArgumentException("cannot instanciate " + c);
-		
+
 		var a = ((String) from).split(",");
 
 		for (String i : a) {

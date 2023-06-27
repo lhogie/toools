@@ -132,6 +132,10 @@ public class Clazz {
 	public static boolean isInterface(Class<?> thisClass) {
 		return Modifier.isInterface(thisClass.getModifiers());
 	}
+	
+	public static boolean isStatic(Class<?> thisClass) {
+		return Modifier.isStatic(thisClass.getModifiers());
+	}
 
 	public static boolean isConcrete(Class<?> thisClass) {
 		return !isInterface(thisClass) && !isAbstract(thisClass);
@@ -148,7 +152,7 @@ public class Clazz {
 	}
 
 	public static boolean isInner(Class<?> thisClass) {
-		return thisClass.getName().contains("$");
+		return thisClass.getEnclosingClass() != null;
 	}
 
 	public static boolean isInstantiable(Class<?> thisClass) {
@@ -191,7 +195,7 @@ public class Clazz {
 			throw new NullPointerException("cannot instantiate the null class");
 
 		try {
-			return clazz.newInstance();
+			return clazz.getConstructor().newInstance();
 		} catch (Throwable e) {
 			if (e.getCause() == null) {
 				throw new ClassInstantiationException(e);

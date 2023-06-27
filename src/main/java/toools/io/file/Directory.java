@@ -45,11 +45,11 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Stack;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import toools.extern.Proces;
@@ -175,21 +175,12 @@ public class Directory extends AbstractFile {
 		return sum;
 	}
 
-	public List<AbstractFile> getChildFiles(FileFilter... ffs) {
+	public List<AbstractFile> getChildFiles(FileFilter ffs) {
 		if (!exists())
 			throw new IllegalStateException("cannot get the children of a non-existing directory " + this.getPath());
 
-		List<AbstractFile> children = new ArrayList<AbstractFile>();
-
-		for (String s : javaFile.list()) {
-			AbstractFile f = AbstractFile.map(getPath() + '/' + s, null);
-
-			if (accept(f, ffs)) {
-				children.add(f);
-			}
-		}
-
-		return children;
+		return Arrays.stream(javaFile.list()).map(s -> (AbstractFile) AbstractFile.map(getPath() + '/' + s, null))
+				.filter(f -> ffs.test(f)).toList();
 	}
 
 	public List<AbstractFile> getChildren() {
@@ -205,9 +196,6 @@ public class Directory extends AbstractFile {
 	}
 
 	public boolean mkdirs() {
-		if (exists())
-			throw new IllegalStateException("cannot create and already-existing directory " + this.getPath());
-
 		return javaFile.mkdirs();
 	}
 
@@ -217,12 +205,11 @@ public class Directory extends AbstractFile {
 		return l;
 	}
 
-
 	public void search(Predicate<AbstractFile> p) {
 		if (false)// Utilities.operatingSystemIsUNIX()) {
 		{
 			Cout.debugSuperVisible(new String(Proces.exec("find", getPath())));
-			for (String line : TextUtilities.splitInLines(new String(Proces.exec("find", getPath())))) {
+			for (String line : TextUtilities.lines(new String(Proces.exec("find", getPath())))) {
 				AbstractFile f = AbstractFile.map(line, null);
 
 				if (p.test(f)) {
@@ -245,16 +232,6 @@ public class Directory extends AbstractFile {
 				}
 			}
 		}
-	}
-
-	private boolean accept(AbstractFile f, FileFilter... ffs) {
-		for (FileFilter ff : ffs) {
-			if (!ff.test(f)) {
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -291,11 +268,6 @@ public class Directory extends AbstractFile {
 
 	public RegularFile getChildRegularFile(String name) {
 		return getChild(name, RegularFile.class);
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<RegularFile> getChildRegularFilesMatching(String re) {
-		return (List<RegularFile>) (List) getChildFiles(FileFilter.regularFileFilter, new FileFilter.RegexFilter(re));
 	}
 
 	public static Directory getCurrentDirectory() {
