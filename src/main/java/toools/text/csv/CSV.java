@@ -44,10 +44,12 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 */
 package toools.text.csv;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 import java.util.function.DoubleToLongFunction;
 import java.util.function.LongToDoubleFunction;
 
@@ -62,20 +64,51 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
  *         To change the template for this generated type comment go to
  *         Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class CSV
-{
-	public static List<List<String>> disassemble(String text, String separator)
-	{
+public class CSV {
+	public static List<String> readReaders(BufferedReader r, String separator) throws IOException {
+		return disassemble(r.readLine(), separator).get(0);
+	}
+
+	public static List<List<String>> read(BufferedReader r, List<Integer> headers, String separator)
+			throws IOException {
 		List<List<String>> lines = new LinkedList<List<String>>();
 
-		for (String line : text.split("\n"))
-		{
-			if (line.length() > 0)
-			{
+		while (true) {
+			String line = r.readLine();
+
+			if (line == null) {
+				break;
+			}
+
+			lines.add(disassemble(line, separator).get(0));
+		}
+
+		return lines;
+	}
+
+	public static List<Integer> headIndices(List<String> allHeaders, List<String> requestedHeaders) {
+		var r = new ArrayList<Integer>();
+
+		for (String h : requestedHeaders) {
+			int i = allHeaders.indexOf(h);
+
+			if (i == -1)
+				throw new IllegalArgumentException("cannot find header " + h);
+
+			r.add(i);
+		}
+
+		return r;
+	}
+
+	public static List<List<String>> disassemble(String text, String separator) {
+		List<List<String>> lines = new LinkedList<List<String>>();
+
+		for (String line : text.split("\n")) {
+			if (line.length() > 0) {
 				List<String> cols = new LinkedList<String>();
 
-				for (String col : line.split(separator))
-				{
+				for (String col : line.split(separator)) {
 					cols.add(col);
 				}
 
@@ -86,32 +119,26 @@ public class CSV
 		return lines;
 	}
 
-	public static String assemble(List<List<String>> list, char separator)
-	{
+	public static String assemble(List<List<String>> list, char separator) {
 		StringBuffer buf = new StringBuffer();
 
-		for (List<String> thisLine : list)
-		{
-			for (int i = 0; i < thisLine.size(); ++i)
-			{
+		for (List<String> thisLine : list) {
+			for (int i = 0; i < thisLine.size(); ++i) {
 				String thisToken = thisLine.get(i);
 				boolean containsSep = thisToken.indexOf(separator) >= 0;
 
-				if (containsSep)
-				{
+				if (containsSep) {
 					buf.append("\"");
 				}
 
 				buf.append(thisToken);
 
-				if (containsSep)
-				{
+				if (containsSep) {
 					buf.append("\"");
 				}
 
 				// if this is not the last element
-				if (i < thisLine.size() - 1)
-				{
+				if (i < thisLine.size() - 1) {
 					buf.append(separator);
 				}
 			}
@@ -122,16 +149,13 @@ public class CSV
 		return buf.toString();
 	}
 
-	public static void print(List<List<String>> l, PrintStream ps)
-	{
+	public static void print(List<List<String>> l, PrintStream ps) {
 		int li = 1;
 
-		for (List<String> thisLine : l)
-		{
+		for (List<String> thisLine : l) {
 			ps.print(li++);
 
-			for (String thisElement : thisLine)
-			{
+			for (String thisElement : thisLine) {
 				ps.print(thisElement);
 			}
 
@@ -139,14 +163,10 @@ public class CSV
 		}
 	}
 
-
-
-	public static String from(Long2LongMap m)
-	{
+	public static String from(Long2LongMap m) {
 		StringBuilder b = new StringBuilder();
 
-		for (Entry e : m.long2LongEntrySet())
-		{
+		for (Entry e : m.long2LongEntrySet()) {
 			b.append(e.getLongKey());
 			b.append(' ');
 			b.append(e.getLongValue());
@@ -156,10 +176,8 @@ public class CSV
 		return b.toString();
 	}
 
-	public static void print(LongIterator i, LongToDoubleFunction f, PrintStream ps)
-	{
-		while (i.hasNext())
-		{
+	public static void print(LongIterator i, LongToDoubleFunction f, PrintStream ps) {
+		while (i.hasNext()) {
 			long l = i.nextLong();
 			ps.print(l);
 			ps.print(' ');
@@ -168,10 +186,8 @@ public class CSV
 		}
 	}
 
-	public static void print(DoubleIterator i, DoubleToLongFunction f, PrintStream ps)
-	{
-		while (i.hasNext())
-		{
+	public static void print(DoubleIterator i, DoubleToLongFunction f, PrintStream ps) {
+		while (i.hasNext()) {
 			double l = i.nextDouble();
 			ps.print(l);
 			ps.print(' ');

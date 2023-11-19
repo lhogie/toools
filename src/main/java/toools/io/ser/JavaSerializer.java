@@ -48,9 +48,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
-import it.unimi.dsi.fastutil.objects.Object2BooleanFunction;
-import it.unimi.dsi.fastutil.objects.Object2ObjectFunction;
-
 public class JavaSerializer<E> extends Serializer<E> {
 	public static final JavaSerializer<?> instance = new JavaSerializer<>();
 
@@ -62,7 +59,17 @@ public class JavaSerializer<E> extends Serializer<E> {
 			byte[] b = new byte[size];
 			d.readFully(b);
 
-			ObjectInputStream oos = new ObjectInputStream(new ByteArrayInputStream(b));
+			ObjectInputStream oos = new ObjectInputStream(new ByteArrayInputStream(b)) {
+				{
+					enableResolveObject(true);
+				}
+
+				@Override
+				protected Object resolveObject(Object obj) throws IOException {
+					return replaceAtDeserialization(obj);
+				}
+			};
+
 			Object o = oos.readObject();
 			oos.close();
 			return (E) o;
@@ -71,10 +78,27 @@ public class JavaSerializer<E> extends Serializer<E> {
 		}
 	}
 
+	protected Object replaceAtDeserialization(Object obj) {
+		return obj;
+	}
+	
+	protected  Object replaceAtSerialization(Object obj) {
+		return obj;
+	}
+
 	@Override
 	public void write(E o, OutputStream os) throws IOException {
 		ByteArrayOutputStream bo = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(bo);
+		ObjectOutputStream oos = new ObjectOutputStream(bo) {
+			{
+				enableReplaceObject(true);
+			}
+
+			@Override
+			protected Object replaceObject(Object obj) throws IOException {
+				return replaceAtSerialization(obj);
+			}
+		};
 		oos.writeObject(o);
 		oos.close();
 		byte[] buf = bo.toByteArray();
@@ -86,13 +110,6 @@ public class JavaSerializer<E> extends Serializer<E> {
 	@Override
 	public String getMIMEType() {
 		return "ser";
-	}
-
-	static class ReplacementRule{
-
-		public Object2BooleanFunction test;
-		public Object2ObjectFunction replacer;
-		
 	}
 
 	@Override

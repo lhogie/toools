@@ -38,13 +38,16 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public interface SizeOf {
 	long sizeOf();
 
-	public static <A extends SizeOf> long sizeOf(Iterable<A> c) {
+	public static long sizeOf(Iterable<?> c) {
 		if (c == null) {
 			return 0;
 		}
@@ -52,7 +55,7 @@ public interface SizeOf {
 		long sum = 8;
 
 		for (var o : c) {
-			sum += o.sizeOf();
+			sum += sizeOf(o);
 		}
 
 		return sum;
@@ -66,12 +69,46 @@ public interface SizeOf {
 		return 8 + s.length() * 2;
 	}
 
-	public static long sizeOf(Object s) {
-		if (s == null) {
+	public static List<Function<Object, Integer>> sizeEvaluators = new ArrayList<>();
+
+	public static long sizeOf(Object o) {
+		if (o == null) {
 			return 0;
+		} else if (o instanceof SizeOf) {
+			return ((SizeOf) o).sizeOf();
+		} else if (o instanceof Iterable) {
+			return sizeOf((Iterable) o);
+		} else if (o instanceof String) {
+			return sizeOf((String) o);
+		} else if (o instanceof Long) {
+			return 8;
+		} else if (o instanceof Integer) {
+			return 4;
+		} else if (o instanceof Short) {
+			return 2;
+		} else if (o instanceof Character) {
+			return 2;
+		} else if (o instanceof Byte) {
+			return 1;
+		} else if (o instanceof Double) {
+			return 8;
+		} else if (o instanceof Float) {
+			return 4;
+		} else if (o instanceof Throwable) {
+			return 1;
+		} else if (o instanceof Map.Entry) {
+			var e = (Map.Entry) o;
+			return sizeOf(e.getKey()) + sizeOf(e.getValue());
 		}
 
-		throw new IllegalArgumentException();
+		for (var f : sizeEvaluators) {
+			try {
+				return f.apply(o);
+			} catch (Throwable err) {
+			}
+		}
+
+		throw new IllegalArgumentException("cannot sizeof " + o.getClass());
 	}
 
 	public static <A extends SizeOf, C extends Collection<? extends SizeOf>> long sizeOfM(Map<A, C> m) {
@@ -87,7 +124,7 @@ public interface SizeOf {
 
 		return r;
 	}
-	
+
 	public static <C extends Collection<? extends SizeOf>> long sizeOf(Map<String, C> m) {
 		long r = 0;
 

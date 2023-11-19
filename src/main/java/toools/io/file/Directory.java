@@ -332,4 +332,13 @@ public class Directory extends AbstractFile {
 		listRegularFiles().forEach(f -> f.delete());
 	}
 
+	public void ensureEmpty() {
+
+		if (exists()) {
+			deleteRecursively();
+		}
+		
+		mkdirs();
+	}
+
 }

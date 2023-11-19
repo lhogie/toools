@@ -713,7 +713,10 @@ public class TextUtilities {
 		var i = elements.iterator();
 
 		while (i.hasNext()) {
-			b.append(toString.apply(i.next()));
+			var e = i.next();
+//			System.out.println(e);
+			
+			b.append(toString.apply(e));
 
 			if (i.hasNext()) {
 				b.append(separator);

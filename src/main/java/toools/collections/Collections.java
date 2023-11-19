@@ -280,18 +280,22 @@ public class Collections {
 		return pickRandomSubset(c, n, false, random);
 	}
 
-	public static <T> Collection<T> pickRandomSubset(Collection<T> c, int size, boolean allowDuplicates,
+	public static <T> Collection<T> pickRandomSubset(Collection<T> c, int nbWanted, boolean allowDuplicates,
 			Random random) {
-		if (size > c.size())
+		if (nbWanted > c.size())
 			throw new IllegalArgumentException("too many elements requested");
 
-		Collection<T> result = allowDuplicates ? new ArrayList<T>() : new HashSet<T>();
+		Collection<T> result = allowDuplicates ? new ArrayList<T>(nbWanted) : new HashSet<T>(nbWanted);
 
-		while (size-- > 0) {
-			result.add(pickRandomObject(c, random));
+		if (nbWanted == c.size()) {
+			return c;
+		} else {
+			while (result.size() < nbWanted) {
+				result.add(pickRandomObject(c, random));
+			}
+
+			return result;
 		}
-
-		return result;
 	}
 
 	public static <T> T getRandomObjectNot(Collection<T> c, Random random, Collection<T> forbiddenValues) {
@@ -311,14 +315,20 @@ public class Collections {
 		if (c.isEmpty())
 			throw new IllegalArgumentException("collection is empty");
 
-		int pos = (int) MathsUtilities.pickRandomBetween(0, c.size(), random);
-		Iterator<T> i = c.iterator();
+		int pos = random.nextInt(c.size());
 
-		while (pos-- > 0) {
-			i.next();
+		if (c instanceof List) {
+			var l = (List<T>) c;
+			return l.get(pos);
+		} else {
+			Iterator<T> i = c.iterator();
+
+			while (pos-- > 0) {
+				i.next();
+			}
+
+			return i.next();
 		}
-
-		return i.next();
 	}
 
 	public static <E> Collection<E> find(Collection<E> set, String propertyName, Object value) {
