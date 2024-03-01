@@ -35,19 +35,17 @@ Nathann Cohen (LRI, Saclay)
 Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
 
 */
- 
- package toools;
+
+package toools;
 
 import java.util.List;
 import java.util.Vector;
 
-public class DataMapping
-{
+public class DataMapping {
 	public final int offset;
 	public final int length;
 
-	public DataMapping(int i, int length)
-	{
+	public DataMapping(int i, int length) {
 		if (i < 0)
 			throw new IllegalArgumentException("i must be >= 0");
 
@@ -58,18 +56,15 @@ public class DataMapping
 		this.length = length;
 	}
 
-	public long decode(long bits)
-	{
+	public long decode(long bits) {
 		bits <<= 63 - offset - length;
 		bits >>= 63 - length;
 		return bits;
 	}
 
-	public long encode(long bits, long v)
-	{
+	public long encode(long bits, long v) {
 		if (Long.numberOfLeadingZeros(v) < 64 - bits)
-			throw new IllegalArgumentException("cannot be stored on " + length
-					+ " bits: " + v);
+			throw new IllegalArgumentException("cannot be stored on " + length + " bits: " + v);
 
 		v <<= 63 - length;
 		v >>= 63 - length + offset;
@@ -77,28 +72,22 @@ public class DataMapping
 		return bits;
 	}
 
-	public static long[] decodeAll(long bit, List<DataMapping> mappings)
-	{
+	public static long[] decodeAll(long bit, List<DataMapping> mappings) {
 		long[] values = new long[mappings.size()];
 
-		for (int i = 0; i < values.length; ++i)
-		{
+		for (int i = 0; i < values.length; ++i) {
 			values[i] = mappings.get(i).decode(bit);
 		}
 
 		return values;
 	}
 
-	public static List<DataMapping> createContiguousMappings(
-			int... elementsLength)
-	{
+	public static List<DataMapping> createContiguousMappings(int... elementsLength) {
 		List<DataMapping> mappingList = new Vector<DataMapping>();
 		int currentOffset = 0;
 
-		for (int i = 0; i < elementsLength.length; ++i)
-		{
-			DataMapping mapping = new DataMapping(currentOffset,
-					elementsLength[i]);
+		for (int i = 0; i < elementsLength.length; ++i) {
+			DataMapping mapping = new DataMapping(currentOffset, elementsLength[i]);
 			mappingList.add(mapping);
 			currentOffset += elementsLength[i];
 		}
@@ -126,8 +115,7 @@ public class DataMapping
 	// return builder.toString();
 	// }
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		long l = 45;
 		DataMapping m = new DataMapping(0, 8);
 		l = m.encode(l, 78954);

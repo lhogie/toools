@@ -45,6 +45,10 @@ public class Date {
 	static final long timeDiffMs = System.nanoTime()
 			- (1000000 * System.currentTimeMillis());
 
+	public static String prettyTime(double seconds) {
+		return String.format("%.3f", seconds) + "s";
+	}
+	
 	public static long timeNs() {
 		return System.nanoTime() - timeDiffMs;
 	}

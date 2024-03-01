@@ -143,7 +143,7 @@ public class Clazz {
 
 	public static <V> Constructor<V> findDefaultConstructor(Class<V> thisClass) {
 		try {
-			return thisClass.getConstructor(new Class[0]);
+			return thisClass.getConstructor();
 		} catch (SecurityException e) {
 			return null;
 		} catch (NoSuchMethodException e) {
@@ -560,4 +560,27 @@ public class Clazz {
 			throw new RuntimeException(e);
 		}
 	}
+	
+
+	private static String innerClassName(Class c) {
+		var ec = c.getEnclosingClass();
+
+		if (ec == null)
+			throw new IllegalArgumentException(c + " is not an inner class");
+
+		return c.getName().substring(ec.getName().length() + 1);
+	}
+
+	private static Class enclosingClass(Object lambda) {
+		int i = lambda.getClass().getName().indexOf("$$Lambda$");
+
+		if (i < 0) {
+			throw new IllegalStateException("this is not a lambda");
+		}
+
+		return Clazz.findClass(lambda.getClass().getName().substring(0, i));
+	}
+
+
+
 }
