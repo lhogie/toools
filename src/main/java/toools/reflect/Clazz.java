@@ -132,7 +132,7 @@ public class Clazz {
 	public static boolean isInterface(Class<?> thisClass) {
 		return Modifier.isInterface(thisClass.getModifiers());
 	}
-	
+
 	public static boolean isStatic(Class<?> thisClass) {
 		return Modifier.isStatic(thisClass.getModifiers());
 	}
@@ -560,7 +560,6 @@ public class Clazz {
 			throw new RuntimeException(e);
 		}
 	}
-	
 
 	private static String innerClassName(Class c) {
 		var ec = c.getEnclosingClass();
@@ -581,6 +580,16 @@ public class Clazz {
 		return Clazz.findClass(lambda.getClass().getName().substring(0, i));
 	}
 
-
+	public static Class innerClass(Class o, String innerClassName) {
+		for (var c : bfs(o)) {
+			try {
+				return Class.forName(c.getName() + "$" + innerClassName);
+			} catch (NoClassDefFoundError | ClassNotFoundException err) {
+				System.out.println("loo");
+			}
+		}
+		
+		throw new NoClassDefFoundError(o + "$" + innerClassName);
+	}
 
 }

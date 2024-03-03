@@ -99,6 +99,8 @@ public interface SizeOf {
 		} else if (o instanceof Map.Entry) {
 			var e = (Map.Entry) o;
 			return sizeOf(e.getKey()) + sizeOf(e.getValue());
+		} else if (o instanceof Class) {
+			return 8;
 		}
 
 		for (var f : sizeEvaluators) {
