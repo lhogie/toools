@@ -13,33 +13,19 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
-public class RSA {
+public class RSAEncoder {
 	private Cipher encryptCipher;
-	public KeyPair keyPair;
+	public final KeyPair keyPair;
 
-	static Map<PublicKey, Cipher> m = new HashMap<>();
-
-	public RSA(PublicKey k) {
-		this.keyPair = new KeyPair(k, null);
-		this.encryptCipher = null;
+	public RSAEncoder() {
+		this(randomKeyPair());
 	}
-
-	public RSA() {
-	}
-
-	public void random(boolean enableEncryption) {
+	
+	public RSAEncoder(KeyPair kp) {
 		try {
-			var keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-			keyPairGenerator.initialize(512);
-			this.keyPair = keyPairGenerator.generateKeyPair();
-			
-			if (enableEncryption) {
-				this.encryptCipher = Cipher.getInstance("RSA");
-				encryptCipher.init(Cipher.ENCRYPT_MODE, keyPair.getPrivate());
-			}
-			else {
-				this.keyPair = new KeyPair(keyPair.getPublic(), null); // remove to enable encryption
-			}
+			this.keyPair = kp;
+			this.encryptCipher = Cipher.getInstance("RSA");
+			encryptCipher.init(Cipher.ENCRYPT_MODE, keyPair.getPrivate());
 		} catch (Throwable err) {
 			throw new IllegalStateException(err);
 		}
@@ -53,7 +39,19 @@ public class RSA {
 		}
 	}
 
-	public byte[] decode(PublicKey publicKey, byte[] encodedDataBytes) {
+	static Map<PublicKey, Cipher> m = new HashMap<>();
+
+	public static KeyPair randomKeyPair() {
+		try {
+			var keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+			keyPairGenerator.initialize(512);
+			return keyPairGenerator.generateKeyPair();
+		} catch (Throwable err) {
+			throw new IllegalStateException(err);
+		}
+	}
+
+	public static byte[] decode(PublicKey publicKey, byte[] encodedDataBytes) {
 		var decryptCipher = m.get(publicKey);
 
 		try {
@@ -61,6 +59,7 @@ public class RSA {
 				m.put(publicKey, decryptCipher = Cipher.getInstance("RSA"));
 				decryptCipher.init(Cipher.DECRYPT_MODE, publicKey);
 			}
+
 			return decryptCipher.doFinal(encodedDataBytes);
 		} catch (Throwable err) {
 			throw new IllegalStateException(err);
@@ -69,7 +68,7 @@ public class RSA {
 
 	public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
 			IllegalBlockSizeException, BadPaddingException {
-		var g = new RSA();
+		var g = new RSAEncoder();
 //		System.out.println(g.keyPair.getPublic().get);
 		var encoded = g.encode("salut".getBytes());
 		System.out.println(encoded);
