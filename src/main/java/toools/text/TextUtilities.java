@@ -46,6 +46,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -61,6 +62,13 @@ import toools.math.MathsUtilities;
 import toools.reflect.Clazz;
 
 public class TextUtilities {
+	public static String base64(byte[] bytes) {
+		return new String(Base64.getMimeEncoder().encode(bytes)).replace("\n", "").replace("\r", "");
+	}
+
+	public static byte[] unbase64(byte[] bytes) {
+		return Base64.getMimeDecoder().decode(bytes);
+	}
 	public static List<String> matchesGroups(String s, String re) {
 		Pattern r = Pattern.compile(re);
 		Matcher m = r.matcher(s);
@@ -76,6 +84,23 @@ public class TextUtilities {
 			return l;
 		} else {
 			return null;
+		}
+	}
+
+	public static List<String> split(String s, char c) {
+		int i = 0;
+		var r = new ArrayList<String>();
+
+		while (true) {
+			int p = s.indexOf(c, i);
+
+			if (p < 0) {
+				r.add(s.substring(i));
+				return r;
+			}
+
+			r.add(s.substring(i, p));
+			i = p + 1;
 		}
 	}
 
@@ -483,6 +508,7 @@ public class TextUtilities {
 			return false;
 		}
 	}
+
 	/**
 	 * @return a nice representation of the name of the given array class.
 	 *         org.lucci.Boh -> org.lucci.Boh [String9 - String[]
@@ -715,7 +741,7 @@ public class TextUtilities {
 		while (i.hasNext()) {
 			var e = i.next();
 //			System.out.println(e);
-			
+
 			b.append(toString.apply(e));
 
 			if (i.hasNext()) {

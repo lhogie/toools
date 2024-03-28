@@ -26,6 +26,10 @@ public class Q<E> implements Iterable<E> {
 		return q.poll();
 	}
 
+	public E peek() {
+		return q.peek();
+	}
+	
 	public E poll_sync() {
 		try {
 			return q.take();
@@ -96,5 +100,10 @@ public class Q<E> implements Iterable<E> {
 		var r = new ArrayList<E>(size());
 		forEach(m -> r.add(m));
 		return r;
+	}
+	
+	@Override
+	public String toString() {
+		return q.toString();
 	}
 }

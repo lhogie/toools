@@ -38,6 +38,7 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 
 package toools;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -94,6 +95,16 @@ public interface SizeOf {
 			return 8;
 		} else if (o instanceof Float) {
 			return 4;
+		} else if (o.getClass().isArray()) {
+			int len = Array.getLength(o);
+			long sz = 0;
+			
+			for (int i = 0; i < len; ++i) {
+				var e = Array.get(o, i);
+				sz = sizeOf(e);
+			}
+			
+			return sz;
 		} else if (o instanceof Throwable) {
 			return 1;
 		} else if (o instanceof Map.Entry) {
