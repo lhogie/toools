@@ -17,7 +17,7 @@ public class JSONMap extends JSONElement {
 		if (v == null)
 			throw new NullPointerException();
 
-		l.add(new Pair(k, v, true));
+		l.add(new Pair(k, v));
 	}
 
 	@Override
@@ -42,5 +42,4 @@ public class JSONMap extends JSONElement {
 		return s;
 	}
 
-	
 }

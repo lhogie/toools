@@ -3,7 +3,6 @@ package toools.collection;
 import java.io.Serializable;
 
 public class Pair<E, F> implements Serializable {
-	public boolean ordered;
 	public E a;
 	public F b;
 
