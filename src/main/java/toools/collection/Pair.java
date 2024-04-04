@@ -2,12 +2,12 @@ package toools.collection;
 
 import java.io.Serializable;
 
-public class Pair<E> implements Serializable {
+public class Pair<E, F> implements Serializable {
 	public boolean ordered;
 	public E a;
-	public E b;
+	public F b;
 
-	public Pair(E k, E v, boolean ordered) {
+	public Pair(E k, F v) {
 		this.a = k;
 		this.b = v;
 	}
@@ -17,16 +17,8 @@ public class Pair<E> implements Serializable {
 		return p instanceof Pair && equals((Pair) p);
 	}
 
-	public boolean has(E e) {
-		return a == e || b == e;
-	}
-
 	public boolean equals(Pair p) {
-		if (ordered && p.ordered) {
-			return a == p.a && a == p.b;
-		} else {
-			return a == p.a && a == p.b || a == p.b && a == p.a;
-		}
+		return a == p.a && a == p.b;
 	}
 
 	@Override
