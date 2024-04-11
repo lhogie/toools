@@ -69,6 +69,7 @@ public class TextUtilities {
 	public static byte[] unbase64(byte[] bytes) {
 		return Base64.getMimeDecoder().decode(bytes);
 	}
+
 	public static List<String> matchesGroups(String s, String re) {
 		Pattern r = Pattern.compile(re);
 		Matcher m = r.matcher(s);
@@ -1045,6 +1046,25 @@ public class TextUtilities {
 		PrintStream ps = new PrintStream(bos);
 		t.printStackTrace(ps);
 		return new String(bos.toByteArray());
+	}
+
+	public static String f(String s) {
+		var r = "";
+		int len = s.length();
+
+		for (int i = 0; i < len; ++i) {
+			var c = s.charAt(i);
+
+			if (i == 0 && Character.isUpperCase(c)) {
+				r += Character.toLowerCase(c);
+			} else if (i > 0 && Character.isUpperCase(c) && Character.isLowerCase(s.charAt(i - 1))) {
+				r += " " + Character.toLowerCase(c);
+			} else {
+				r += c;
+			}
+		}
+
+		return r;
 	}
 
 }
