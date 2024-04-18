@@ -98,12 +98,12 @@ public interface SizeOf {
 		} else if (o.getClass().isArray()) {
 			int len = Array.getLength(o);
 			long sz = 0;
-			
+
 			for (int i = 0; i < len; ++i) {
 				var e = Array.get(o, i);
 				sz = sizeOf(e);
 			}
-			
+
 			return sz;
 		} else if (o instanceof Throwable) {
 			return 1;
@@ -121,7 +121,18 @@ public interface SizeOf {
 			}
 		}
 
-		throw new IllegalArgumentException("cannot sizeof " + o.getClass());
+		long r = 0;
+
+		for (var f : o.getClass().getFields()) {
+			try {
+				r += sizeOf(f.get(o));
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+
+		return r;
+//		throw new IllegalArgumentException("cannot sizeof " + o.getClass());
 	}
 
 	public static <A extends SizeOf, C extends Collection<? extends SizeOf>> long sizeOfM(Map<A, C> m) {

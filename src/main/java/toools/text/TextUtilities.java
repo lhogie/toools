@@ -1048,23 +1048,24 @@ public class TextUtilities {
 		return new String(bos.toByteArray());
 	}
 
+	// ThisIsAnExample -> this is an example
 	public static String f(String s) {
-		var r = "";
+		var r = new StringBuilder();
 		int len = s.length();
 
 		for (int i = 0; i < len; ++i) {
 			var c = s.charAt(i);
 
 			if (i == 0 && Character.isUpperCase(c)) {
-				r += Character.toLowerCase(c);
+				r.append(Character.toLowerCase(c));
 			} else if (i > 0 && Character.isUpperCase(c) && Character.isLowerCase(s.charAt(i - 1))) {
-				r += " " + Character.toLowerCase(c);
+				r.append(Character.toLowerCase(c));
 			} else {
-				r += c;
+				r.append(c);
 			}
 		}
 
-		return r;
+		return r.toString();
 	}
 
 }

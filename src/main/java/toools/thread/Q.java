@@ -9,7 +9,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-public class Q<E> implements Iterable<E> {
+import toools.SizeOf;
+
+public class Q<E> implements Iterable<E>, SizeOf{
 	private final BlockingQueue<E> q;
 	public QListener<E> listener;
 	private Thread thread;
@@ -105,5 +107,14 @@ public class Q<E> implements Iterable<E> {
 	@Override
 	public String toString() {
 		return q.toString();
+	}
+
+	@Override
+	public long sizeOf() {
+		long r = 0;
+		for (var e : q) {
+			r += SizeOf.sizeOf(e);
+		}
+		return r;
 	}
 }

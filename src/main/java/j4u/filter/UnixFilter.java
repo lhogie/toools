@@ -12,85 +12,65 @@ import java.util.concurrent.LinkedBlockingQueue;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
-public abstract class UnixFilter
-{
+public abstract class UnixFilter {
 	private final BlockingQueue queue = new LinkedBlockingQueue();
 	private final Process process;
 	private boolean error = false;
 
-	public UnixFilter(Directory wd, String cmd, String... args)
-	{
-		if (wd == null)
-		{
+	public UnixFilter(Directory wd, String cmd, String... args) {
+		if (wd == null) {
 			wd = Directory.getCurrentDirectory();
 		}
 
-		try
-		{
+		try {
 			List<String> cmdLine = new ArrayList<String>();
 			cmdLine.add(cmd);
 
-			for (String arg : args)
-			{
+			for (String arg : args) {
 				cmdLine.add(arg);
 			}
 
-			process = Runtime.getRuntime().exec(cmdLine.toArray(new String[0]), args,
-					wd.toFile());
+			process = Runtime.getRuntime().exec(cmdLine.toArray(new String[0]), args, wd.toFile());
 
 			new ReadingThread(process.getInputStream(), true);
 			new ReadingThread(process.getErrorStream(), false);
 
 			// the thread that takes from the input queue and write to the
 			// process stdin
-			new Thread()
-			{
+			new Thread() {
 				@Override
-				public void run()
-				{
-					while (true)
-					{
-						try
-						{
+				public void run() {
+					while (true) {
+						try {
 							Object o = queue.take();
 							// System.out.println("*** received: " + o);
-							if (o.getClass() == String.class)
-							{
+							if (o.getClass() == String.class) {
 								String line = (String) o;
 								line += '\n';
 								process.getOutputStream().write(line.getBytes());
 								process.getOutputStream().flush();
-							}
-							else
-							{
+							} else {
 								break;
 							}
-						}
-						catch (Throwable e)
-						{
+						} catch (Throwable e) {
 							error = true;
 							throw new IllegalStateException(e);
 						}
 					}
 
-					try
-					{
+					try {
 						// by sending EOT to stdin, the process will close by
 						// itself (filters behave like this)
 						process.getOutputStream().close();
 
 						// waiting for the program to return
-						 int returnCode = process.waitFor();
-						 terminated(returnCode);
-					}
-					catch (Throwable t)
-					{
+						int returnCode = process.waitFor();
+						terminated(returnCode);
+					} catch (Throwable t) {
 					}
 				}
 			}.start();
-		}
-		catch (IOException e1)
-		{
+		} catch (IOException e1) {
 			throw new IllegalStateException(e1);
 		}
 	}
@@ -101,67 +81,49 @@ public abstract class UnixFilter
 
 	protected abstract void newLineOnStderr(String l);
 
-	public void newLineToStdin(String line)
-	{
+	public void newLineToStdin(String line) {
 		// remove trailing space, if any
-		if (line.charAt(line.length() - 1) == '\n')
-		{
+		if (line.charAt(line.length() - 1) == '\n') {
 			line = line.substring(0, line.length() - 1);
 		}
 
-		try
-		{
+		try {
 			// System.out.println("*** new line to stdin: " + line);
 
 			queue.put(line);
-		}
-		catch (InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 			error = true;
 			throw new IllegalStateException(e);
 		}
 	}
 
-	private class ReadingThread extends Thread
-	{
+	private class ReadingThread extends Thread {
 		private final BufferedReader br;
 		private final boolean stdout;
 
-		public ReadingThread(InputStream is, boolean stdout)
-		{
+		public ReadingThread(InputStream is, boolean stdout) {
 			br = new BufferedReader(new InputStreamReader(is));
 			this.stdout = stdout;
 			start();
 		}
 
 		@Override
-		public void run()
-		{
-			while ( ! error)
-			{
-				try
-				{
+		public void run() {
+			while (!error) {
+				try {
 					String l = br.readLine();
 
-					if (l == null)
-					{
+					if (l == null) {
 						br.close();
 						break;
-					}
-					else
-					{
-						if (stdout)
-						{
+					} else {
+						if (stdout) {
 							newLineOnStdout(l);
-						}
-						else
-						{
+						} else {
 							newLineOnStderr(l);
 						}
 					}
-				}
-				catch (IOException e)
-				{
+				} catch (IOException e) {
 					error = true;
 					throw new IllegalStateException(e);
 				}
@@ -169,50 +131,41 @@ public abstract class UnixFilter
 		}
 	}
 
-	public int endOfTransmission()
-	{
-		try
-		{
+	public int endOfTransmission() {
+		try {
 			queue.put(new Object());
 			return process.waitFor();
-		}
-		catch (InterruptedException e)
-		{
+		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
-	public static void main(String[] args) throws IOException
-	{
+	public static void main(String[] args) throws IOException {
 		List<String> result = new ArrayList<String>();
-		UnixFilter unixFilter = new UnixFilter(null, "grep", "-i", "root")
-		{
+		UnixFilter unixFilter = new UnixFilter(null, "grep", "-i", "root") {
 
 			@Override
-			protected void newLineOnStdout(String l)
-			{
+			protected void newLineOnStdout(String l) {
 				System.out.println("received: " + l);
 			}
 
 			@Override
-			protected void newLineOnStderr(String l)
-			{
+			protected void newLineOnStderr(String l) {
 				System.err.println("received: " + l);
 			}
 
 			@Override
 			protected void terminated(int returnCode) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		};
 
-		BufferedReader r = new BufferedReader(new InputStreamReader(
-				new RegularFile("/etc/passwd").createReadingStream()));
+		BufferedReader r = new BufferedReader(
+				new InputStreamReader(new RegularFile("/etc/passwd").createReadingStream()));
 		String line;
 
-		while ((line = r.readLine()) != null)
-		{
+		while ((line = r.readLine()) != null) {
 			unixFilter.newLineToStdin(line);
 		}
 
