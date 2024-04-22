@@ -83,8 +83,7 @@ public class NetUtilities {
 	public static final int TCP_FRAME_LENGTH = 60000;
 
 	public static void notifyUsageForLucSoftware(String softwareName) {
-		notifyUsage("http://www.i3s.unice.fr/~hogie/software/register_use.php",
-				softwareName);
+		notifyUsage("http://www.i3s.unice.fr/~hogie/software/register_use.php", softwareName);
 	}
 
 	public static void notifyUsage(final String webServiceURL, String softwareName) {
@@ -93,15 +92,12 @@ public class NetUtilities {
 			public void run() {
 				try {
 					Map<String, String> parms = new HashMap<String, String>();
-					parms.put("who", System.getProperty("user.name") + "@"
-							+ NetUtilities.getIPAddress().getHostName());
+					parms.put("who", System.getProperty("user.name") + "@" + NetUtilities.getIPAddress().getHostName());
 					parms.put("name", softwareName);
-					parms.put("os", System.getProperty("os.name") + " "
-							+ System.getProperty("os.version"));
+					parms.put("os", System.getProperty("os.name") + " " + System.getProperty("os.version"));
 					parms.put("java", System.getProperty("java.version"));
 					NetUtilities.retrieveURLContent(webServiceURL, parms, null);
-				}
-				catch (Throwable e) {
+				} catch (Throwable e) {
 					// e.printStackTrace();
 				}
 			}
@@ -109,14 +105,10 @@ public class NetUtilities {
 	}
 
 	public static byte[] retrieveURLContent(URL url) throws IOException {
-		InputStream is = url.openConnection().getInputStream();
-		byte[] bytes = toools.io.Utilities.readUntilEOF(is);
-		is.close();
-		return bytes;
+		return url.openStream().readAllBytes();
 	}
 
-	public List<InetAddress> getInetAddresses(List<String> hostnames)
-			throws UnknownHostException {
+	public List<InetAddress> getInetAddresses(List<String> hostnames) throws UnknownHostException {
 		List<InetAddress> l = new ArrayList<InetAddress>();
 
 		for (String s : hostnames) {
@@ -128,10 +120,8 @@ public class NetUtilities {
 
 	public static final boolean isLocalhost(InetAddress ip) {
 		try {
-			return ip.isLoopbackAddress()
-					|| NetworkInterface.getByInetAddress(ip) != null;
-		}
-		catch (SocketException e) {
+			return ip.isLoopbackAddress() || NetworkInterface.getByInetAddress(ip) != null;
+		} catch (SocketException e) {
 			return false;
 		}
 	}
@@ -144,16 +134,15 @@ public class NetUtilities {
 		return retrieveURLContent(new URL(url));
 	}
 
-	public static byte[] retrieveURLContent(String cgiAddress, byte[] postData)
-			throws IOException {
+	public static byte[] retrieveURLContent(String cgiAddress, byte[] postData) throws IOException {
 		return retrieveURLContent(cgiAddress, new HashMap<String, String>(), postData);
 	}
 
-	public static byte[] retrieveURLContent(String cgiAddress, Map<String, String> parms,
-			byte[] postData) throws IOException {
+	public static byte[] retrieveURLContent(String cgiAddress, Map<String, String> parms, byte[] postData)
+			throws IOException {
 		String rq = "";
 
-		if ( ! parms.isEmpty()) {
+		if (!parms.isEmpty()) {
 			for (String key : parms.keySet()) {
 				String value = parms.get(key);
 				rq += (rq.isEmpty() ? "?" : "&") + URLEncoder.encode(key, "UTF-8") + "="
@@ -183,20 +172,17 @@ public class NetUtilities {
 
 		try {
 			names.add(InetAddress.getLocalHost().getCanonicalHostName());
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 		}
 
 		try {
 			names.add(InetAddress.getLocalHost().getHostName());
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 		}
 
 		try {
 			names.add(InetAddress.getLocalHost().getHostAddress());
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 		}
 
 		for (String name : names) {
@@ -211,32 +197,27 @@ public class NetUtilities {
 	public static byte[] retrieveLucHogieData(String name) {
 		try {
 			return retrieveURLContent(new URL("http://luc.hogie.fr/" + name));
-		}
-		catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			return null;
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	public static Socket connect(InetAddress ip, int port, int timeoutms)
-			throws IOException {
+	public static Socket connect(InetAddress ip, int port, int timeoutms) throws IOException {
 		Socket s = new Socket();
 
 		try {
 			s.connect(new InetSocketAddress(ip, port), timeoutms);
 
-		}
-		catch (SocketTimeoutException e) {
+		} catch (SocketTimeoutException e) {
 			SocketTimeoutException c = new SocketTimeoutException(
 					e.getMessage() + " to host " + ip.getHostName() + " on port " + port);
 			c.setStackTrace(e.getStackTrace());
 			throw c;
-		}
-		catch (ConnectException e) {
+		} catch (ConnectException e) {
 			ConnectException c = new ConnectException(
 					e.getMessage() + " to host " + ip.getHostName() + " on port " + port);
 			c.setStackTrace(e.getStackTrace());
@@ -245,35 +226,31 @@ public class NetUtilities {
 		return s;
 	}
 
-	public static boolean isServerRunningOnPort(InetAddress host, int port, int timeoutms,
-			ConnectionCloser closer) {
+	public static boolean isServerRunningOnPort(InetAddress host, int port, int timeoutms, ConnectionCloser closer) {
 		try {
 			Socket s = connect(host, port, timeoutms);
 
 			if (closer != null) {
 				try {
 					closer.closeCleanly(new TCPConnection(s));
-				}
-				catch (Throwable t) {
+				} catch (Throwable t) {
 					throw new IllegalStateException(t);
 				}
 			}
 
 			return true;
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			return false;
 		}
 	}
 
-	public static boolean waitUntilServerStarts(InetAddress host, int port,
-			int testTimeoutMs, int globalTimeoutMs, ConnectionCloser closer) {
+	public static boolean waitUntilServerStarts(InetAddress host, int port, int testTimeoutMs, int globalTimeoutMs,
+			ConnectionCloser closer) {
 		long peremptionDate = System.currentTimeMillis() + globalTimeoutMs;
 
 		if (isServerRunningOnPort(host, port, testTimeoutMs, closer)) {
 			return true;
-		}
-		else {
+		} else {
 			while (System.currentTimeMillis() < peremptionDate) {
 				Threads.sleepMs(100);
 
@@ -286,13 +263,10 @@ public class NetUtilities {
 		}
 	}
 
-	public static boolean isLocalServerRunningOnPort(int port, int timeoutms,
-			ConnectionCloser closer) {
+	public static boolean isLocalServerRunningOnPort(int port, int timeoutms, ConnectionCloser closer) {
 		try {
-			return isServerRunningOnPort(InetAddress.getLocalHost(), port, timeoutms,
-					closer);
-		}
-		catch (UnknownHostException e) {
+			return isServerRunningOnPort(InetAddress.getLocalHost(), port, timeoutms, closer);
+		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -346,13 +320,12 @@ public class NetUtilities {
 		return getWorkingServersInLANOf(port, getIPAddress(), timeout);
 	}
 
-	public static Collection<Socket> getWorkingServersInLANOf(int port,
-			InetAddress localAddress, int timeout) {
+	public static Collection<Socket> getWorkingServersInLANOf(int port, InetAddress localAddress, int timeout) {
 		return getWorkingServers(port, getAllIPAddressesInLAN(localAddress), timeout);
 	}
 
-	public static Collection<Socket> getWorkingServers(final int port,
-			Collection<InetAddress> candidateServers, final int timeoutms) {
+	public static Collection<Socket> getWorkingServers(final int port, Collection<InetAddress> candidateServers,
+			final int timeoutms) {
 		final Collection<Socket> servers = new ArrayList<Socket>();
 		@SuppressWarnings("unused")
 		final List<InetAddress> l = new ArrayList<InetAddress>(candidateServers);
@@ -362,8 +335,7 @@ public class NetUtilities {
 			protected void process(InetAddress canditate) {
 				try {
 					servers.add(connect(canditate, port, timeoutms));
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 				}
 			}
 		};
@@ -375,8 +347,7 @@ public class NetUtilities {
 		for (Socket s : sockets) {
 			try {
 				s.close();
-			}
-			catch (IOException t) {
+			} catch (IOException t) {
 			}
 		}
 	}
@@ -398,13 +369,12 @@ public class NetUtilities {
 			networkInterfaces = new HashRelation<NetworkInterface, InetAddress>();
 
 			try {
-				for (NetworkInterface netInterface : Collections.convertEnumerationToList(
-						NetworkInterface.getNetworkInterfaces())) {
-					networkInterfaces.addAll(netInterface, Collections
-							.convertEnumerationToList(netInterface.getInetAddresses()));
+				for (NetworkInterface netInterface : Collections
+						.convertEnumerationToList(NetworkInterface.getNetworkInterfaces())) {
+					networkInterfaces.addAll(netInterface,
+							Collections.convertEnumerationToList(netInterface.getInetAddresses()));
 				}
-			}
-			catch (SocketException e) {
+			} catch (SocketException e) {
 				throw new IllegalStateException(e);
 			}
 		}
@@ -420,8 +390,7 @@ public class NetUtilities {
 
 			try {
 				addresses.add(InetAddress.getByAddress(bytes));
-			}
-			catch (UnknownHostException e) {
+			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
 		}
@@ -458,8 +427,7 @@ public class NetUtilities {
 		try {
 			new URL(sourceFileName);
 			return true;
-		}
-		catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			return false;
 		}
 	}
@@ -496,8 +464,7 @@ public class NetUtilities {
 	public static boolean isHardware(NetworkInterface ni) {
 		try {
 			return ni.getHardwareAddress() != null;
-		}
-		catch (SocketException e) {
+		} catch (SocketException e) {
 			throw new IllegalStateException(e);
 		}
 	}
@@ -506,9 +473,9 @@ public class NetUtilities {
 		Relation<NetworkInterface, InetAddress> nic_ips = getNICs();
 
 		for (NetworkInterface ni : nic_ips.keySet()) {
-			if ( ! isHardware(ni)) {
+			if (!isHardware(ni)) {
 				for (InetAddress a : nic_ips.getValues(ni)) {
-					if (a instanceof Inet4Address && ! a.isLoopbackAddress()) {
+					if (a instanceof Inet4Address && !a.isLoopbackAddress()) {
 						return a;
 					}
 				}
@@ -536,13 +503,11 @@ public class NetUtilities {
 		System.out.println(getIPAddress());
 	}
 
-	public static ServerSocket findFreePort(int basePort, int maxTries)
-			throws IOException {
+	public static ServerSocket findFreePort(int basePort, int maxTries) throws IOException {
 		for (int port = basePort; port < basePort + maxTries; ++port) {
 			try {
 				return new ServerSocket(port);
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 			}
 		}
 
@@ -557,7 +522,7 @@ public class NetUtilities {
 		for (int attempt = 0; attempt < maxNbAttempt; ++attempt) {
 			int p = ThreadLocalRandom.current().nextInt(end - start) + start;
 
-			if ( ! isLocalServerRunningOnPort(p, timeoutMs, null)) {
+			if (!isLocalServerRunningOnPort(p, timeoutMs, null)) {
 				return p;
 			}
 		}

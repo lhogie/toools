@@ -1059,6 +1059,7 @@ public class TextUtilities {
 			if (i == 0 && Character.isUpperCase(c)) {
 				r.append(Character.toLowerCase(c));
 			} else if (i > 0 && Character.isUpperCase(c) && Character.isLowerCase(s.charAt(i - 1))) {
+				r.append('_');
 				r.append(Character.toLowerCase(c));
 			} else {
 				r.append(c);

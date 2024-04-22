@@ -43,6 +43,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -61,6 +62,8 @@ import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
 public class Clazz {
+
+
 	public static List<Class> bfs(Class c) {
 		List<Class> r = new ArrayList<>();
 		List<Class> q = new ArrayList<>();
@@ -248,7 +251,7 @@ public class Clazz {
 
 	public static boolean isExecutable(Class<?> thisClass) {
 		try {
-			Method m = thisClass.getMethod("main", new Class[] { (new String[0]).getClass() });
+			Method m = thisClass.getMethod("main", String.class);
 			return (m.getModifiers() & Modifier.STATIC) != 0;
 		} catch (Throwable e) {
 			return false;
@@ -262,7 +265,7 @@ public class Clazz {
 
 	public static boolean hasDefaultConstructor(Class<? extends Object> c) {
 		try {
-			return c.getConstructor(new Class[0]) != null;
+			return c.getConstructor() != null;
 		} catch (SecurityException e) {
 			throw new IllegalStateException(e);
 		} catch (NoSuchMethodException e) {
@@ -459,40 +462,7 @@ public class Clazz {
 
 	}
 
-	/**
-	 * Returns the size of the given class. This assumes that the class is either a
-	 * primitive type or a class containing primitive types.
-	 */
-	public static int sizeOf(Class c) {
-		if (c.isPrimitive()) {
-			if (c == byte.class || c == boolean.class) {
-				return 1;
-			} else if (c == char.class || c == short.class) {
-				return 2;
-			} else if (c == int.class || c == float.class) {
-				return 4;
-			} else if (c == long.class || c == double.class) {
-				return 8;
-			} else
-				throw new IllegalStateException(c.getName());
-		} else {
-			int sizeof = 0;
 
-			while (c != null) {
-				for (Field f : c.getDeclaredFields()) {
-					if (f.getType().isPrimitive()) {
-						sizeof += sizeOf(f.getType());
-					} else {
-						return -1;
-					}
-				}
-
-				c = c.getSuperclass();
-			}
-
-			return sizeof;
-		}
-	}
 
 	public static void setFieldValue(Object target, String fieldName, Object value) {
 		try {
@@ -500,7 +470,7 @@ public class Clazz {
 			f.setAccessible(true);
 			f.set(target, value);
 		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-			throw new IllegalStateException(e);
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -513,9 +483,8 @@ public class Clazz {
 		int result = compiler.run(null, out, err, f.getPath());
 
 		if (result != 0) {
-			System.out.println(new String(out.toByteArray()));
-			System.err.println(new String(err.toByteArray()));
-			throw new IllegalStateException();
+			System.out.println();
+			throw new IllegalStateException(new String(out.toByteArray()) + "" + new String(err.toByteArray()));
 		}
 
 		return new RegularFile(classname + ".class");
@@ -523,12 +492,9 @@ public class Clazz {
 
 	public static Class loadClassfile(String classname, RegularFile f) {
 		try {
-			URL url = f.getParent().javaFile.toURI().toURL();
-			URL[] urls = new URL[] { url };
-			ClassLoader cl = new URLClassLoader(urls);
-			return cl.loadClass(classname);
+			return new URLClassLoader(new URL[] { f.getParent().javaFile.toURI().toURL() }).loadClass(classname);
 		} catch (Throwable e) {
-			throw new IllegalStateException(e);
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -588,7 +554,7 @@ public class Clazz {
 				System.out.println("loo");
 			}
 		}
-		
+
 		throw new NoClassDefFoundError(o + "$" + innerClassName);
 	}
 

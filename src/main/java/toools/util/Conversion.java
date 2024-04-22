@@ -207,9 +207,7 @@ public class Conversion {
 		if (cc == null)
 			throw new IllegalArgumentException("cannot instanciate " + c);
 
-		var a = ((String) from).split(",");
-
-		for (String i : a) {
+		for (String i : from.split(",")) {
 			cc.add(Long.parseLong(i));
 		}
 
