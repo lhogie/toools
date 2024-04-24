@@ -39,10 +39,13 @@ Julien Deantoin (I3S, Université Cote D'Azur, Saclay)
 package toools;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 public interface SizeOf {
@@ -75,10 +78,16 @@ public interface SizeOf {
 	public static long sizeOf(Object o) {
 		if (o == null) {
 			return 0;
-		} else if (o instanceof SizeOf) {
-			return ((SizeOf) o).sizeOf();
-		} else if (o instanceof Iterable) {
-			return sizeOf((Iterable) o);
+		} else if (o instanceof SizeOf s) {
+			return s.sizeOf();
+		} else if (o instanceof Iterable i) {
+			long s = 0;
+
+			for (var e : i) {
+				s += sizeOf(e);
+			}
+
+			return s;
 		} else if (o instanceof String) {
 			return sizeOf((String) o);
 		} else if (o instanceof Long) {
@@ -121,18 +130,27 @@ public interface SizeOf {
 			}
 		}
 
-		long r = 0;
+		long sum = 0;
 
-		for (var f : o.getClass().getFields()) {
-			try {
-				r += sizeOf(f.get(o));
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				throw new IllegalStateException(e);
+		Set<Integer> alreadyVisited = new HashSet<>();
+
+		for (var field : o.getClass().getFields()) {
+			if (!Modifier.isStatic(field.getModifiers())) {
+				try {
+					var fieldValue = field.get(o);
+
+					if (fieldValue != null && !alreadyVisited.contains(System.identityHashCode(fieldValue))) {
+						System.err.println(List.of(sum, o.getClass(), field.getName()));
+						sum += sizeOf(fieldValue);
+						alreadyVisited.add(System.identityHashCode(fieldValue));
+					}
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new IllegalStateException(e);
+				}
 			}
 		}
-
-		return r;
-//		throw new IllegalArgumentException("cannot sizeof " + o.getClass());
+//		System.exit(1);
+		return sum;
 	}
 
 	public static <A extends SizeOf, C extends Collection<? extends SizeOf>> long sizeOfM(Map<A, C> m) {
