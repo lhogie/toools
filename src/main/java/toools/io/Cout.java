@@ -1,5 +1,6 @@
 package toools.io;
 
+import toools.src.PositionInSource;
 import toools.text.TextUtilities;
 import toools.util.Date;
 
@@ -72,6 +73,12 @@ public abstract class Cout {
 
 	public static void result(Object o) {
 		stdout.add("R \t" + o);
+	}
+
+	public static void debug(PositionInSource here, Object... o) {
+		for (Object a : o) {
+			stdout.add("D\t" + here + "\t" + a);
+		}
 	}
 
 	public static void debug(Object... o) {

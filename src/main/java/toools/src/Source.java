@@ -48,138 +48,110 @@ import toools.text.TextUtilities;
 /**
  * @author luc
  * 
-
+ * 
  */
-public class Source
-{
-	private static List<StackTraceElement> createStack()
-	{
+public class Source {
+	private static List<StackTraceElement> createStack() {
 		List<StackTraceElement> elements = Arrays.asList(new Error().getStackTrace());
 		int i = elements.size() - 1;
 
-		while ( ! elements.get(i).getClassName().equals(Source.class.getName()))
-		{
+		while (!elements.get(i).getClassName().equals(Source.class.getName())) {
 			--i;
 		}
 
 		return elements.subList(i + 1, elements.size());
 	}
 
-	public static String getSourceFileName()
-	{
+	public static String getSourceFileName() {
 		return createStack().get(0).getFileName();
 	}
 
-	public static String getSourceResourceName()
-	{
+	public static String getSourceResourceName() {
 		String fileName = getSourceFileName();
 		String packageName = getPackageName();
 		return '/' + packageName.replace('.', '/') + '/' + fileName;
 	}
 
-	public static String getPackageName()
-	{
+	public static String getPackageName() {
 		String className = getClassName();
 		int pos = className.lastIndexOf('.');
 
-		if (pos == - 1)
-		{
+		if (pos == -1) {
 			return "";
-		}
-		else
-		{
+		} else {
 			return className.substring(0, pos);
 		}
 	}
 
-	public static String getClassName()
-	{
+	public static String getClassName() {
 		return createStack().get(0).getClassName();
 	}
 
-	public static int getLineNumber()
-	{
+	public static PositionInSource here() {
+		return new PositionInSource(getSourceFileName(), getLineNumber());
+	}
+	
+	public static int getLineNumber() {
 		return createStack().get(0).getLineNumber();
 	}
 
-	public static String getSourceLine()
-	{
+	public static String getSourceLine() {
 		return getSourceCodeLines().get(getLineNumber() - 1);
 	}
 
-	public static List<String> getSubsequentSourceLines(int n)
-	{
+	public static List<String> getSubsequentSourceLines(int n) {
 		int l = getLineNumber();
 		return getSourceCodeLines().subList(l, l + n);
 	}
 
-	public static List<String> getSourceCodeLines()
-	{
+	public static List<String> getSourceCodeLines() {
 		return TextUtilities.lines(getSourceCode());
 	}
 
-	public static String getSourceCode()
-	{
+	public static String getSourceCode() {
 		JavaResource resource = new JavaResource(getSourceResourceName());
 
-		try
-		{
+		try {
 			byte[] bytes = resource.getByteArray();
 			return new String(bytes);
-		}
-		catch (IORuntimeException ex)
-		{
+		} catch (IORuntimeException ex) {
 			return null;
 		}
 	}
 
-	public static String getClassSourceCode(Class<?> clazz)
-	{
+	public static String getClassSourceCode(Class<?> clazz) {
 		JavaResource r = getClassSourceCodeAsResource(clazz);
 
-		if (r.exists())
-		{
-			try
-			{
+		if (r.exists()) {
+			try {
 				return new String(r.getByteArray());
-			}
-			catch (IORuntimeException ex)
-			{
+			} catch (IORuntimeException ex) {
 				return null;
 			}
-		}
-		else
-		{
+		} else {
 			return null;
 		}
 	}
 
-	public static Class<?> getThisClass()
-	{
+	public static Class<?> getThisClass() {
 		String className = getClassName();
 
-		try
-		{
+		try {
 			return Class.forName(className);
-		}
-		catch (ClassNotFoundException ex)
-		{
+		} catch (ClassNotFoundException ex) {
 			throw new IllegalStateException("class " + className + " cannot be found");
 		}
 	}
 
-	public static JavaResource getClassBytecodeAsJavaResource(Class<?> thisClass)
-	{
+	public static JavaResource getClassBytecodeAsJavaResource(Class<?> thisClass) {
 		return new JavaResource("/" + thisClass.getName().replace('.', '/') + ".class");
 	}
 
-	public static JavaResource getClassSourceCodeAsResource(Class<?> thisClass)
-	{
+	public static JavaResource getClassSourceCodeAsResource(Class<?> thisClass) {
 		return new JavaResource("/" + thisClass.getName().replace('.', '/') + ".java");
 	}
 
-	public static void main(String[] args)
-	{
+	public static void main(String[] args) {
 		System.out.println(createStack());
 		System.out.println(getClassName());
 	}
