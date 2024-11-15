@@ -111,6 +111,10 @@ public class Utilities {
 
 	}
 
+	public static JFrame displayInJFrame(Component c) {
+		return displayInJFrame(c, c.getName());
+	}
+
 	public static JFrame displayInJFrame(Component c, String title) {
 		final JFrame f = new JFrame(title);
 

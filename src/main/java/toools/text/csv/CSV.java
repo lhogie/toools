@@ -57,6 +57,7 @@ import it.unimi.dsi.fastutil.doubles.DoubleIterator;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.Long2LongMap.Entry;
 import it.unimi.dsi.fastutil.longs.LongIterator;
+import toools.collections.Collections;
 
 /**
  * @author luc.hogie
@@ -118,6 +119,7 @@ public class CSV {
 
 		return lines;
 	}
+	
 
 	public static String assemble(List<List<String>> list, char separator) {
 		StringBuffer buf = new StringBuffer();
