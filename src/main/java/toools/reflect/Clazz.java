@@ -43,9 +43,9 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -62,7 +62,6 @@ import toools.io.file.Directory;
 import toools.io.file.RegularFile;
 
 public class Clazz {
-
 
 	public static List<Class> bfs(Class c) {
 		List<Class> r = new ArrayList<>();
@@ -462,8 +461,6 @@ public class Clazz {
 
 	}
 
-
-
 	public static void setFieldValue(Object target, String fieldName, Object value) {
 		try {
 			Field f = target.getClass().getDeclaredField(fieldName);
@@ -556,6 +553,11 @@ public class Clazz {
 		}
 
 		throw new NoClassDefFoundError(o + "$" + innerClassName);
+	}
+
+	public static List<Class<?>> getGenericTypes(Class<?> c) {
+		var types = ((ParameterizedType) c.getClass().getGenericSuperclass()).getActualTypeArguments();
+		return (List<Class<?>>) (List) Arrays.stream(types).map(t -> (Class<?>) t).toList();
 	}
 
 }
