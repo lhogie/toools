@@ -62,6 +62,14 @@ import toools.math.MathsUtilities;
 import toools.reflect.Clazz;
 
 public class TextUtilities {
+
+	private static final String regex = "([a-z])([A-Z]+)";
+	private static final String replacement = "$1_$2";
+
+	public static String camelToSnake(String s) {
+		return s.replaceAll(regex, replacement).toLowerCase();
+	}
+
 	public static String base64(byte[] bytes) {
 		return new String(Base64.getMimeEncoder().encode(bytes)).replace("\n", "").replace("\r", "");
 	}

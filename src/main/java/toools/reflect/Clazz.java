@@ -57,6 +57,7 @@ import java.util.Map;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
+import toools.io.Cout;
 import toools.io.JavaResource;
 import toools.io.file.Directory;
 import toools.io.file.RegularFile;
@@ -556,7 +557,8 @@ public class Clazz {
 	}
 
 	public static List<Class<?>> getGenericTypes(Class<?> c) {
-		var types = ((ParameterizedType) c.getClass().getGenericSuperclass()).getActualTypeArguments();
+		//Cout.debugSuperVisible(c);
+		var types = ((ParameterizedType) c.getGenericSuperclass()).getActualTypeArguments();
 		return (List<Class<?>>) (List) Arrays.stream(types).map(t -> (Class<?>) t).toList();
 	}
 
